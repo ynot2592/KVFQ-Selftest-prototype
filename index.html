@@ -1750,8 +1750,7 @@ html, body{
      </div>
   </section>
 
-  <!-- 여기부터 screen_camtest 시작
-  <!-- 카메라 권한 테스트 화면 -->
+  <!-- screen_camtest 삭제 보관용 시작
   <div class="card hidden" id="screen_camtest">
     <h2>카메라 권한 테스트</h2>
     <p class="small">아래 <b>카메라 권한 요청(전면)</b> 버튼을 눌러주세요. 전면 카메라 접근을 확인합니다. 실패 시 원인 힌트를 표시합니다. 카메라 화면이 나오면 <b>교정 화면으로 이동</b> 버튼을 눌러주시면 다음 화면으로 넘어갑니다.</p>
@@ -1770,7 +1769,7 @@ html, body{
       <div class="v">권한상태: <b id="permState">-</b></div>
     </div>
   </div>
-  여기까지 screen_camtest 끝 -->
+  screen_camtest 삭제 보관용 끝 -->
 
     <!-- VFQ VAS 17문항 -->
   <div class="card hidden" id="screen_vfq">
@@ -1823,7 +1822,7 @@ html, body{
     <div id="vfqResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
   </div>
 
-  <!-- 교정 일단 주석처리 시작
+  <!-- screen_calib 삭제 보관용 시작
   <div class="card hidden" id="screen_calib">
     <h2>카메라 교정(40 cm)</h2>
     <p>스마트폰을 눈앞 <b>40 cm</b> 위치에 고정해주세요. 아래 첫번째 <b>교정</b> 버튼을 눌러주세요. 버튼을 누른 후 얼굴을 인식하면 <b>픽셀 PD</b>가 표시됩니다. 안정화 후 스크롤을 내려 <b>교정</b>을 한번 더 누르고 <b>다음(NPC 측정)</b> 버튼을 눌러주세요.</p>
@@ -1839,7 +1838,7 @@ html, body{
       <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
     </div>
   </div>
-  여기까지 주석처리 끝 -->
+  screen_calib 삭제 보관용 끝 -->
 
   <section id="screen_pd" class="card hidden">
       <h1>PD(동공간거리) 자가측정</h1>
@@ -1906,7 +1905,7 @@ html, body{
       <div class="v">최신 RT: <b id="pvtLast">-</b> ms</div>
     </div>
     <div class="row" style="margin-top:8px"><button class="btn primary" onclick="startPVT()">시작</button><button class="btn ghost" onclick="finishPVT()">조기 종료</button></div>
-    <div class="row" style="margin-top:8px"><button class="btn" onclick="go('screen_export')">다음(CSV 저장)</button><button class="btn ghost" onclick="go('screen_home')">처음으로</button></div>
+    <div class="row" style="margin-top:8px"><button class="btn" onclick="go('screen_thankyou')">다음(종료)</button><button class="btn ghost" onclick="go('screen_home')">처음으로</button></div>
   </div>
 
 <!-- 설문 완료 감사 페이지 -->
@@ -2000,14 +1999,10 @@ function toKSTString(d = new Date()){
   let isSubmitting = false;
   const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)  
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
+
   function go(id){
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-
-  if(id === 'screen_export'){
-    const b = document.getElementById('iabWarn');
-    if(b) b.classList.toggle('hidden', !isInApp);
-  }
+  document.getElementById(id).classList.remove('hidden'); 
 
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
@@ -2367,31 +2362,74 @@ try{
 
   // ---------- 권한 테스트 ----------
   async function requestCam(){
-    const camStatus=gid('camStatus'), camError=gid('camError');
-    const secCtx=gid('secCtx'), proto=gid('proto'), camCount=gid('camCount'), permState=gid('permState')
-    secCtx.textContent = window.isSecureContext ? 'Secure(OK)' : 'Not secure(문제)';
-    proto.textContent = location.protocol;
-    try{ const p=await navigator.permissions.query({name:'camera'}); permState.textContent=p.state }catch{ permState.textContent='unknown' }
-    try{ const devices=await navigator.mediaDevices.enumerateDevices(); camCount.textContent=devices.filter(d=>d.kind==='videoinput').length }catch{ camCount.textContent='unknown' }
+  const camStatus = gid('camStatus');
+  const camError  = gid('camError');
+  const secCtx    = gid('secCtx');
+  const proto     = gid('proto');
+  const camCount  = gid('camCount');
+  const permState = gid('permState');
 
-    camStatus.textContent='요청 중…'; camError.textContent='-'
-    try{
-      const constraints={video:{facingMode:{ideal:'user'}},audio:false}
-      const stream=await navigator.mediaDevices.getUserMedia(constraints)
-      const tv = gid('testV'); tv.srcObject=stream; await tv.play(); camStatus.textContent='전면 카메라 연결됨'
-      const tc = gid('testC'); tc.width=tv.videoWidth; tc.height=tv.videoHeight; 
-      if(!tv || !tc) return;
-      const tctx = tc.getContext('2d');
-      ;(function draw(){ tctx.drawImage(tv,0,0,tc.width,tc.height); requestAnimationFrame(draw) })()
-    }catch(e){
-      camStatus.textContent='실패'
-      let hint=''
-      if(!window.isSecureContext && location.protocol!=='http:'){ hint='file:// 또는 비보안 출처입니다. http:// 또는 https:// 로 열어주세요.' }
-      else if(location.protocol==='http:' && !/localhost|127\.0\.0\.1/.test(location.host)){ hint='http 비보안 출처입니다. https:// 또는 http://localhost 로 열어주세요.' }
-      else { hint='브라우저 사이트 권한에서 이 도메인의 카메라를 허용하세요. 다른 앱이 카메라 점유 중인지도 확인.' }
-      camError.textContent=(e&&e.message?e.message:String(e))+' | 힌트: '+hint
-    }
+  if(camStatus) camStatus.textContent = '대기';
+  if(camError)  camError.textContent = '-';
+  if(secCtx)    secCtx.textContent = window.isSecureContext ? 'Secure(OK)' : 'Not secure(문제)';
+  if(proto)     proto.textContent = location.protocol;
+
+  try{const p = await navigator.permissions.query({name:'camera'});
+    if(permState) permState.textContent = p.state;}catch{if(permState) permState.textContent = 'unknown';
   }
+
+  try{const devices = await navigator.mediaDevices.enumerateDevices();
+    if(camCount) camCount.textContent = devices.filter(d=>d.kind==='videoinput').length;}catch{
+    if(camCount) camCount.textContent = 'unknown';
+  }
+
+  if(camStatus) camStatus.textContent = '요청 중…';
+  if(camError) camError.textContent = '-';
+
+  try{
+    const constraints = { video:{facingMode:{ideal:'user'}}, audio:false };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    const tv = gid('testV');
+    const tc = gid('testC');
+
+    if(!tv || !tc){
+      if(camStatus) camStatus.textContent = '테스트 화면 없음';
+      return;
+    }
+
+    tv.srcObject = stream;
+    await tv.play();
+
+    tc.width = tv.videoWidth;
+    tc.height = tv.videoHeight;
+
+    const tctx = tc.getContext('2d');
+    if(!tctx){
+      if(camStatus) camStatus.textContent = 'canvas 초기화 실패';
+      return;
+    }
+
+    if(camStatus) camStatus.textContent = '전면 카메라 연결됨';
+
+    (function draw(){
+      tctx.drawImage(tv, 0, 0, tc.width, tc.height);
+      requestAnimationFrame(draw);
+    })();
+
+  }catch(e){
+    if(camStatus) camStatus.textContent = '실패';
+    let hint = '';
+    if(!window.isSecureContext && location.protocol!=='http:'){
+      hint = 'file:// 또는 비보안 출처입니다. http:// 또는 https:// 로 열어주세요.';
+    }else if(location.protocol==='http:' && !/localhost|127\.0\.0\.1/.test(location.host)){
+      hint = 'http 비보안 출처입니다. https:// 또는 http://localhost 로 열어주세요.';
+    }else{
+      hint = '브라우저 사이트 권한에서 이 도메인의 카메라를 허용하세요. 다른 앱이 카메라 점유 중인지도 확인.';
+    }
+    if(camError) camError.textContent = (e && e.message ? e.message : String(e)) + ' | 힌트: ' + hint;
+  }
+}
 
   // ---------- 카메라/FaceMesh 셋업 ----------
   const video = gid('v');
@@ -2456,8 +2494,9 @@ try{
   function clearNPC(){ S.npc=[null,null,null]; ['npc1','npc2','npc3','npcAvg'].forEach(id=>gid(id).textContent='-') }
 
   // ---------- PVT ----------
-  const pvtBox=gid('pvtBox')
+  const pvtBox = gid('pvtBox');
   function startPVT(){
+    if(!pvtBox) return;
     S.pvt={dur:120,start:performance.now(),elapsed:0,phase:'waiting',waitTO:null,goAt:0,rt:[],lapse:0,last:null}
     pvtBox.textContent='WAIT'; pvtBox.className='target'
     scheduleGo()
