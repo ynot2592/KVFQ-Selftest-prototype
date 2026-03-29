@@ -1980,7 +1980,8 @@ async function sendToSheet(payload){
     return false;
   }
 }
-  const S={ pid:"", pdmm:64, vfq:{}, vfqSum:0, focal_px:null, pixPD:0, distNow:NaN, npc:[null,null,null], pvt:{dur:120,start:0,elapsed:0,timer:null,phase:'idle',waitTO:null,goAt:0,rt:[],lapse:0,last:null} }
+  const S = { pid: "", birth: "", sex: "", retest2: "", vfq: {}, vfqSum: 0, consentAtISO: "", consentAtKST: "", pdmm: null, focal_px: null, pixPD: null, distNow: null, npc: { break: null, recovery: null }, npa: null, pvt: { dur:120, start:0, elapsed:0, timer:null, phase:'idle', waitTO:null, goAt:0, rt:[], lapse:0, last:null }
+};
 
 function toKSTString(d = new Date()){
   const kst = new Date(d.getTime() + 9*60*60*1000);
