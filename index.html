@@ -1750,7 +1750,7 @@ html, body{
      </div>
   </section>
 
-  <!--여기부터 screen_camtest 시작
+  <!-- 여기부터 screen_camtest 시작
   <!-- 카메라 권한 테스트 화면 -->
   <div class="card hidden" id="screen_camtest">
     <h2>카메라 권한 테스트</h2>
@@ -2378,8 +2378,10 @@ try{
     try{
       const constraints={video:{facingMode:{ideal:'user'}},audio:false}
       const stream=await navigator.mediaDevices.getUserMedia(constraints)
-      const tv=gid('testV'); tv.srcObject=stream; await tv.play(); camStatus.textContent='전면 카메라 연결됨'
-      const tc=gid('testC'); tc.width=tv.videoWidth; tc.height=tv.videoHeight; const tctx=tc.getContext('2d');
+      const tv = gid('testV'); tv.srcObject=stream; await tv.play(); camStatus.textContent='전면 카메라 연결됨'
+      const tc = gid('testC'); tc.width=tv.videoWidth; tc.height=tv.videoHeight; 
+      if(!tv || !tc) return;
+      const tctx = tc.getContext('2d');
       ;(function draw(){ tctx.drawImage(tv,0,0,tc.width,tc.height); requestAnimationFrame(draw) })()
     }catch(e){
       camStatus.textContent='실패'
@@ -2392,9 +2394,12 @@ try{
   }
 
   // ---------- 카메라/FaceMesh 셋업 ----------
-  const video=gid('v'), canvas=gid('c'), ctx=canvas.getContext('2d'); let camera,fm
+  const video = gid('v');
+  const canvas = gid('c');
+  const ctx = canvas ? canvas.getContext('2d') : null; let camera,fm
   let lastPixPD=0, lastConf=0
   async function setupCam(){
+    if (!video || !canvas || !ctx) return;
     return new Promise((resolve)=>{
       fm = new FaceMesh({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`})
       fm.setOptions({maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6, minTrackingConfidence:0.6})
@@ -2404,6 +2409,7 @@ try{
     })
   }
   function onResults(res){
+    if (!video || !canvas || !ctx) return;
     canvas.width=video.videoWidth; canvas.height=video.videoHeight; ctx.save(); ctx.clearRect(0,0,canvas.width,canvas.height)
     if(res.multiFaceLandmarks && res.multiFaceLandmarks.length>0){
       const lm=res.multiFaceLandmarks[0]
