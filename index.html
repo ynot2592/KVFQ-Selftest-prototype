@@ -2865,7 +2865,9 @@ async function startSelftest(){
     stream.getTracks().forEach(track => track.stop());
 
     go('screen_pd');
-  }const retry = confirm(
+  }catch(err){
+
+  const retry = confirm(
 `카메라 권한이 허용되지 않았습니다.
 
 자가측정에 참여하시려면 카메라 권한이 필요합니다.
