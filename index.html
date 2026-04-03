@@ -1612,16 +1612,32 @@ html, body{
   <section id="screen_home" class="card hidden">
      <h1>자가측정 안내</h1>
      <p>
-         설문 응답은 제출되었습니다. 이어서 자가측정을 진행할 수 있습니다.
-         자가측정 순서는 PD → NPC → NPA → RT 입니다.
+        설문 응답은 정상적으로 제출되었습니다.
      </p>
+
      <p>
-         자가측정에는 카메라 권한이 필요할 수 있으며, 영상은 저장되지 않습니다.
-         원하지 않으면 설문만 제출하고 종료할 수 있습니다.
+        이어서 스마트폰 기반 자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)을 진행할 수 있습니다.
+        자가측정에는 전면 카메라 접근 권한이 필요할 수 있으며, <b>영상·사진·음성은 저장되지 않습니다.</b>
      </p>
-     <div class="row">
+
+     <p>
+        자가측정은 약 10–15분 정도 소요되며, 원하지 않을 경우 설문만 제출하고 종료할 수 있습니다.
+     </p>
+
+     <ul style="margin:10px 0 0 18px; color:var(--muted); line-height:1.6;">
+         <li>PD(동공간거리)</li>
+         <li>폭주근점(NPC)</li>
+         <li>조절근점(NPA)</li>
+         <li>반응속도(RT)</li>
+     </ul>
+
+     <p class="small" style="margin-top:12px;">
+         ※ 자가측정 결과는 연구용 참고자료로 활용되며, 임상적 진단이나 정밀 측정을 대체하지 않습니다.
+     </p>
+
+     <div class="row" style="margin-top:14px">
          <button class="btn ghost" onclick="go('screen_thankyou')">설문만 제출하고 종료</button>
-         <button class="btn primary" onclick="go('screen_pd')">자가측정 계속하기</button>
+         <button class="btn primary" onclick="startSelftest()">자가측정 계속하기</button>
      </div>
   </section>
 
@@ -2794,7 +2810,24 @@ function onConsentSign(){
 
 function onConsentNext(){
   if(!consentSigned) return;
-  go('screen_vfq');   // 무조건 2페이지(VFQ)로
+  go('screen_vfq');   
+}
+
+async function startSelftest(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'user' } },
+      audio: false
+    });
+
+    // 권한이 허용되면 일단 바로 스트림 종료
+    stream.getTracks().forEach(track => track.stop());
+
+    go('screen_pd');
+  }catch(err){
+    alert('카메라 권한이 허용되지 않아 설문만 제출된 상태로 종료됩니다.');
+    go('screen_thankyou');
+  }
 }
 
   // 보조: CSV 양식 다운로드 (빈 헤더)
