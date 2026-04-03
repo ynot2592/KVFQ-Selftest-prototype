@@ -70,15 +70,7 @@
     border-radius: 10px;
     background:#10172a;
     border:1px solid rgba(255,255,255,.08);
-  }
-
- 
-.question-block.example{
-  background: rgba(239,68,68,.10);
-  border: 1px solid rgba(239,68,68,.35);
-  margin: 10px -6px 10px;     /* 기존 question-block보다 작게 */
-  padding: 8px 12px 10px;     /* 내부도 살짝 압축 */
-}
+  } 
 
 .question-block.example .question-title{
   font-weight: 800;
@@ -851,6 +843,8 @@
 
 
 .question-block.example{
+  background: rgba(239,68,68,.10);
+  border: 1px solid rgba(239,68,68,.35);
   padding: 8px 12px 0px;
   margin: 8px 0 8px;
   margin-left: 0;
@@ -1000,13 +994,6 @@ html, body{
   border-top: 1px dashed rgba(255,255,255,.18);
   padding-top: 10px;
   margin-top: 6px;
-}
-
-#screen_consent #retest_section .retestLabel .small{
-  display:block;
-  font-size: 12px;
-  margin-top: 4px;
-  color: #8ea0c9;
 }
 
 #screen_consent #consentSignedAt_inline{
@@ -1291,13 +1278,10 @@ html, body{
 </head>
 <body>
 <div class="wrap">
-  <!-- 동의/안내 페이지 -->
+  
   <div class="card" id="screen_consent">
   <div class="consentHeader">
-    <h1>연구대상자 설명문 및 동의서</h1>
-    <p class="small" style="margin-top:4px;">
-        본 링크는 K-VFQ 설문과 스마트폰 기반 자가측정이 포함된 연구용 링크입니다.
-    </p>
+    <h1>연구대상자 설명문 및 동의서</h1>   
 
 <div class="consentMeta">
   <div class="metaBox">
@@ -1307,8 +1291,7 @@ html, body{
   </div>
 </div>
 
-
-    <!-- 요약(항상 표시) -->
+    
     <div class="consentSummary">
       <div class="summaryHead">
   <h2 class="consentSubTitle" style="margin:0;">
@@ -1321,27 +1304,40 @@ html, body{
       <p>
         본 연구는 디지털 기기 사용 환경에서의 시각 피로를 체계적으로 평가하기 위한
         한국어판 Visual Fatigue Questionnaire(K-VFQ)를 개발·검증하고,
-        스마트폰 기반 자가측정을 통해 주관적 시각 피로도와 시기능 지표 간의 관계를 탐색하고자 합니다.
+        스마트폰 기반 자가측정을 통해 주관적 시각 피로도와 시기능 지표 간의 관계를 탐색합니다.
       </p>
       <p>
-       본 연구에서 사용되는 설문지는 Visual Fatigue Questionnaire의 한국어판으로, 국내 임상에서 실제로 사용되는 표현과 
-       일반인의 이해도를 고려하여 ‘한국어판 안정피로 설문지(K-VFQ)’로 표기합니다.
+       국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여, 
+       본 연구에서는 이를 '안정피로'로 정의하고, <b>한국어판 안정피로 설문지(K-VFQ)</b>를 통해 평가합니다.
+      </p>
+      <p class="summary-note">
+          ※ 본 링크는 <b>K-VFQ 설문과 스마트폰 기반 자가측정</b>이 포함된 연구용 링크입니다.
       </p>
 
+
       <ul>
-        <li><b>진행 내용 :</b> K-VFQ 17문항(슬라이더) 설문 + 자가측정(PD, 폭주근점, 조절근점, 반응속도)(카메라 권한 허용 시)</li>
+        <li><b>진행 내용 :</b> K-VFQ 17문항 설문 + 자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)(카메라 권한 허용 시) (총 약 20-25분)</li>
         <li><b>중단 가능 :</b> 참여는 자발적이며 언제든 중단/철회할 수 있고 불이익이 없습니다.</li>
-        <li><b>카메라 :</b> 자가측정에는 전면 카메라 접근 권한이 필요하나, <b>영상·사진·음성은 저장되지 않습니다</b>.</li>
+        <li><b>카메라 :</b> 자가측정에는 전면 카메라 접근 권한이 필요할 수 있으며, <b>영상·사진·음성은 저장되지 않습니다/b>.</li>
         <li><b>저장 데이터 :</b> 참여자 분류를 위한 생년월일 및 성별, 설문 응답, 자가측정 결과 수치만 연구 목적으로 저장되며, 영상·사진·음성은 저장되지 않습니다.</li>
-        <li class="excludeItem"> <b>제외 대상 :</b><br> <b>의사로부터</b> 시기능 이상을 <b>진단받은 자</b>(사시·약시·조절이상·안구운동장애 등)<br><b>최근 3개월 이내</b> 안과 수술 또는 급성 안질환자,<br>임산부(생리적 변화로 인한 영향), 미성년자, 동의 능력이 제한된 취약대상자(시각·지적·정신적 장애 등). </li>
+        <li><b>비수집 정보 :</b> 영상·사진·음성 등 개인을 식별할 수 있는 정보는 수집·저장되지 않습니다.</li>
+  
+        <li class="excludeItem">
+            <b>제외 대상 :</b><br> 
+            <b>의사로부터</b> 시기능 이상을 <b>진단받은 자</b>(사시·약시·조절이상·안구운동장애 등)<br>
+            <b>최근 3개월 이내</b> 안과 수술 또는 급성 안질환자,<br>
+            임산부(생리적 변화로 인한 영향), 미성년자, 동의 능력이 제한된 취약대상자(시각·지적·정신적 장애 등).
+        </li>
       </ul>
 
       <div class="consentWarn">
-        ※ 전면 카메라 접근 권한 허용은<br> <b>거리 및 눈의 위치를 계산하기 위함</b>으로,<br> <b>영상·사진·음성은 절대 저장되지 않습니다.</b><br> 카메라 권한 거부 시 <b>설문만 진행</b>할 수 있습니다.
+        ※ 전면 카메라 접근 권한 허용은<br>
+       <b>거리 및 눈의 위치를 계산하기 위함</b>으로,<br>
+       <b>영상·사진·음성은 절대 저장되지 않습니다.</b><br> 
+       카메라 권한을 거부할 경우 <b>설문만 진행</b>할 수 있습니다.
       </div>      
     </div>
-
-    <!-- 전체 설명문(접기/펼치기) -->
+    
     <details class="detailsBox" id="details_full">
     <summary>
       <span class="sumTitle">2. 연구 설명문 전체 보기</span>
@@ -1367,7 +1363,7 @@ html, body{
         </p>
 
         <p class="purpose-note">     
-         국내 임상에서는 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여,
+         국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여,
          본 연구에서는 이를 ‘안정피로’로 정의하고, <b>한국어판 안정피로 설문지(K-VFQ)</b>를 통해 평가합니다.
         </p>
 
@@ -1387,11 +1383,11 @@ html, body{
 
         <h3>3. 연구 방법</h3>
         <p class="method-note">
-           <b>본 링크는 설문 및 자가측정 참여자용이며, 설문 완료 후 스마트폰 기반 자가측정 단계가 이어질 수 있습니다.</b>
+           <b>본 링크는 설문 및 자가측정 참여자용이며, 설문 완료 후 스마트폰 기반 자가측정 단계로 이어집니다.</b>
         </p>
         <ol>
           <li>K-VFQ 설문 : 링크를 통해 17문항 설문 응답</li>
-          <li>자가측정 : 설문 완료 후 자가측정(PD 측정, 폭주근점, 조절근점, 반응속도)을 순서대로 진행 (설문 포함 총 20-25분)</li>
+          <li>자가측정 : 설문 완료 후 자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)을 순서대로 진행 (설문 포함 총 20-25분)</li>
           <li>전면 카메라 권한 : 자가측정 시 필요할 수 있으며, 승인 거부 시 설문만 완료하고 종료할 수 있습니다.</li>
         </ol>
 
@@ -1406,8 +1402,8 @@ html, body{
 
         <h3>5. 위험요소</h3>
         <p>
-          온라인 설문 및 자가측정 과정에서 일시적인 눈의 피로감/건조감/흐림/초점 불편감이 있을 수 있으며,
-          불편 시 언제든 중단할 수 있습니다. 반응속도 측정 시 강한 광자극은 사용하지 않습니다.
+          온라인 설문 및 자가측정 과정에서 일시적인 눈의 피로감, 건조감, 흐림, 초점 불편감이 발생할 수 있으며,
+          불편 시 언제든 중단할 수 있습니다. 반응속도 측정 과정에서 강한 광자극은 사용하지 않습니다.
           <br><b>카메라 접근</b>은 <b>거리 및 위치 계산 목적</b>이며, <b>영상·이미지·음성은 저장되지 않습니다.</b>
         </p>
 
@@ -1415,31 +1411,30 @@ html, body{
         <p>
           <b>수집 항목 : 생년월일, 성별, 설문 및 자가측정 결과(필요시 대면 측정 결과).</b>
           <br>데이터는 접근 권한이 제한된 보안 환경에 저장되며 연구 종료 후 3년 보관 후 폐기됩니다.
-          <br>제3자 제공은 원칙적으로 없으나, IRB가 절차/신뢰성 검증을 위해 열람을 요청할 경우, 익명화 상태로 제공될 수 있습니다.
+          <br>제3자 제공은 원칙적으로 없으나, IRB가 절차 및 신뢰성 검증을 위해 열람을 요청할 경우, 익명화 상태로 제공될 수 있습니다.
+          <br>또한, 연구 참여 및 동의 시점과 설문 제출 시각은 시스템에 자동으로 기록됩니다.
         </p>
 
         <h3>7. 연구 문의</h3>
         <p>
           본 연구 설명문은 언제든지 다시 열람할 수 있으며, 궁금한 사항은 연구자에게 문의할 수 있습니다.
           <br>요청 시 연구대상자 설명문의 사본을 제공받을 수 있습니다.
-          <br><br>담당 연구원 : 최유나 (ynot2592@gmail.com)
+          <br><br>담당 연구원 : 최유나 (dbsk338@naver.com)
         </p>
       </div>
     </details>
 
-    <!-- =========================
-     ✅ 동의서 섹션 (고정 박스)
-     ========================= -->
+   
 <div class="sectionBox" id="consent_section">
 
-  <!-- 박스 제목 -->
+  
   <div class="sectionHead">
   <span>3. 연구대상자 동의서</span>
 </div>
 
   <div class="sectionBody">
 
-    <!-- (1) 동의서 문항(1~7) -->
+    
     <div class="detailsInner" id="consent_agree_text">
       <ol style="margin:6px 0 0 18px; padding:0;">
         <li>나는 본 연구의 설명문을 읽었으며, 연구의 목적과 절차에 대해 충분히 안내받았고, 궁금한 사항은 언제든지 연구자에게 문의할 수 있음을 이해하였습니다.</li>
@@ -1452,11 +1447,11 @@ html, body{
       </ol>
 
       <p class="small" style="margin-top:14px;">
-        * 문의 : 담당 연구원 최유나 (ynot2592@gmail.com)
+        * 문의 : 담당 연구원 최유나 (dbsk338@naver.com)
       </p>
     </div>
 
-    <!-- (2) 체크박스 3개 -->
+   
     <div class="consentChecks" id="consent_checks_v3" style="margin-top:12px;">
       <div class="checkRow finalAgree">
         <input id="c_main" type="checkbox" />
@@ -1496,7 +1491,7 @@ html, body{
 </div>
 
 
-    <!-- 기본 정보 -->
+    
     <div class="grid two consentFormGrid">
     <div class="field birthField">
         <span>생년월일<br><span class="small">(YYYY-MM-DD)</span></span>
@@ -1530,7 +1525,7 @@ html, body{
         <input id="pid_preview" readonly value="(동의 후 자동 생성됨)" />
       </div>
 
- <!-- ✅ 재검자(2회) 영역: 안내+입력 한 덩어리로 묶음 (절대 분리 금지) -->
+ 
 <div class="field retestSection" id="retest_section">
   <div class="retestTopNote">
   <div class="retestNoteText">
@@ -1541,7 +1536,7 @@ html, body{
 
     <div class="noteLine">
       <span class="noteBullet">※</span>
-      <span><b>항상 동일하게 입력 가능한</b> 영문과 숫자를 입력하시기 바랍니다.</span>
+      <span><b>항상 동일하게 입력 가능한</b> 영문 1개와 숫자 2개를 사용해 주세요.</span>
     </div>    
   </div>
 </div>
@@ -1556,14 +1551,27 @@ html, body{
 <div class="noteExample">
       아래 입력칸에 <b>항상 동일하게 입력 가능한</b><br>
       <b>영문 1개</b>와 <b>숫자 2개</b>를 입력해 주세요.<br>
-      <b>(예: 이름의 성 이니셜 + 휴대폰 번호 끝 2자리)</b>
-    </div>
+      <b class="exampleMain">(예: 본인이 정한 임의의 조합 K74, M12 등)</b><br>
+      <div class="exampleList small">
+      <div>· 좋아하는 알파벳 + 좋아하는 숫자 2자리</div>
+      <div>· 자주 사용하는 문자 + 임의의 숫자 조합</div>
+      <div>· 기억하기 쉬운 고정 조합 (예: 항상 쓰는 패턴)</div>
+</div>
+</div>
+
+<div class="small warn-note">
+  ※ 이름, 생년월일, 전화번호 등 개인을 식별할 수 있는 정보와 관련된 조합은 사용하지 마세요.
+</div>
+
+<div class="small warn-note">
+  ※ 재검자 코드는 반복 측정 시 동일 참여자를 구분하기 위한 용도로만 사용되며, 개인을 식별할 수 있는 정보와는 무관합니다.
+</div>
 
     <div class="retestInputs">
       <input id="retest_initial"
              type="text"
              maxlength="1"
-             placeholder="이니셜 (예: K)" />
+             placeholder="영문 1개 (예: K)" />
 
       <input id="retest_digits"
              type="text"
@@ -1575,9 +1583,9 @@ html, body{
 </div>
     </div>
 
-    <div id="consentHint" class="small" style="color: var(--text);"></div>    
+    <div id="consentHint" class="small" style="color: var(--text);"></div> 
 
-    <!-- 1줄: 동의 버튼 + 동의완료시각 -->
+   
 <div class="row consentRow1">
   <button class="btn primary" id="btn_consent_start" onclick="onConsentSign()" disabled>
     동의하고 시작하기 
@@ -1587,7 +1595,7 @@ html, body{
 <div id="consentLockGuide" class="small"></div>
 <span id="consentSignedAt_inline" class="small signedAt"></span>
 
-<!-- 2줄: 다음 버튼(아래로) -->
+
 <div class="row consentRow2">
   <button class="btn primary" id="btn_consent_next" onclick="onConsentNext()" disabled>
     다음
@@ -1643,11 +1651,14 @@ html, body{
     <div class="vfq-subtitle">시각 피로(안정피로) 설문</div>
 
     <p style="font-size:14.5px; margin-top:20px;">
-      본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판이며, 국내 임상에서 실제로 사용되는 표현과 참여자의 이해도를 고려하여 <b>‘한국어판 안정피로 설문지(K-VFQ)’</b> 로 표기합니다.
+      p style="font-size:14.5px; margin-top:20px;">
+      본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판입니다.<br>
+      국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여, 본 연구에서는 이를 '안정피로'로 정의하고, 
+      <b>한국어판 안정피로 설문지(K-VFQ)</b>로 표기합니다.
     </p>
 
     <p style="font-size:14.5px;">
-      아래 항목 각각에 대해 <b>현재(지금)</b> 느끼는 상태를 기준으로 응답해 주세요.
+      본 설문은 <b>현재 시점</b>의 주관적 시각 피로 상태를 평가하기 위한 것입니다.
     </p>
     
     <p style="font-size:14.5px;">
@@ -1655,10 +1666,10 @@ html, body{
      표시는 <b>왼쪽 끝</b>부터 <b>오른쪽 끝</b>까지 <b>어느 위치에나</b> 할 수 있습니다. (<b>굵은 선 포함</b>, 수정 가능)
     </p>
 
-<!-- 예시는 섹션 박스 밖에 둘 자리 -->
+
 <div id="vfqExampleMount"></div>
 
-<!-- 설문 섹션 박스 (동의서 3번처럼) -->
+
 <div class="sectionBox" id="vfq_section">
 
   <div class="sectionHead">
@@ -1666,9 +1677,9 @@ html, body{
   </div>
 
   <div class="sectionBody">
-    <!-- ‘현재(지금)~’ 안내는 "그냥 본문"으로 -->
+    
     <p style="margin:0;color:var(--muted);line-height:1.55;">
-      <b style="color:var(--text);">‘현재(지금)’</b> 다음 증상 중 느껴지는 것이 있습니까?
+      <b style="color:var(--text);">‘현재’</b> 다음 증상 중 느껴지는 것이 있습니까?
     </p>
 
     <p class="small" style="margin:0 0 8px; padding-left:4px; font-size:13px; color:var(--muted); line-height:1.2;">
@@ -1684,7 +1695,7 @@ html, body{
   <button class="btn ghost" id="btn_vfq_back" onclick="go('screen_consent')">뒤로</button>
 </div>
 
-    <!-- 지금은 테스트용으로 점수 요약을 보여주고, 나중엔 숨겨도 됨 -->
+    
     <div id="vfqResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
   </div>
 
@@ -1774,7 +1785,7 @@ html, body{
     <div class="row" style="margin-top:8px"><button class="btn" onclick="go('screen_thankyou')">다음(종료)</button><button class="btn ghost" onclick="go('screen_home')">처음으로</button></div>
   </div>
 
-<!-- 설문 완료 감사 페이지 -->
+
 <div class="card hidden" id="screen_thankyou">
   <h2 style="text-align:center; margin-top:20px; margin-bottom:18px;">참여해 주셔서 감사합니다</h2>
 
@@ -1795,12 +1806,12 @@ html, body{
 
       <p class="thanks-note" style="margin-top:18px;">
           <span class="mark">※</span>
-          <span class="txt"><b>2회 측정 대상자</b>(신뢰도 검증 참여자 등)는 <b>위 참여자ID를 캡처하여 보관</b>하시고, <b>재참여 시 동일한 참여자ID로 진행</b>해 주세요.</span>
+          <span class="txt"><b>2회 측정 대상자</b>(신뢰도 검증 참여자 등)는 <b>위 참여자ID를 캡처하여 보관</b>해 주시고, <b>재참여 시 동일한 참여자ID로 진행</b>해 주세요.</span>
       </p>
 
       <p class="thanks-note" style="margin-top:8px;">
           <span class="mark">※</span>
-          <span class="txt">화면을 닫기 전, 위 참여자ID와 제출 시각이 정상적으로 표시되는지 확인해 주세요.</span>
+          <span class="txt">화면을 닫기 전, 참여자 ID와 제출 시각이 정상적으로 표시되는지 확인하신 후 화면을 종료해 주세요.</span>
       </p>
     </div>
   </div>
@@ -1810,9 +1821,9 @@ html, body{
   </div>
 </div>  
 
+
 <script>
-  // ---------- 전역 상태 ----------
-// 인앱 브라우저/플랫폼 감지
+
 const UA = navigator.userAgent || '';
 const isKakao = /KAKAOTALK/i.test(UA);
 const isLine  = /Line\//i.test(UA);
@@ -2196,13 +2207,6 @@ try{
     resultDiv.textContent = '';
     return;    
   }
-
-  // Thank you 화면에 표시 값 채우기
-  const tp = gid('thanks_pid'); 
-  if(tp) tp.textContent = S.pid || '-';
-
-  const tt = gid('thanks_time');
-  if(tt) tt.textContent = toKSTString(now2);
 
   // ✅ 성공했을 때 다음 페이지
   go('screen_home');
