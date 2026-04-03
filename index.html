@@ -2865,10 +2865,21 @@ async function startSelftest(){
     stream.getTracks().forEach(track => track.stop());
 
     go('screen_pd');
-  }catch(err){
-    alert('카메라 권한이 허용되지 않아,\n설문만 제출된 상태로 종료됩니다.');
-    openThankyou();
+  }const retry = confirm(
+`카메라 권한이 허용되지 않았습니다.
+
+자가측정에 참여하시려면 카메라 권한이 필요합니다.
+
+다시 시도하시겠습니까?
+(취소 시 설문만 제출되고 종료됩니다)`
+  );
+
+  if(retry){
+    return; // 다시 시도
+  }else{
+    openThankyou(); // 종료
   }
+}
 }
 
   // 보조: CSV 양식 다운로드 (빈 헤더)
