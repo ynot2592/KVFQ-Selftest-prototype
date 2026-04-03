@@ -1612,16 +1612,20 @@ html, body{
   <section id="screen_home" class="card hidden">
      <h1>자가측정 안내</h1>
      <p>
-        설문 응답은 정상적으로 제출되었습니다.
+        <b>설문 응답은 정상적으로 제출되었습니다.</b>
      </p>
 
      <p>
         이어서 스마트폰 기반 자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)을 진행할 수 있습니다.
+     </p>
+
+     <p>
         자가측정에는 전면 카메라 접근 권한이 필요할 수 있으며, <b>영상·사진·음성은 저장되지 않습니다.</b>
      </p>
 
      <p>
-        자가측정은 약 10–15분 정도 소요되며, 원하지 않을 경우 설문만 제출하고 종료할 수 있습니다.
+        자가측정은 약 10–15분 정도 소요되며,<br>
+        원하지 않을 경우 설문만 제출하고 종료할 수 있습니다.
      </p>
 
      <ul style="margin:10px 0 0 18px; color:var(--muted); line-height:1.6;">
@@ -1636,7 +1640,7 @@ html, body{
      </p>
 
      <div class="row" style="margin-top:14px">
-         <button class="btn ghost" onclick="go('screen_thankyou')">설문만 제출하고 종료</button>
+         <button class="btn ghost" onclick="openThankyou()">설문만 제출하고 종료</button>
          <button class="btn primary" onclick="startSelftest()">자가측정 계속하기</button>
      </div>
   </section>
@@ -1668,9 +1672,11 @@ html, body{
     <div class="vfq-subtitle">시각 피로(안정피로) 설문</div>
 
     <p style="font-size:14.5px; margin-top:20px;">
-      본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판입니다.<br>
-      국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여, 본 연구에서는 이를 '안정피로'로 정의하고, 
-      <b>한국어판 안정피로 설문지(K-VFQ)</b>로 표기합니다.
+      본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판입니다.
+
+    <p style="font-size:14.5px;">
+      국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여,<br>
+      본 연구에서는 이를 '안정피로'로 정의하고, <b>한국어판 안정피로 설문지(K-VFQ)</b>로 표기합니다.
     </p>
 
     <p style="font-size:14.5px;">
@@ -1832,6 +1838,11 @@ html, body{
     </div>
   </div>
 
+  <div class="kpi">
+      <div class="v">참여자 ID: <b id="thanks_pid">-</b></div>
+      <div class="v">제출 시각(KST): <b id="thanks_time">-</b></div>
+  </div>
+
   <div class="row" style="margin-top:12px; justify-content:center;">
     <button class="btn ghost" onclick="resetAll()">처음으로</button>
   </div>
@@ -1873,7 +1884,7 @@ async function sendToSheet(payload){
     return false;
   }
 }
-  const S = { pid: "", birth: "", sex: "", retest2: "", vfq: {}, vfqSum: 0, consentAtISO: "", consentAtKST: "", pdmm: null, focal_px: null, pixPD: null, distNow: null, npc: { break: null, recovery: null }, npa: null, pvt: { dur:120, start:0, elapsed:0, timer:null, phase:'idle', waitTO:null, goAt:0, rt:[], lapse:0, last:null }
+  const S = { pid: "", birth: "", sex: "", retest2: "", vfq: {}, vfqSum: 0, consentAtISO: "", consentAtKST: "", submitAtISO: "", submitAtKST: "", pdmm: null, focal_px: null, pixPD: null, distNow: null, npc: { break: null, recovery: null }, npa: null, pvt: { dur:120, start:0, elapsed:0, timer:null, phase:'idle', waitTO:null, goAt:0, rt:[], lapse:0, last:null }
 };
 
 function toKSTString(d = new Date()){
@@ -2193,6 +2204,10 @@ if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.conse
 }
 
 const now2 = new Date();
+
+// ✅ 여기 추가 (이 2줄)
+S.submitAtISO = now2.toISOString();
+S.submitAtKST = toKSTString(now2);
 
 try{
   const ok = await sendToSheet({
@@ -2813,6 +2828,16 @@ function onConsentNext(){
   go('screen_vfq');   
 }
 
+function openThankyou(){
+  const tp = document.getElementById('thanks_pid');
+  if(tp) tp.textContent = S.pid || '-';
+
+  const tt = document.getElementById('thanks_time');
+  if(tt) tt.textContent = S.submitAtKST || '-';
+
+  go('screen_thankyou');
+}
+
 async function startSelftest(){
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -2826,7 +2851,7 @@ async function startSelftest(){
     go('screen_pd');
   }catch(err){
     alert('카메라 권한이 허용되지 않아 설문만 제출된 상태로 종료됩니다.');
-    go('screen_thankyou');
+    openThankyou();
   }
 }
 
