@@ -1274,6 +1274,11 @@ html, body{
   margin-left:10px;   
 }
 
+.selftest-emphasis{
+  color: #ffffff;
+  font-weight: 700;
+}
+
 </style>
 </head>
 <body>
@@ -1620,7 +1625,9 @@ html, body{
      </p>
 
      <p>
-        자가측정에는 전면 카메라 접근 권한이 필요할 수 있으며, <b>영상·사진·음성은 저장되지 않습니다.</b>
+        자가측정에는
+        <span class="selftest-emphasis">전면 카메라 접근 권한</span>이 필요할 수 있으며 
+        <span class="selftest-emphasis">영상·사진·음성은 저장되지 않습니다</span>.
      </p>
 
      <p>
@@ -1837,11 +1844,7 @@ html, body{
       </p>
     </div>
   </div>
-
-  <div class="kpi">
-      <div class="v">참여자 ID: <b id="thanks_pid">-</b></div>
-      <div class="v">제출 시각(KST): <b id="thanks_time">-</b></div>
-  </div>
+  
 
   <div class="row" style="margin-top:12px; justify-content:center;">
     <button class="btn ghost" onclick="resetAll()">처음으로</button>
@@ -2839,6 +2842,18 @@ function openThankyou(){
 }
 
 async function startSelftest(){
+
+  // ✅ 추가 (여기!)
+  const ok = confirm(
+    '다음 단계에서 브라우저의 카메라 권한 확인 창이 표시될 수 있습니다.\n' +
+    '카메라는 거리 및 눈의 위치 계산에만 사용되며, 영상·사진·음성은 저장되지 않습니다.\n\n' +
+    '계속하시겠습니까?'
+  );
+
+  if(!ok){
+    return; // 취소하면 아무것도 안 하고 멈춤
+  }
+
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'user' } },
@@ -2850,7 +2865,7 @@ async function startSelftest(){
 
     go('screen_pd');
   }catch(err){
-    alert('카메라 권한이 허용되지 않아 설문만 제출된 상태로 종료됩니다.');
+    alert('카메라 권한이 허용되지 않아,<br> 설문만 제출된 상태로 종료됩니다.');
     openThankyou();
   }
 }
