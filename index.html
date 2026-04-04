@@ -1279,6 +1279,12 @@ html, body{
   font-weight: 700;
 }
 
+gid('btn_pd_start')?.addEventListener('click', startPDMeasure);
+gid('btn_pd_capture')?.addEventListener('click', capturePDTrial);
+gid('btn_pd_reset')?.addEventListener('click', resetPD);
+gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
+gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
+
 </style>
 </head>
 <body>
@@ -1747,15 +1753,99 @@ html, body{
   screen_calib 삭제 보관용 끝 -->
 
   <section id="screen_pd" class="card hidden">
-      <h1>PD(동공간거리) 자가측정</h1>
-      <p>여기는 PD 측정 페이지입니다.</p>
-      <div class="row">
-          <button class="btn ghost" onclick="go('screen_home')">이전</button>
-          <button class="btn primary" onclick="go('screen_npc')">다음</button>
-      </div>
-  </section>
+  <h1>동공간거리(PD) 자가측정</h1>
 
-  <!-- NPC 측정 -->
+  <p class="summary-note">
+  이 단계에서는 <b>양안 동공 중심 간 거리(PD)</b>를 측정합니다.<br><br>
+  스마트폰을 <b>팔을 가볍게 뻗은 정도의 거리</b>로 들고,<br>
+  얼굴이 화면 안에 자연스럽게 들어오도록 맞춰 주세요.<br>
+  얼굴을 정면으로 하고, <b>카메라 가까운 쪽을 바라봐 주세요.</b><br>
+  이마와 턱이 화면 밖으로 잘리지 않도록 해 주세요.
+</p>
+
+  <div class="sectionBox">
+    <div class="sectionHead">
+      <span>선택 입력</span>
+    </div>
+    <div class="sectionBody">
+      <p class="summary-note">
+        <b>본인의 PD를 알고 있는 경우에만 입력해 주세요.</b><br>
+        입력하신 값은 참고용으로 기록되며, <b>입력하지 않으셔도 자동 측정으로 진행</b>하실 수 있습니다.
+      </p>
+
+      <div class="field" style="margin-top:10px;">
+        <span>PD (알고 있는 경우에만 입력)</span>
+        <div class="row" style="flex:1; gap:8px;">
+          <input id="pd_known_input" type="number" min="45" max="75" step="1" placeholder="예: 62">
+          <span style="align-self:center;">mm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sectionBox">
+    <div class="sectionHead">
+      <span>카메라 안내</span>
+    </div>
+    <div class="sectionBody">
+      <p class="summary-note">
+        전면 카메라를 사용하여 얼굴 위치와 눈의 간격을 확인합니다.<br>
+        <span class="selftest-emphasis">영상·사진·음성은 수집 및 저장되지 않습니다.</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="sectionBox">
+    <div class="sectionHead">
+      <span>측정 화면</span>
+    </div>
+    <div class="sectionBody">
+      <div class="videoWrap">
+        <video id="pd_video" playsinline autoplay muted></video>
+        <canvas id="pd_canvas"></canvas>
+      </div>
+
+      <p id="pd_status_text" class="method-note" style="margin-top:10px;">
+          얼굴을 화면 중앙에 맞추고, 스마트폰을 너무 가깝거나 멀지 않게 들어 주세요.
+      </p>
+
+      <div class="kpi" style="margin-top:8px">
+        <div class="v">현재 측정: <b id="pd_trial_label">-</b></div>
+        <div class="v">픽셀 거리: <b id="pd_pix_value">-</b></div>
+        <div class="v">자동 추정 PD: <b id="pd_auto_live_value">-</b> mm</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sectionBox">
+    <div class="sectionHead">
+      <span>측정 결과</span>
+    </div>
+    <div class="sectionBody">
+      <div class="kpi">
+        <div class="v">입력 PD: <b id="pd_known_value">-</b></div>
+        <div class="v">1차 자동 PD: <b id="pd_auto_1">-</b></div>
+        <div class="v">2차 자동 PD: <b id="pd_auto_2">-</b></div>
+        <div class="v">3차 자동 PD: <b id="pd_auto_3">-</b></div>
+        <div class="v">최종 자동 PD: <b id="pd_auto_final">-</b></div>
+      </div>
+
+      <p id="pd_retry_note" class="warn-note" style="display:none; color:#fca5a5; margin-top:10px;">
+        1차와 2차 측정값 차이가 커서 3차 측정이 필요합니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn ghost" onclick="go('screen_home')">이전</button>
+    <button class="btn" id="btn_pd_start" type="button">측정 시작</button>
+    <button class="btn" id="btn_pd_capture" type="button" disabled>현재 값 기록</button>
+    <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
+    <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
+  </div>
+</section>
+
+!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
     <h2>NPC 측정(3회)</h2>
     <p>중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하며 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요. <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 원형 버튼을 탭하면 그 순간 거리(㎝)가 기록됩니다. 정확도를 위해 <b>총 3번</b>의 측정을 하세요. 너무 빠르게 이동하면 경고가 뜹니다.</p>
@@ -1887,7 +1977,50 @@ async function sendToSheet(payload){
     return false;
   }
 }
-  const S = { pid: "", birth: "", sex: "", retest2: "", vfq: {}, vfqSum: 0, consentAtISO: "", consentAtKST: "", submitAtISO: "", submitAtKST: "", pdmm: null, focal_px: null, pixPD: null, distNow: null, npc: { break: null, recovery: null }, npa: null, pvt: { dur:120, start:0, elapsed:0, timer:null, phase:'idle', waitTO:null, goAt:0, rt:[], lapse:0, last:null }
+  const S = {
+  pid: "",
+  birth: "",
+  sex: "",
+  retest2: "",
+  vfq: {},
+  vfqSum: 0,
+  consentAtISO: "",
+  consentAtKST: "",
+  submitAtISO: "",
+  submitAtKST: "",
+
+  pd_input_mm: null,
+  pd_input_present: false,
+  pd_auto_trials: [null, null, null],
+  pd_auto_px_trials: [null, null, null],
+  pd_trial_count: 0,
+  pd_auto_final_mm: null,
+  pd_measure_needed: 2,
+  pd_completed: false,
+  pd_quality_ok: false,
+  pd_quality_reason: "",
+  pd_stable_frames: 0,
+  pd_last_center_ok: false,
+
+  focal_px: null,
+  pixPD: null,
+  distNow: null,
+
+  npc: [null, null, null],
+  npa: null,
+
+  pvt: {
+    dur:120,
+    start:0,
+    elapsed:0,
+    timer:null,
+    phase:'idle',
+    waitTO:null,
+    goAt:0,
+    rt:[],
+    lapse:0,
+    last:null
+  }
 };
 
 function toKSTString(d = new Date()){
@@ -2336,67 +2469,344 @@ try{
   }
 }
 
-  // ---------- 카메라/FaceMesh 셋업 ----------
-  const video = gid('v');
-  const canvas = gid('c');
-  const ctx = canvas ? canvas.getContext('2d') : null; let camera,fm
-  let lastPixPD=0, lastConf=0
-  async function setupCam(){
-    if (!video || !canvas || !ctx) return;
-    return new Promise((resolve)=>{
-      fm = new FaceMesh({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`})
-      fm.setOptions({maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6, minTrackingConfidence:0.6})
-      fm.onResults(onResults)
-      camera = new Camera(video,{onFrame:async()=>{await fm.send({image:video})}, width:640, height:480})
-      camera.start().then(resolve)
-    })
-  }
-  function onResults(res){
-    if (!video || !canvas || !ctx) return;
-    canvas.width=video.videoWidth; canvas.height=video.videoHeight; ctx.save(); ctx.clearRect(0,0,canvas.width,canvas.height)
-    if(res.multiFaceLandmarks && res.multiFaceLandmarks.length>0){
-      const lm=res.multiFaceLandmarks[0]
-      const L=[33,133], R=[362,263]
-      const lpt=avgPts(L.map(i=>lm[i])), rpt=avgPts(R.map(i=>lm[i]))
-      const x1=lpt.x*canvas.width, y1=lpt.y*canvas.height, x2=rpt.x*canvas.width, y2=rpt.y*canvas.height
-      const d=Math.hypot(x2-x1,y2-y1); lastPixPD=d; lastConf = 0.8
-      ctx.strokeStyle='rgba(0,255,255,.8)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke()
-    }
-    ctx.restore()
-    S.pixPD=lastPixPD
-    gid('pixPD').textContent= lastPixPD? lastPixPD.toFixed(1):'-'
-    gid('pixPD2').textContent= lastPixPD? lastPixPD.toFixed(1):'-'
-    gid('conf').textContent= lastConf.toFixed(2)
-    if(S.focal_px && S.pdmm && lastPixPD){ const Dmm=(S.focal_px*S.pdmm)/lastPixPD; S.distNow=Dmm/10; gid('distNow').textContent=S.distNow.toFixed(1) }
-    // 속도 경고
-    const now = performance.now(); S._lastT = S._lastT||now; S._lastD = S._lastD||S.distNow
-    const dt = (now - S._lastT)/1000; if(dt>0 && isFinite(S.distNow) && isFinite(S._lastD)){
-      const v = Math.abs(S.distNow - S._lastD)/dt; gid('speedNow').textContent = v.toFixed(1)
-      gid('speedWarn').style.display = (v > NPC_SPEED_MAX) ? 'block' : 'none'
-    }
-    S._lastT = now; S._lastD = S.distNow
-  }
-  function avgPts(arr){ const x=arr.reduce((a,p)=>a+p.x,0)/arr.length; const y=arr.reduce((a,p)=>a+p.y,0)/arr.length; return {x,y} }
+  // ---------- PD 카메라/FaceMesh ----------
+const pdVideo = gid('pd_video');
+const pdCanvas = gid('pd_canvas');
+const pdCtx = pdCanvas ? pdCanvas.getContext('2d') : null;
 
-  async function doCalib(){
-    if(!video.srcObject){
-      try{ const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'}},audio:false}); video.srcObject=s; await video.play() }catch(e){ alert('카메라 접근 실패: '+(e.message||e)); return }
-    }
-    if(!fm){ await setupCam() }
-    S.pid=(gid('pid').value||'NA').trim(); S.pdmm=Number(gid('pdmm').value||64); gid('labPD').textContent=S.pdmm
-    const D0mm=400
-    if(S.pixPD>0 && S.pdmm>0){ S.focal_px=(S.pixPD*D0mm)/S.pdmm; gid('focal').textContent=S.focal_px.toFixed(1) }
-    else { alert('얼굴/눈 인식이 불안정하거나 PD가 유효하지 않습니다. 조명/정면 자세를 점검하세요.') }
+let pdCamera = null;
+let pdFaceMesh = null;
+let pdLastPix = 0;
+let pdLastAutoMm = null;
+let pdIsRunning = false;
+
+function parseKnownPdInput(){
+  const el = gid('pd_known_input');
+  if(!el) return null;
+
+  const raw = (el.value || '').trim();
+  if(!raw) return null;
+
+  const n = Number(raw);
+  if(!Number.isFinite(n)) return null;
+  if(n < 45 || n > 75) return null;
+
+  return Math.round(n);
+}
+
+function updateKnownPdState(){
+  const v = parseKnownPdInput();
+  S.pd_input_mm = v;
+  S.pd_input_present = v !== null;
+  gid('pd_known_value').textContent = v !== null ? `${v} mm` : '-';
+}
+
+function getMedian(arr){
+  const vals = arr.filter(v => Number.isFinite(v)).slice().sort((a,b)=>a-b);
+  if(!vals.length) return null;
+  const mid = Math.floor(vals.length / 2);
+  if(vals.length % 2 === 1) return vals[mid];
+  return Number(((vals[mid - 1] + vals[mid]) / 2).toFixed(1));
+}
+
+function updatePdResultUI(){
+  gid('pd_auto_1').textContent = Number.isFinite(S.pd_auto_trials[0]) ? `${S.pd_auto_trials[0].toFixed(1)} mm` : '-';
+  gid('pd_auto_2').textContent = Number.isFinite(S.pd_auto_trials[1]) ? `${S.pd_auto_trials[1].toFixed(1)} mm` : '-';
+  gid('pd_auto_3').textContent = Number.isFinite(S.pd_auto_trials[2]) ? `${S.pd_auto_trials[2].toFixed(1)} mm` : '-';
+  gid('pd_auto_final').textContent = Number.isFinite(S.pd_auto_final_mm) ? `${S.pd_auto_final_mm.toFixed(1)} mm` : '-';
+
+  gid('btn_pd_next').disabled = !S.pd_completed;
+}
+
+async function setupPDCam(){
+  if(!pdVideo || !pdCanvas || !pdCtx) return;
+
+  if(!pdFaceMesh){
+    pdFaceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    pdFaceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6
+    });
+
+    pdFaceMesh.onResults(onPDResults);
   }
 
-  // ---------- NPC 기록 ----------
-  function markDiplopia(n){
-    if(!(S.focal_px>0 && S.pdmm>0 && S.pixPD>0)){ alert('교정 후 정면 시야에서 다시 시도하세요.'); return }
-    const Dcm=S.distNow; if(!isFinite(Dcm)){ alert('거리 추정 불가'); return }
-    S.npc[n-1]=Number(Dcm.toFixed(1)); gid('npc'+n).textContent=S.npc[n-1].toFixed(1)
-    const vals=S.npc.filter(v=>v!=null); if(vals.length){ const m=vals.reduce((a,b)=>a+b,0)/vals.length; gid('npcAvg').textContent=m.toFixed(1) }
+  if(!pdCamera){
+    pdCamera = new Camera(pdVideo, {
+      onFrame: async () => {
+        if(pdFaceMesh && pdVideo) {
+          await pdFaceMesh.send({ image: pdVideo });
+        }
+      },
+      width: 640,
+      height: 480
+    });
   }
-  function clearNPC(){ S.npc=[null,null,null]; ['npc1','npc2','npc3','npcAvg'].forEach(id=>gid(id).textContent='-') }
+
+  await pdCamera.start();
+}
+
+function onPDResults(res){
+  if(!pdVideo || !pdCanvas || !pdCtx) return;
+
+  pdCanvas.width = pdVideo.videoWidth || 640;
+  pdCanvas.height = pdVideo.videoHeight || 480;
+
+  pdCtx.clearRect(0, 0, pdCanvas.width, pdCanvas.height);
+
+  if(res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0){
+    const lm = res.multiFaceLandmarks[0];
+
+    const L = [33,133];
+    const R = [362,263];
+
+    const lpt = avgPts(L.map(i => lm[i]));
+    const rpt = avgPts(R.map(i => lm[i]));
+
+    const x1 = lpt.x * pdCanvas.width;
+    const y1 = lpt.y * pdCanvas.height;
+    const x2 = rpt.x * pdCanvas.width;
+    const y2 = rpt.y * pdCanvas.height;
+
+    pdLastPix = Math.hypot(x2 - x1, y2 - y1);
+
+    pdCtx.strokeStyle = 'rgba(0,255,255,.8)';
+    pdCtx.lineWidth = 2;
+    pdCtx.beginPath();
+    pdCtx.moveTo(x1, y1);
+    pdCtx.lineTo(x2, y2);
+    pdCtx.stroke();
+
+    pdCtx.fillStyle = '#22d3ee';
+    pdCtx.beginPath();
+    pdCtx.arc(x1, y1, 4, 0, Math.PI * 2);
+    pdCtx.fill();
+
+    pdCtx.beginPath();
+    pdCtx.arc(x2, y2, 4, 0, Math.PI * 2);
+    pdCtx.fill();
+
+    const quality = assessPDQuality(
+       lm,
+       pdCanvas.width,
+       pdCanvas.height,
+       { x:x1, y:y1 },
+       { x:x2, y:y2 },
+       pdLastPix
+    );
+
+    S.pd_quality_ok = quality.ok;
+    S.pd_quality_reason = quality.reason;
+
+    gid('pd_status_text').textContent = quality.reason;
+    gid('pd_pix_value').textContent = pdLastPix.toFixed(1);
+
+    // 임시 자동 PD 추정값
+    // 현재는 1 px = 0.35 mm 가정의 임시값
+    // 나중에 실제 환산식 확정 시 이 부분만 바꾸면 됨
+    pdLastAutoMm = Number((pdLastPix * 0.35).toFixed(1));
+    gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
+
+    if(pdIsRunning){
+    gid('btn_pd_capture').disabled = !quality.ok;
+}
+    }
+  }else{
+    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+    gid('pd_pix_value').textContent = '-';
+    gid('pd_auto_live_value').textContent = '-';
+    gid('btn_pd_capture').disabled = true;
+    pdLastPix = 0;
+    pdLastAutoMm = null;
+    S.pd_quality_ok = false;
+    S.pd_quality_reason = "얼굴을 화면 중앙에 맞춰 주세요.";
+  }
+}
+
+function avgPts(arr){
+  const x = arr.reduce((a,p)=>a+p.x,0)/arr.length;
+  const y = arr.reduce((a,p)=>a+p.y,0)/arr.length;
+  return {x, y};
+}
+
+function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
+  const eyeMidX = (leftPt.x + rightPt.x) / 2;
+  const eyeMidY = (leftPt.y + rightPt.y) / 2;
+
+  const centerX = canvasW / 2;
+  const centerY = canvasH / 2;
+
+  const dx = Math.abs(eyeMidX - centerX);
+  const dy = Math.abs(eyeMidY - centerY);
+
+  const eyeTilt = Math.abs(leftPt.y - rightPt.y);
+
+  // 너무 멀거나 너무 가까운 경우를 대략 막는 기준
+  if(pixDist < 80){
+    return { ok:false, reason:'스마트폰을 조금 더 가까이 해 주세요.' };
+  }
+
+  if(pixDist > 220){
+    return { ok:false, reason:'스마트폰을 조금 더 멀리 해 주세요.' };
+  }
+
+  // 얼굴이 중앙에서 너무 벗어난 경우
+  if(dx > canvasW * 0.18 || dy > canvasH * 0.18){
+    return { ok:false, reason:'얼굴을 화면 중앙에 맞춰 주세요.' };
+  }
+
+  // 고개가 기울어진 경우
+  if(eyeTilt > canvasH * 0.03){
+    return { ok:false, reason:'고개를 기울이지 말고 정면을 바라봐 주세요.' };
+  }
+
+  return { ok:true, reason:'측정 가능한 자세입니다. 현재 값 기록 버튼을 눌러 주세요.' };
+}
+
+async function startPDMeasure(){
+  updateKnownPdState();
+
+  gid('pd_retry_note').style.display = 'none';
+  gid('pd_status_text').textContent = '카메라를 준비하고 있습니다...';
+  gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
+
+  try{
+    await setupPDCam();
+    pdIsRunning = true;
+    gid('btn_pd_capture').disabled = true;
+    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+  }catch(e){
+    alert('PD 측정을 시작할 수 없습니다: ' + (e.message || e));
+  }
+}
+
+function capturePDTrial(){
+  if(!Number.isFinite(pdLastAutoMm) || !Number.isFinite(pdLastPix)){
+    alert('아직 얼굴이 안정적으로 인식되지 않았습니다.');
+    return;
+  }
+
+  if(!S.pd_quality_ok){
+  alert(S.pd_quality_reason || '측정 자세가 아직 안정적이지 않습니다.');
+  return;
+  }
+
+  const idx = S.pd_trial_count;
+  if(idx > 2) return;
+
+  S.pd_auto_trials[idx] = pdLastAutoMm;
+  S.pd_auto_px_trials[idx] = Number(pdLastPix.toFixed(1));
+  S.pd_trial_count += 1;
+
+  updatePdResultUI();
+
+  if(S.pd_trial_count === 2){
+    const a = S.pd_auto_trials[0];
+    const b = S.pd_auto_trials[1];
+
+    if(Math.abs(a - b) > 2){
+      S.pd_measure_needed = 3;
+      gid('pd_retry_note').style.display = 'block';
+      gid('pd_status_text').textContent = '측정값 차이가 커서 3차 측정이 필요합니다.';
+      gid('pd_trial_label').textContent = '3차';
+      return;
+    }else{
+      finalizePD();
+      return;
+    }
+  }
+
+  if(S.pd_trial_count === 3){
+    finalizePD();
+    return;
+  }
+
+  gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
+  gid('pd_status_text').textContent = '다음 측정을 위해 다시 얼굴을 정면으로 맞춰 주세요.';
+}
+
+function finalizePD(){
+  S.pd_auto_final_mm = getMedian(S.pd_auto_trials);
+
+  if(!Number.isFinite(S.pd_auto_final_mm)){
+    alert('최종 PD 값을 만들 수 없습니다.');
+    return;
+  }
+
+  S.pdmm = S.pd_auto_final_mm;
+  S.pdCompleted = true;
+  S.pd_completed = true;
+
+  gid('labPD').textContent = S.pd_auto_final_mm.toFixed(1);
+  gid('pd_status_text').textContent = 'PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.';
+
+  updatePdResultUI();
+
+  // 여기서는 임시로 focal_px를 단순 저장만 해 둠
+  // 실제 환산 로직 확정 후 이 부분 다시 정교화
+  const validPix = S.pd_auto_px_trials.filter(v => Number.isFinite(v));
+  if(validPix.length){
+    S.pixPD = validPix[validPix.length - 1];
+  }
+}
+
+function resetPD(){
+  S.pd_auto_trials = [null, null, null];
+  S.pd_auto_px_trials = [null, null, null];
+  S.pd_trial_count = 0;
+  S.pd_auto_final_mm = null;
+  S.pd_measure_needed = 2;
+  S.pd_completed = false;
+  S.pdmm = null;
+
+  pdLastPix = 0;
+  pdLastAutoMm = null;
+  pdIsRunning = false;
+
+  gid('pd_trial_label').textContent = '-';
+  gid('pd_pix_value').textContent = '-';
+  gid('pd_auto_live_value').textContent = '-';
+  gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+  gid('pd_retry_note').style.display = 'none';
+  gid('btn_pd_capture').disabled = true;
+  gid('btn_pd_next').disabled = true;
+
+  updateKnownPdState();
+  updatePdResultUI();
+}
+
+// ---------- NPC 기록 ----------
+function markDiplopia(n){
+  if(!(S.pd_auto_final_mm > 0)){
+    alert('먼저 PD 측정을 완료해 주세요.');
+    return;
+  }
+
+  const Dcm = S.distNow;
+  if(!isFinite(Dcm)){
+    alert('거리 추정 불가');
+    return;
+  }
+
+  S.npc[n-1] = Number(Dcm.toFixed(1));
+  gid('npc'+n).textContent = S.npc[n-1].toFixed(1);
+
+  const vals = S.npc.filter(v => v != null);
+  if(vals.length){
+    const m = vals.reduce((a,b)=>a+b,0)/vals.length;
+    gid('npcAvg').textContent = m.toFixed(1);
+  }
+}
+
+function clearNPC(){
+  S.npc = [null, null, null];
+  ['npc1','npc2','npc3','npcAvg'].forEach(id => gid(id).textContent='-');
+}
 
   // ---------- PVT ----------
   const pvtBox = gid('pvtBox');
@@ -2978,6 +3388,8 @@ if(sb){
   sb.disabled = false;
   sb.textContent = '설문 완료'; // 또는 '제출'
 }
+
+resetPD();
 }
 
 </script>
