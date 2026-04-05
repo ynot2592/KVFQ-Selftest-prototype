@@ -2893,14 +2893,7 @@ function recordPDTrial(){
     finalizePD();
     return;
   }
-}
-
-  gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
-  gid('pd_status_text').textContent = '다음 측정을 위해 자세를 다시 맞춰 주세요.';
-  S.pd_hold_frames = 0;
-  S.pd_last_hold_value = null;
-  S.pd_waiting_next_trial = false;
-}
+}  
 
 function finalizePD(){
   S.pd_auto_final_mm = getMedian(S.pd_auto_trials);
