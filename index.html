@@ -63,6 +63,37 @@
   .vfq-item h4{margin:0 0 6px}
   .btn.circle{border-radius:9999px;height:64px;width:64px;display:flex;align-items:center;justify-content:center}
 
+  .pdOverlay{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  pointer-events:none;
+}
+
+.pdOverlayBadge{
+  align-self:flex-start;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(15,23,42,.78);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+}
+
+.pdOverlayText{
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(15,23,42,.78);
+  border:1px solid rgba(79,209,255,.25);
+  color:#e6ebff;
+  font-size:13px;
+  line-height:1.35;
+}
   
   .question-block{
     margin: 18px 0px 12px;   
@@ -1795,9 +1826,14 @@ html, body{
     </div>
     <div class="sectionBody">
       <div class="videoWrap">
-        <video id="pd_video" playsinline autoplay muted></video>
-        <canvas id="pd_canvas"></canvas>
-      </div>
+  <video id="pd_video" playsinline autoplay muted></video>
+  <canvas id="pd_canvas"></canvas>
+
+  <div class="pdOverlay">
+    <div id="pd_overlay_trial" class="pdOverlayBadge">준비</div>
+    <div id="pd_overlay_status" class="pdOverlayText">얼굴을 화면 중앙에 맞춰 주세요.</div>
+  </div>
+</div>
 
       <p id="pd_status_text" class="method-note" style="margin-top:10px;">
           얼굴을 화면 중앙에 맞추고, 스마트폰을 너무 가깝거나 멀지 않게 들어 주세요.
@@ -1997,7 +2033,8 @@ async function sendToSheet(payload){
   pd_last_center_ok: false,
   pd_auto_recording: false,
   pd_hold_frames: 0,
-  pd_last_hold_value: null,  
+  pd_last_hold_value: null, 
+  pd_rearm_until: 0,
 
   focal_px: null,
   pixPD: null,
@@ -2038,9 +2075,18 @@ function toKSTString(d = new Date()){
   const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)  
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
 
-  function go(id){
+function go(id){
+  const leavingPd =
+    gid('screen_pd') &&
+    !gid('screen_pd').classList.contains('hidden') &&
+    id !== 'screen_pd';
+
+  if(leavingPd){
+  stopPDCam(true);
+}
+
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden'); 
+  document.getElementById(id).classList.remove('hidden');
 
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
@@ -2052,15 +2098,14 @@ function toKSTString(d = new Date()){
     document.body.scrollTop = 0;
   });
 
- if(id === 'screen_pd' && !S.pd_completed){
-  setTimeout(() => {
-    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞추고 준비해 주세요. 잠시 후 자동 측정이 시작됩니다.';
-  }, 100);
+  if(id === 'screen_pd' && !S.pd_completed){
+    setPDTrialDisplay('준비');
+    setPDStatus('얼굴을 화면 중앙에 맞추고 준비해 주세요. 잠시 후 자동 측정이 시작됩니다.');
 
-  setTimeout(() => {
-    startPDMeasure();
-  }, 2000);
-}
+    setTimeout(() => {
+      startPDMeasure();
+    }, 1500);
+  }
 }
 
   // ---------- VFQ VAS 17문항 (오늘 만든 캔버스 버전) ----------
@@ -2481,11 +2526,14 @@ const pdVideo = gid('pd_video');
 const pdCanvas = gid('pd_canvas');
 const pdCtx = pdCanvas ? pdCanvas.getContext('2d') : null;
 
-let pdCamera = null;
 let pdFaceMesh = null;
 let pdLastPix = 0;
 let pdLastAutoMm = null;
 let pdIsRunning = false;
+
+let pdStream = null;
+let pdLoopRunning = false;
+let sharedSelfieStream = null;
 
 function parseKnownPdInput(){
   const el = gid('pd_known_input');
@@ -2525,6 +2573,20 @@ function updatePdResultUI(){
   gid('btn_pd_next').disabled = !S.pd_completed;
 }
 
+function setPDStatus(text){
+  const a = gid('pd_status_text');
+  const b = gid('pd_overlay_status');
+  if(a) a.textContent = text;
+  if(b) b.textContent = text;
+}
+
+function setPDTrialDisplay(text){
+  const a = gid('pd_trial_label');
+  const b = gid('pd_overlay_trial');
+  if(a) a.textContent = text;
+  if(b) b.textContent = text;
+}
+
 async function setupPDCam(){
   if(!pdVideo || !pdCanvas || !pdCtx) return;
 
@@ -2543,19 +2605,65 @@ async function setupPDCam(){
     pdFaceMesh.onResults(onPDResults);
   }
 
-  if(!pdCamera){
-    pdCamera = new Camera(pdVideo, {
-      onFrame: async () => {
-        if(pdFaceMesh && pdVideo) {
-          await pdFaceMesh.send({ image: pdVideo });
-        }
-      },
-      width: 640,
-      height: 480
-    });
+  if(sharedSelfieStream && sharedSelfieStream.active){
+  pdStream = sharedSelfieStream;
+}else if(!pdStream || !pdStream.active){
+  pdStream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: { ideal: 'user' },
+      width: { ideal: 640 },
+      height: { ideal: 480 }
+    },
+    audio: false
+  });
+  sharedSelfieStream = pdStream;
+}
+
+  if(pdVideo.srcObject !== pdStream){
+    pdVideo.srcObject = pdStream;
   }
 
-  await pdCamera.start();
+  if(pdVideo.paused){
+    await pdVideo.play();
+  }
+
+  if(!pdLoopRunning){
+    pdLoopRunning = true;
+
+    const tick = async () => {
+      if(!pdLoopRunning) return;
+
+      if(pdVideo.readyState >= 2 && pdFaceMesh){
+        try{
+          await pdFaceMesh.send({ image: pdVideo });
+        }catch(e){}
+      }
+
+      requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  }
+}
+
+function stopPDCam(fullClose = false){
+  pdLoopRunning = false;
+  pdIsRunning = false;
+
+  if(pdVideo){
+    pdVideo.srcObject = null;
+  }
+
+  if(fullClose){
+    if(pdStream){
+      pdStream.getTracks().forEach(track => track.stop());
+      pdStream = null;
+    }
+    if(sharedSelfieStream){
+      sharedSelfieStream.getTracks().forEach(track => track.stop());
+      sharedSelfieStream = null;
+    }
+  }
 }
 
 function onPDResults(res){
@@ -2568,7 +2676,7 @@ function onPDResults(res){
 
   // 얼굴이 안 잡힌 경우
   if(!(res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0)){
-    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+    setPDStatus('얼굴을 화면 중앙에 맞춰 주세요.');
     gid('pd_pix_value').textContent = '-';
     gid('pd_auto_live_value').textContent = '-';
 
@@ -2582,7 +2690,6 @@ function onPDResults(res){
     return;
   }
 
-  // 얼굴이 잡힌 경우
   const lm = res.multiFaceLandmarks[0];
 
   const L = [33,133];
@@ -2628,38 +2735,41 @@ function onPDResults(res){
 
   gid('pd_pix_value').textContent = pdLastPix.toFixed(1);
 
-  // 임시 자동 PD 추정값
   pdLastAutoMm = Number((pdLastPix * 0.35).toFixed(1));
   gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
 
-  // 품질이 안 좋으면 hold 초기화
   if(!quality.ok){
-    gid('pd_status_text').textContent = quality.reason;
+    setPDStatus(quality.reason);
     S.pd_hold_frames = 0;
     S.pd_last_hold_value = null;
     return;
   }
 
-  // 품질이 좋으면 자동기록 준비
-  gid('pd_status_text').textContent = `${quality.reason} (${S.pd_hold_frames}/8)`;
+  if(!pdIsRunning || !S.pd_auto_recording || S.pd_completed){
+    setPDStatus(quality.reason);
+    return;
+  }
 
-  if(pdIsRunning && S.pd_auto_recording){
-    const rounded = Number(pdLastAutoMm.toFixed(1));
+  // 재정렬 대기 시간
+  if(Date.now() < S.pd_rearm_until){
+    return;
+  }
 
-    if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 2.0){
-      S.pd_hold_frames += 1;
-    }else{
-      S.pd_hold_frames = 1;
-      S.pd_last_hold_value = rounded;
-    }
+  const rounded = Number(pdLastAutoMm.toFixed(1));
 
-    gid('pd_status_text').textContent = `${quality.reason} (${S.pd_hold_frames}/8)`;
+  if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 2.0){
+    S.pd_hold_frames += 1;
+  }else{
+    S.pd_hold_frames = 1;
+    S.pd_last_hold_value = rounded;
+  }
 
-    if(S.pd_hold_frames >= 8){
-      S.pd_hold_frames = 0;
-      S.pd_last_hold_value = null;
-      recordPDTrial();
-    }
+  setPDStatus(`${quality.reason} (${S.pd_hold_frames}/8)`);
+
+  if(S.pd_hold_frames >= 8){
+    S.pd_hold_frames = 0;
+    S.pd_last_hold_value = null;
+    recordPDTrial();
   }
 }
 
@@ -2707,31 +2817,34 @@ async function startPDMeasure(){
   updateKnownPdState();
 
   gid('pd_retry_note').style.display = 'none';
-  gid('pd_status_text').textContent = '카메라를 준비하고 있습니다...';
-  gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
 
-  S.pd_auto_recording = true;
+  S.pd_auto_recording = !S.pd_completed;
   S.pd_hold_frames = 0;
   S.pd_last_hold_value = null;
-  S.pd_waiting_next_trial = false;
+  S.pd_rearm_until = Date.now() + 1200;
+
+  const nextTrial = S.pd_completed ? '완료' : `${Math.min(S.pd_trial_count + 1, 3)}차`;
+  setPDTrialDisplay(nextTrial);
 
   try{
     await setupPDCam();
     pdIsRunning = true;
-    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞추고 잠시 그대로 유지해 주세요.';
+
+    if(S.pd_completed){
+      setPDStatus('PD 측정이 이미 완료되었습니다. 다시 측정을 원하면 "다시 측정"을 눌러 주세요.');
+      return;
+    }
+
+    setPDStatus('얼굴을 화면 중앙에 맞추고 잠시 그대로 유지해 주세요.');
   }catch(e){
     alert('PD 측정을 시작할 수 없습니다: ' + (e.message || e));
   }
 }
 
 function recordPDTrial(){
-  if(!Number.isFinite(pdLastAutoMm) || !Number.isFinite(pdLastPix)){
-    return;
-  }
-
-  if(!S.pd_quality_ok){
-    return;
-  }  
+  if(!Number.isFinite(pdLastAutoMm) || !Number.isFinite(pdLastPix)) return;
+  if(!S.pd_quality_ok) return;
+  if(S.pd_completed) return;
 
   const idx = S.pd_trial_count;
   if(idx > 2) return;
@@ -2742,6 +2855,22 @@ function recordPDTrial(){
 
   updatePdResultUI();
 
+  // 1차 완료
+  if(S.pd_trial_count === 1){
+    setPDTrialDisplay('1차 완료');
+    setPDStatus('1차 측정이 완료되었습니다. 잠시 후 2차 측정을 시작합니다.');
+    S.pd_rearm_until = Date.now() + 1200;
+
+    setTimeout(() => {
+      if(!S.pd_completed && S.pd_trial_count === 1){
+        setPDTrialDisplay('2차');
+        setPDStatus('얼굴을 화면 중앙에 맞추면 2차 측정이 시작됩니다.');
+      }
+    }, 1200);
+    return;
+  }
+
+  // 2차 후 비교
   if(S.pd_trial_count === 2){
     const a = S.pd_auto_trials[0];
     const b = S.pd_auto_trials[1];
@@ -2749,11 +2878,9 @@ function recordPDTrial(){
     if(Math.abs(a - b) > 2){
       S.pd_measure_needed = 3;
       gid('pd_retry_note').style.display = 'block';
-      gid('pd_status_text').textContent = '측정값 차이가 커서 3차 측정이 필요합니다. 다시 자세를 맞춰 주세요.';
-      gid('pd_trial_label').textContent = '3차';
-      S.pd_hold_frames = 0;
-      S.pd_last_hold_value = null;
-      S.pd_waiting_next_trial = false;
+      setPDTrialDisplay('3차');
+      setPDStatus('1차와 2차 차이가 커서 3차 측정을 진행합니다.');
+      S.pd_rearm_until = Date.now() + 1200;
       return;
     }else{
       finalizePD();
@@ -2761,10 +2888,12 @@ function recordPDTrial(){
     }
   }
 
+  // 3차 후 완료
   if(S.pd_trial_count === 3){
     finalizePD();
     return;
   }
+}
 
   gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
   gid('pd_status_text').textContent = '다음 측정을 위해 자세를 다시 맞춰 주세요.';
@@ -2781,16 +2910,17 @@ function finalizePD(){
     return;
   }
 
-  S.pdmm = S.pd_auto_final_mm;  
+  S.pdmm = S.pd_auto_final_mm;
   S.pd_completed = true;
+  S.pd_auto_recording = false;
+  pdIsRunning = false;
 
   gid('labPD').textContent = S.pd_auto_final_mm.toFixed(1);
-  gid('pd_status_text').textContent = 'PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.';
+  setPDTrialDisplay('완료');
+  setPDStatus('PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.');
 
   updatePdResultUI();
 
-  // 여기서는 임시로 focal_px를 단순 저장만 해 둠
-  // 실제 환산 로직 확정 후 이 부분 다시 정교화
   const validPix = S.pd_auto_px_trials.filter(v => Number.isFinite(v));
   if(validPix.length){
     S.pixPD = validPix[validPix.length - 1];
@@ -2808,17 +2938,17 @@ function resetPD(){
   S.pd_auto_recording = false;
   S.pd_hold_frames = 0;
   S.pd_last_hold_value = null;
-  S.pd_waiting_next_trial = false;
+  S.pd_rearm_until = 0;
 
   pdLastPix = 0;
   pdLastAutoMm = null;
   pdIsRunning = false;
 
-  gid('pd_trial_label').textContent = '-';
+  setPDTrialDisplay('준비');
   gid('pd_pix_value').textContent = '-';
   gid('pd_auto_live_value').textContent = '-';
-  gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
-  gid('pd_retry_note').style.display = 'none';  
+  setPDStatus('얼굴을 화면 중앙에 맞춰 주세요.');
+  gid('pd_retry_note').style.display = 'none';
   gid('btn_pd_next').disabled = true;
 
   updateKnownPdState();
@@ -3312,14 +3442,13 @@ async function startSelftest(){
 
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'user' } },
-      audio: false
-    });
+  video: { facingMode: { ideal: 'user' } },
+  audio: false
+});
 
-    // 권한이 허용되면 일단 바로 스트림 종료
-    stream.getTracks().forEach(track => track.stop());
+sharedSelfieStream = stream;
 
-    go('screen_pd');
+go('screen_pd');
   }catch(err){
 
   const retry = confirm(
@@ -3435,14 +3564,31 @@ if(sb){
 }
 
 resetPD();
+stopPDCam();
 }
 
-gid('btn_pd_start')?.addEventListener('click', startPDMeasure);
+gid('btn_pd_start')?.addEventListener('click', async () => {
+  try{
+    await setupPDCam();
+    pdIsRunning = true;
+
+    if(S.pd_completed){
+      setPDTrialDisplay('완료');
+      setPDStatus('카메라를 다시 연결했습니다. 다시 측정을 원하면 "다시 측정"을 눌러 주세요.');
+    }else{
+      setPDTrialDisplay(`${Math.min(S.pd_trial_count + 1, 3)}차`);
+      setPDStatus('카메라를 다시 연결했습니다. 얼굴을 화면 중앙에 맞춰 주세요.');
+    }
+  }catch(e){
+    alert('카메라를 다시 시작할 수 없습니다: ' + (e.message || e));
+  }
+});
+
 gid('btn_pd_reset')?.addEventListener('click', () => {
   resetPD();
   setTimeout(() => {
     startPDMeasure();
-  }, 300);
+  }, 500);
 });
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
