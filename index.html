@@ -1280,7 +1280,6 @@ html, body{
 }
 
 gid('btn_pd_start')?.addEventListener('click', startPDMeasure);
-gid('btn_pd_capture')?.addEventListener('click', capturePDTrial);
 gid('btn_pd_reset')?.addEventListener('click', resetPD);
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
@@ -1838,8 +1837,7 @@ gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
   <div class="row" style="margin-top:12px">
     <button class="btn ghost" onclick="go('screen_home')">이전</button>
-    <button class="btn" id="btn_pd_start" type="button">카메라 다시 시작</button>
-    <button class="btn" id="btn_pd_capture" type="button" disabled>현재 값 기록</button>
+    <button class="btn" id="btn_pd_start" type="button">카메라 다시 시작</button>    
     <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
     <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
   </div>
@@ -2001,6 +1999,10 @@ async function sendToSheet(payload){
   pd_quality_reason: "",
   pd_stable_frames: 0,
   pd_last_center_ok: false,
+  pd_auto_recording: false,
+  pd_hold_frames: 0,
+  pd_last_hold_value: null,
+  pd_waiting_next_trial: false,
 
   focal_px: null,
   pixPD: null,
@@ -2619,9 +2621,26 @@ function onPDResults(res){
     pdLastAutoMm = Number((pdLastPix * 0.35).toFixed(1));
     gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
 
-    if(pdIsRunning){
-    gid('btn_pd_capture').disabled = !quality.ok;
- }
+    if(pdIsRunning && S.pd_auto_recording){
+  if(quality.ok){
+    const rounded = Number(pdLastAutoMm.toFixed(1));
+
+    if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 1.0){
+      S.pd_hold_frames += 1;
+    }else{
+      S.pd_hold_frames = 1;
+      S.pd_last_hold_value = rounded;
+    }
+
+    gid('pd_status_text').textContent =
+      `${quality.reason} (${S.pd_hold_frames}/15)`;
+
+    if(S.pd_hold_frames >= 15){
+      S.pd_waiting_next_trial = true;
+      S.pd_hold_frames = 0;
+      S.pd_last_hold_value = null;
+      recordPDTrial();
+    } 
     
   }else{
     gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
@@ -2632,6 +2651,8 @@ function onPDResults(res){
     pdLastAutoMm = null;
     S.pd_quality_ok = false;
     S.pd_quality_reason = "얼굴을 화면 중앙에 맞춰 주세요.";
+    S.pd_hold_frames = 0;
+    S.pd_last_hold_value = null;
   }
 }
 
@@ -2672,7 +2693,7 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
     return { ok:false, reason:'고개를 기울이지 말고 정면을 바라봐 주세요.' };
   }
 
-  return { ok:true, reason:'측정 가능한 자세입니다. 현재 값 기록 버튼을 눌러 주세요.' };
+  return { ok:true, reason:'측정 가능한 자세입니다. 잠시 그대로 유지해 주세요.' };
 }
 
 async function startPDMeasure(){
@@ -2682,25 +2703,31 @@ async function startPDMeasure(){
   gid('pd_status_text').textContent = '카메라를 준비하고 있습니다...';
   gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
 
+  S.pd_auto_recording = true;
+  S.pd_hold_frames = 0;
+  S.pd_last_hold_value = null;
+  S.pd_waiting_next_trial = false;
+
   try{
     await setupPDCam();
     pdIsRunning = true;
-    gid('btn_pd_capture').disabled = true;
-    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+    gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞추고 잠시 그대로 유지해 주세요.';
   }catch(e){
     alert('PD 측정을 시작할 수 없습니다: ' + (e.message || e));
   }
 }
 
-function capturePDTrial(){
+function recordPDTrial(){
   if(!Number.isFinite(pdLastAutoMm) || !Number.isFinite(pdLastPix)){
-    alert('아직 얼굴이 안정적으로 인식되지 않았습니다.');
     return;
   }
 
   if(!S.pd_quality_ok){
-  alert(S.pd_quality_reason || '측정 자세가 아직 안정적이지 않습니다.');
-  return;
+    return;
+  }
+
+  if(S.pd_waiting_next_trial){
+    return;
   }
 
   const idx = S.pd_trial_count;
@@ -2719,8 +2746,11 @@ function capturePDTrial(){
     if(Math.abs(a - b) > 2){
       S.pd_measure_needed = 3;
       gid('pd_retry_note').style.display = 'block';
-      gid('pd_status_text').textContent = '측정값 차이가 커서 3차 측정이 필요합니다.';
+      gid('pd_status_text').textContent = '측정값 차이가 커서 3차 측정이 필요합니다. 다시 자세를 맞춰 주세요.';
       gid('pd_trial_label').textContent = '3차';
+      S.pd_hold_frames = 0;
+      S.pd_last_hold_value = null;
+      S.pd_waiting_next_trial = false;
       return;
     }else{
       finalizePD();
@@ -2734,7 +2764,10 @@ function capturePDTrial(){
   }
 
   gid('pd_trial_label').textContent = `${S.pd_trial_count + 1}차`;
-  gid('pd_status_text').textContent = '다음 측정을 위해 다시 얼굴을 정면으로 맞춰 주세요.';
+  gid('pd_status_text').textContent = '다음 측정을 위해 자세를 다시 맞춰 주세요.';
+  S.pd_hold_frames = 0;
+  S.pd_last_hold_value = null;
+  S.pd_waiting_next_trial = false;
 }
 
 function finalizePD(){
@@ -2770,6 +2803,10 @@ function resetPD(){
   S.pd_measure_needed = 2;
   S.pd_completed = false;
   S.pdmm = null;
+  S.pd_auto_recording = false;
+  S.pd_hold_frames = 0;
+  S.pd_last_hold_value = null;
+  S.pd_waiting_next_trial = false;
 
   pdLastPix = 0;
   pdLastAutoMm = null;
@@ -2779,8 +2816,7 @@ function resetPD(){
   gid('pd_pix_value').textContent = '-';
   gid('pd_auto_live_value').textContent = '-';
   gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
-  gid('pd_retry_note').style.display = 'none';
-  gid('btn_pd_capture').disabled = true;
+  gid('pd_retry_note').style.display = 'none';  
   gid('btn_pd_next').disabled = true;
 
   updateKnownPdState();
