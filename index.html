@@ -1279,11 +1279,6 @@ html, body{
   font-weight: 700;
 }
 
-gid('btn_pd_start')?.addEventListener('click', startPDMeasure);
-gid('btn_pd_reset')?.addEventListener('click', resetPD);
-gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
-gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
-
 </style>
 </head>
 <body>
@@ -1870,7 +1865,7 @@ gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
       <div class="v">평균: <b id="npcAvg">-</b> cm</div>
     </div>
     <div class="row" style="margin-top:8px">
-      <button class="btn" onclick="go('screen_pvt')">다음(반응속도)</button>
+      <button class="btn" onclick="go('screen_npa')">다음(NPA 측정)</button>
       <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
     </div>
   </div>
@@ -1993,6 +1988,7 @@ async function sendToSheet(payload){
   pd_auto_px_trials: [null, null, null],
   pd_trial_count: 0,
   pd_auto_final_mm: null,
+  pdmm: null,
   pd_measure_needed: 2,
   pd_completed: false,
   pd_quality_ok: false,
@@ -2568,6 +2564,7 @@ function onPDResults(res){
 
   pdCtx.clearRect(0, 0, pdCanvas.width, pdCanvas.height);
 
+  // 1) 얼굴이 인식된 경우
   if(res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0){
     const lm = res.multiFaceLandmarks[0];
 
@@ -2601,56 +2598,65 @@ function onPDResults(res){
     pdCtx.fill();
 
     const quality = assessPDQuality(
-       lm,
-       pdCanvas.width,
-       pdCanvas.height,
-       { x:x1, y:y1 },
-       { x:x2, y:y2 },
-       pdLastPix
+      lm,
+      pdCanvas.width,
+      pdCanvas.height,
+      { x:x1, y:y1 },
+      { x:x2, y:y2 },
+      pdLastPix
     );
 
     S.pd_quality_ok = quality.ok;
     S.pd_quality_reason = quality.reason;
 
-    gid('pd_status_text').textContent = quality.reason;
     gid('pd_pix_value').textContent = pdLastPix.toFixed(1);
 
     // 임시 자동 PD 추정값
-    // 현재는 1 px = 0.35 mm 가정의 임시값
-    // 나중에 실제 환산식 확정 시 이 부분만 바꾸면 됨
     pdLastAutoMm = Number((pdLastPix * 0.35).toFixed(1));
     gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
 
-    if(pdIsRunning && S.pd_auto_recording){
-  if(quality.ok){
-    const rounded = Number(pdLastAutoMm.toFixed(1));
-
-    if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 1.0){
-      S.pd_hold_frames += 1;
-    }else{
-      S.pd_hold_frames = 1;
-      S.pd_last_hold_value = rounded;
-    }
-
-    gid('pd_status_text').textContent =
-      `${quality.reason} (${S.pd_hold_frames}/15)`;
-
-    if(S.pd_hold_frames >= 15){
-      S.pd_waiting_next_trial = true;
+    // 2) 얼굴은 잡혔지만 품질이 안 좋은 경우
+    if(!quality.ok){
+      gid('pd_status_text').textContent = quality.reason;
       S.pd_hold_frames = 0;
       S.pd_last_hold_value = null;
-      recordPDTrial();
-    } 
-    
-  }else{
+      return;
+    }
+
+    // 3) 얼굴도 잡히고 품질도 좋은 경우
+    gid('pd_status_text').textContent = quality.reason;
+
+    if(pdIsRunning && S.pd_auto_recording){
+      const rounded = Number(pdLastAutoMm.toFixed(1));
+
+      if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 1.0){
+        S.pd_hold_frames += 1;
+      }else{
+        S.pd_hold_frames = 1;
+        S.pd_last_hold_value = rounded;
+      }
+
+      gid('pd_status_text').textContent = `${quality.reason} (${S.pd_hold_frames}/15)`;
+
+      if(S.pd_hold_frames >= 15){
+        S.pd_waiting_next_trial = true;
+        S.pd_hold_frames = 0;
+        S.pd_last_hold_value = null;
+        recordPDTrial();
+      }
+    }
+
+  } else {
+    // 4) 얼굴이 아예 안 잡힌 경우
     gid('pd_status_text').textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
     gid('pd_pix_value').textContent = '-';
     gid('pd_auto_live_value').textContent = '-';
-    gid('btn_pd_capture').disabled = true;
+
     pdLastPix = 0;
     pdLastAutoMm = null;
+
     S.pd_quality_ok = false;
-    S.pd_quality_reason = "얼굴을 화면 중앙에 맞춰 주세요.";
+    S.pd_quality_reason = '얼굴을 화면 중앙에 맞춰 주세요.';
     S.pd_hold_frames = 0;
     S.pd_last_hold_value = null;
   }
@@ -2778,8 +2784,7 @@ function finalizePD(){
     return;
   }
 
-  S.pdmm = S.pd_auto_final_mm;
-  S.pdCompleted = true;
+  S.pdmm = S.pd_auto_final_mm;  
   S.pd_completed = true;
 
   gid('labPD').textContent = S.pd_auto_final_mm.toFixed(1);
@@ -3434,6 +3439,11 @@ if(sb){
 
 resetPD();
 }
+
+gid('btn_pd_start')?.addEventListener('click', startPDMeasure);
+gid('btn_pd_reset')?.addEventListener('click', resetPD);
+gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
+gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
 </script>
 </body>
