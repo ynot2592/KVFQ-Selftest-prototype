@@ -54,7 +54,7 @@
   .kpi{display:flex;gap:10px;flex-wrap:wrap}
   .kpi .v{padding:8px 10px;border-radius:10px;background:#111a2f;border:1px solid rgba(255,255,255,.08)}
   .videoWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-  video,canvas{display:block;width:100%;height:auto}
+  video,canvas{display:block;width:100%;height:auto;transform:scaleX(-1);}
   .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#12203a;border:1px solid rgba(255,255,255,.1)}
   .target{height:160px;border-radius:14px;background:#0f172a;border:1px dashed #334155;display:flex;align-items:center;justify-content:center;font-weight:700}
   .target.go{background:#0ea5e9}
@@ -1833,14 +1833,9 @@ html, body{
     <div id="pd_overlay_trial" class="pdOverlayBadge">준비</div>
     <div id="pd_overlay_status" class="pdOverlayText">얼굴을 화면 중앙에 맞춰 주세요.</div>
   </div>
-</div>
+</div>      
 
-      <p id="pd_status_text" class="method-note" style="margin-top:10px;">
-          얼굴을 화면 중앙에 맞추고, 스마트폰을 너무 가깝거나 멀지 않게 들어 주세요.
-      </p>
-
-      <div class="kpi" style="margin-top:8px">
-        <div class="v">현재 측정: <b id="pd_trial_label">-</b></div>
+      <div class="kpi" style="margin-top:8px">        
         <div class="v">픽셀 거리: <b id="pd_pix_value">-</b></div>
         <div class="v">자동 추정 PD: <b id="pd_auto_live_value">-</b> mm</div>
       </div>
@@ -2574,16 +2569,12 @@ function updatePdResultUI(){
 }
 
 function setPDStatus(text){
-  const a = gid('pd_status_text');
   const b = gid('pd_overlay_status');
-  if(a) a.textContent = text;
   if(b) b.textContent = text;
 }
 
 function setPDTrialDisplay(text){
-  const a = gid('pd_trial_label');
   const b = gid('pd_overlay_trial');
-  if(a) a.textContent = text;
   if(b) b.textContent = text;
 }
 
@@ -2673,6 +2664,12 @@ function onPDResults(res){
   pdCanvas.height = pdVideo.videoHeight || 480;
 
   pdCtx.clearRect(0, 0, pdCanvas.width, pdCanvas.height);
+
+    if(S.pd_completed){
+    setPDTrialDisplay('완료');
+    setPDStatus('PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.');
+    return;
+  }
 
   // 얼굴이 안 잡힌 경우
   if(!(res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0)){
@@ -2911,6 +2908,7 @@ function finalizePD(){
   gid('labPD').textContent = S.pd_auto_final_mm.toFixed(1);
   setPDTrialDisplay('완료');
   setPDStatus('PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.');
+  gid('pd_retry_note').style.display = 'none';
 
   updatePdResultUI();
 
