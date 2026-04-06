@@ -94,17 +94,7 @@
   font-size:13px;
   line-height:1.35;
 }
-
-.pdCenterLine{
-  position:absolute;
-  left:0;
-  right:0;
-  top:50%;
-  height:0;
-  border-top:2px dashed rgba(255,255,255,.45);
-  pointer-events:none;
-  z-index:2;
-}  
+  
   .question-block{
     margin: 18px 0px 12px;   
     padding: 8px 12px 0px;  
@@ -1838,8 +1828,7 @@ html, body{
     <div class="sectionBody">
       <div class="videoWrap">
   <video id="pd_video" playsinline autoplay muted></video>
-  <canvas id="pd_canvas"></canvas>
-  <div class="pdCenterLine"></div>
+  <canvas id="pd_canvas"></canvas>  
 
   <div class="pdOverlay">
     <div id="pd_overlay_trial" class="pdOverlayBadge">준비</div>
