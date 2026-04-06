@@ -1673,6 +1673,7 @@ html, body{
   <!-- 자가측정 시작 화면 -->
   <section id="screen_home" class="card hidden">
      <h1>자가측정 안내</h1>
+     <div style="height:12px;"></div> 
      <p>
         <b>설문 응답은 정상적으로 제출되었습니다.</b>
      </p>
@@ -1806,18 +1807,16 @@ html, body{
 
   <section id="screen_pd" class="card hidden">
   <h1>동공간거리(PD) 자가측정</h1>
+  <div style="height:12px;"></div>
 
   <p class="summary-note">
-  이 단계에서는 <b>양안 동공 중심 간 거리(PD)</b>를 측정합니다.<br><br>
-  스마트폰을 <b>팔을 가볍게 뻗은 정도의 거리</b>로 들고,<br>
-  얼굴이 화면 안에 자연스럽게 들어오도록 맞춰 주세요.<br>
-  얼굴을 정면으로 하고, <b>카메라 가까운 쪽을 바라봐 주세요.</b><br>
-  이마와 턱이 화면 밖으로 잘리지 않도록 해 주세요.
-</p>
+  이 단계에서는 <b>양안 동공 중심 간 거리(PD)</b>를 측정합니다.
+  </p>
 
   <div class="sectionBox">
     <div class="sectionHead">
-      <span>선택 입력</span>
+      <span>PD 입력</span>
+      <span class="badgeOptional">선택</span>
     </div>
     <div class="sectionBody">
       <p class="summary-note">
@@ -1825,10 +1824,10 @@ html, body{
         입력하신 값은 참고용으로 기록되며, <b>입력하지 않으셔도 자동 측정으로 진행</b>하실 수 있습니다.
       </p>
 
-      <div class="field" style="margin-top:10px;">
-        <span>PD (알고 있는 경우에만 입력)</span>
+      <div class="field" style="margin-top:0;">
+        <span>PD<br><span class="small">(알고 있는 경우에만 입력)</span></span>
         <div class="row" style="flex:1; gap:8px;">
-          <input id="pd_known_input" type="number" min="45" max="75" step="1" placeholder="예: 62">
+          <input id="pd_known_input" type="number" min="45" max="75" step="1" placeholder="예: 64">
           <span style="align-self:center;">mm</span>
         </div>
       </div>
@@ -1841,8 +1840,10 @@ html, body{
     </div>
     <div class="sectionBody">
       <p class="summary-note">
-        전면 카메라를 사용하여 얼굴 위치와 눈의 간격을 확인합니다.<br>
-        <span class="selftest-emphasis">영상·사진·음성은 수집 및 저장되지 않습니다.</span>
+          전면 카메라를 사용하여 얼굴 위치와 눈의 간격을 확인합니다.<br>
+          스마트폰을 얼굴 정면에 위치시키고, 눈과 얼굴이 화면에 잘 보이도록 해주세요.<br>
+          얼굴이 화면 중앙에 오도록 하고, 기울어지지 않게 유지해 주세요.<br><br>
+          <span class="selftest-emphasis">영상·사진·음성은 수집 및 저장되지 않습니다.</span>
       </p>
     </div>
   </div>
