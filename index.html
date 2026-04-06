@@ -55,8 +55,6 @@
   .kpi .v{padding:8px 10px;border-radius:10px;background:#111a2f;border:1px solid rgba(255,255,255,.08)}
   .videoWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
   video,canvas{display:block;width:100%;height:auto}
-  #pd_video{transform:scaleX(-1);}
-  #pd_canvas{transform:scaleX(-1);}
   .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#12203a;border:1px solid rgba(255,255,255,.1)}
   .target{height:160px;border-radius:14px;background:#0f172a;border:1px dashed #334155;display:flex;align-items:center;justify-content:center;font-weight:700}
   .target.go{background:#0ea5e9}
@@ -97,13 +95,16 @@
   line-height:1.35;
 }
 
-.pdGuideLine{
-  width:100%;
+.pdCenterLine{
+  position:absolute;
+  left:0;
+  right:0;
+  top:50%;
   height:0;
   border-top:2px dashed rgba(255,255,255,.45);
-  margin-top:6px;
-}
-  
+  pointer-events:none;
+  z-index:2;
+}  
   .question-block{
     margin: 18px 0px 12px;   
     padding: 8px 12px 0px;  
@@ -1720,6 +1721,7 @@ html, body{
 
     <p style="font-size:14.5px; margin-top:20px;">
       본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판입니다.
+    </P>
 
     <p style="font-size:14.5px;">
       국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여,<br>
@@ -1837,11 +1839,11 @@ html, body{
       <div class="videoWrap">
   <video id="pd_video" playsinline autoplay muted></video>
   <canvas id="pd_canvas"></canvas>
+  <div class="pdCenterLine"></div>
 
   <div class="pdOverlay">
     <div id="pd_overlay_trial" class="pdOverlayBadge">준비</div>
-    <div id="pd_overlay_status" class="pdOverlayText">얼굴을 화면 중앙에 맞춰 주세요.</div>
-    <div class="pdGuideLine"></div>
+    <div id="pd_overlay_status" class="pdOverlayText">얼굴을 화면 중앙에 맞춰 주세요.</div>    
   </div>
 </div>      
 
