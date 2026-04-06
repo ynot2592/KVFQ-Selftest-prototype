@@ -54,7 +54,32 @@
   .kpi{display:flex;gap:10px;flex-wrap:wrap}
   .kpi .v{padding:8px 10px;border-radius:10px;background:#111a2f;border:1px solid rgba(255,255,255,.08)}
   .videoWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-  video,canvas{display:block;width:100%;height:auto}
+  .videoWrap{
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.videoWrap video,
+.videoWrap canvas{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+#pd_video{
+  position:relative;
+  z-index:1;
+}
+
+#pd_canvas{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+
   .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#12203a;border:1px solid rgba(255,255,255,.1)}
   .target{height:160px;border-radius:14px;background:#0f172a;border:1px dashed #334155;display:flex;align-items:center;justify-content:center;font-weight:700}
   .target.go{background:#0ea5e9}
@@ -72,6 +97,7 @@
   flex-direction:column;
   gap:8px;
   pointer-events:none;
+  z-index:3;
 }
 
 .pdOverlayBadge{
