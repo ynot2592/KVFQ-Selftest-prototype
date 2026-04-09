@@ -1991,7 +1991,12 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
     <h2>NPC 측정(3회)</h2>
-    <p>중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하며 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요. <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 원형 버튼을 탭하면 그 순간 거리(㎝)가 기록됩니다. 정확도를 위해 <b>총 3번</b>의 측정을 하세요. 너무 빠르게 이동하면 경고가 뜹니다.</p>
+    <p>
+         중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하면서 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요.<br>
+         시작할 때는 <b>PD 측정 시와 비슷한 거리</b>에서 들어 주세요.<br>
+         <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 버튼을 눌러 기록합니다.<br>
+         정확도를 위해 <b>총 3번</b> 측정하며, 너무 빠르게 이동하면 경고가 표시됩니다.
+    </p>
     <div class="row"><span class="badge">교정 기준 D₀ = 40 cm</span><span class="badge">PD = <b id="labPD">-</b> mm</span></div>
     <div class="kpi" style="margin:8px 0">
       <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
@@ -2165,6 +2170,13 @@ async function sendToSheet(payload){
   pixPD: null,
   distNow: null,
 
+  npc_base_pix: null,
+  npc_base_dist_cm: 34,
+  npc_last_dist: null,
+  npc_last_time: 0,
+  npc_speed_buffer: [],
+  npc_running: false,
+
   npc: [null, null, null],
   npa: null,
 
@@ -2220,7 +2232,7 @@ function toKSTString(d = new Date()){
   }
 
   if(leavingNpc){
-    stopNPCCam(true);
+    stopNPCCam();
   }
 
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
@@ -3110,6 +3122,118 @@ function resetPD(){
   
   S.pd_started = false;
   gid('pd_start_layer').style.display = 'flex';
+}
+
+// ---------- NPC demo measure ----------
+function stopNPCMeasure(){
+  S.npc_running = false;
+  S.npc_last_dist = null;
+  S.npc_last_time = 0;
+  S.npc_speed_buffer = [];
+}
+
+async function startNPCMeasure(){
+  if(!(S.pd_auto_final_mm > 0)){
+    alert('먼저 PD 측정을 완료해 주세요.');
+    go('screen_pd');
+    return;
+  }
+
+  S.npc_running = true;
+  S.npc_base_pix = null;
+  S.npc_last_dist = null;
+  S.npc_last_time = 0;
+  S.npc_speed_buffer = [];
+
+  gid('distNow').textContent = '-';
+  gid('pixPD2').textContent = '-';
+  gid('speedNow').textContent = '-';
+  gid('speedWarn').style.display = 'none';
+
+  try{
+    await setupPDCam();
+    startNPCWatchLoop();
+  }catch(e){
+    alert('NPC 측정을 시작할 수 없습니다: ' + (e.message || e));
+  }
+}
+
+function startNPCWatchLoop(){
+  if(!S.npc_running) return;
+
+  const loop = () => {
+    if(!S.npc_running) return;
+
+    if(Number.isFinite(pdLastPix) && pdLastPix > 0){
+      updateNPCFromPix(pdLastPix);
+    }
+
+    requestAnimationFrame(loop);
+  };
+
+  requestAnimationFrame(loop);
+}
+
+function updateNPCFromPix(currentPix){
+  gid('pixPD2').textContent = currentPix.toFixed(1);
+
+  // 시작 기준 픽셀값 저장
+  if(!Number.isFinite(S.npc_base_pix)){
+    S.npc_base_pix = currentPix;
+  }
+
+  // PD 측정 시작 거리와 비슷한 "팔 반쯤 뻗은 거리"를 34cm로 가정
+  const rawDist = S.npc_base_dist_cm * (S.npc_base_pix / currentPix);
+
+  // 너무 튀는 값 제한
+  const clampedDist = Math.max(4, Math.min(45, rawDist));
+
+  // 소수점 1자리
+  const dist = Number(clampedDist.toFixed(1));
+  S.distNow = dist;
+  gid('distNow').textContent = dist.toFixed(1);
+
+  const now = performance.now();
+
+  if(S.npc_last_dist === null){
+    S.npc_last_dist = dist;
+    S.npc_last_time = now;
+    gid('speedNow').textContent = '0.0';
+    gid('speedWarn').style.display = 'none';
+    return;
+  }
+
+  const dt = (now - S.npc_last_time) / 1000;
+  let delta = S.npc_last_dist - dist;
+
+  // 작은 흔들림 무시
+  if(Math.abs(delta) < 0.4){
+    delta = 0;
+  }
+
+  let speed = 0;
+  if(dt > 0){
+    speed = Math.abs(delta / dt);
+  }
+
+  S.npc_speed_buffer.push(speed);
+  if(S.npc_speed_buffer.length > 5){
+    S.npc_speed_buffer.shift();
+  }
+
+  const avgSpeed =
+    S.npc_speed_buffer.reduce((a,b)=>a+b,0) / S.npc_speed_buffer.length;
+
+  gid('speedNow').textContent = avgSpeed.toFixed(1);
+
+  if(avgSpeed > NPC_SPEED_MAX){
+    gid('speedWarn').style.display = 'block';
+  }else{
+    gid('speedWarn').style.display = 'none';
+  }
+
+  S.npc_last_dist = dist;
+  S.npc_last_time = now;
 }
 
 async function setupNPCCam(){
