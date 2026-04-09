@@ -2187,6 +2187,7 @@ function toKSTString(d = new Date()){
   let fullDocConfirmed = false;
   let consentSigned = false;
   let isSubmitting = false;
+  const PD_PX_TO_MM = 0.7359;
   const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)  
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
 
@@ -2858,7 +2859,7 @@ function onPDResults(res){
 
   gid('pd_pix_value').textContent = pdLastPix.toFixed(1);
 
-  pdLastAutoMm = Number((pdLastPix * 0.35).toFixed(1));
+  pdLastAutoMm = Number((pdLastPix * PD_PX_TO_MM).toFixed(1));
   gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
 
   if(!quality.ok){
