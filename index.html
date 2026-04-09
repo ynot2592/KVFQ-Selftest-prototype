@@ -2201,7 +2201,8 @@ function toKSTString(d = new Date()){
   let consentSigned = false;
   let isSubmitting = false;
   const PD_PX_TO_MM = 0.7186;
-  const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)  
+  const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s) 
+  function go(id){ 
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
 
   const leavingPd =
