@@ -1400,6 +1400,29 @@ html, body{
   line-height: 1.5;
 }
 
+.pdStartLayer{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.25);
+  z-index:20;
+}
+
+.pdStartBtn{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  border:none;
+  font-size:16px;
+  font-weight:700;
+  color:#fff;
+  background:#3b82f6;
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+}
+
 </style>
 </head>
 <body>
@@ -1904,8 +1927,8 @@ html, body{
     </div>
     <div class="sectionBody">
       <p class="summary-note">
-          전면 카메라를 사용하여 얼굴 위치와 눈의 간격을 확인합니다.<br>
-          <span class="selftest-emphasis">스마트폰을 얼굴 정면에 위치</span>시키고, 눈과 얼굴이 화면에 잘 보이도록 해주세요.<br>
+          전면 카메라를 사용하여 <span class="selftest-emphasis">얼굴 위치와 눈의 간격을 확인합니다.</span><br><br>
+          <span class="selftest-emphasis">스마트폰을 얼굴 정면에 위치</span>시키고, 눈과 얼굴이 화면에 잘 보이도록 해주세요.<br><br>
           <span class="selftest-emphasis">얼굴이 화면 중앙</span>에 오도록 하고, <span class="selftest-emphasis">기울어지지 않게 유지</span>해 주세요.<br><br>
           <span class="selftest-emphasis">영상·사진·음성은 수집 및 저장되지 않습니다.</span>
       </p>
@@ -1919,7 +1942,11 @@ html, body{
     <div class="sectionBody">
       <div class="videoWrap">
   <video id="pd_video" playsinline autoplay muted></video>
-  <canvas id="pd_canvas"></canvas>  
+  <canvas id="pd_canvas"></canvas>
+
+  <div id="pd_start_layer" class="pdStartLayer">
+      <button id="btn_pd_start" class="pdStartBtn">측정 시작</button>
+  </div>  
 
   <div class="pdOverlay">
     <div id="pd_overlay_trial" class="pdOverlayBadge">준비</div>
@@ -1954,11 +1981,11 @@ html, body{
   </div>
 
   <div class="row" style="margin-top:12px">
-    <button class="btn ghost" onclick="go('screen_home')">이전</button>
-    <button class="btn" id="btn_pd_start" type="button">카메라 다시 시작</button>    
-    <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
-    <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
-  </div>
+      <button class="btn ghost" onclick="go('screen_home')">이전</button>
+      <button class="btn" id="btn_pd_restart" type="button">카메라 다시 시작</button>    
+      <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
+      <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
+</div>
 </section>
 
 <!-- NPC 측정 -->
@@ -2122,6 +2149,7 @@ async function sendToSheet(payload){
   pd_hold_frames: 0,
   pd_last_hold_value: null, 
   pd_rearm_until: 0,
+  pd_started: false,
 
   focal_px: null,
   pixPD: null,
@@ -2185,13 +2213,14 @@ function go(id){
     document.body.scrollTop = 0;
   });
 
-  if(id === 'screen_pd' && !S.pd_completed){
+  if(id === 'screen_pd'){
     setPDTrialDisplay('준비');
-    setPDStatus('얼굴을 화면 중앙에 맞추고 준비해 주세요. 잠시 후 자동 측정이 시작됩니다.');
+    setPDStatus('측정 시작 버튼을 누르면 측정이 시작됩니다.');
 
-    setTimeout(() => {
-      startPDMeasure();
-    }, 1500);
+    const layer = gid('pd_start_layer');
+    if(layer){
+      layer.style.display = S.pd_completed ? 'none' : 'flex';
+    }
   }
 }
 
@@ -2750,6 +2779,9 @@ function stopPDCam(fullClose = false){
 }
 
 function onPDResults(res){
+  if(!S.pd_started){
+  return;
+  }
   if(!pdVideo || !pdCanvas || !pdCtx) return;
 
   pdCanvas.width = pdVideo.videoWidth || 640;
@@ -3036,6 +3068,9 @@ function resetPD(){
 
   updateKnownPdState();
   updatePdResultUI();
+  
+  S.pd_started = false;
+  gid('pd_start_layer').style.display = 'flex';
 }
 
 // ---------- NPC 기록 ----------
@@ -3650,17 +3685,24 @@ resetPD();
 stopPDCam();
 }
 
-gid('btn_pd_start')?.addEventListener('click', async () => {
+gid('btn_pd_start')?.addEventListener('click', () => {
+  resetPD();
+  S.pd_started = true;
+  gid('pd_start_layer').style.display = 'none';
+  startPDMeasure();
+});
+
+gid('btn_pd_restart')?.addEventListener('click', async () => {
   try{
     await setupPDCam();
-    pdIsRunning = true;
 
     if(S.pd_completed){
       setPDTrialDisplay('완료');
       setPDStatus('카메라를 다시 연결했습니다. 다시 측정을 원하면 "다시 측정"을 눌러 주세요.');
     }else{
-      setPDTrialDisplay(`${Math.min(S.pd_trial_count + 1, 3)}차`);
-      setPDStatus('카메라를 다시 연결했습니다. 얼굴을 화면 중앙에 맞춰 주세요.');
+      setPDStatus('카메라가 다시 연결되었습니다. 측정 시작 버튼을 눌러 주세요.');
+      gid('pd_start_layer').style.display = 'flex';
+      S.pd_started = false;
     }
   }catch(e){
     alert('카메라를 다시 시작할 수 없습니다: ' + (e.message || e));
@@ -3669,10 +3711,8 @@ gid('btn_pd_start')?.addEventListener('click', async () => {
 
 gid('btn_pd_reset')?.addEventListener('click', () => {
   resetPD();
-  setTimeout(() => {
-    startPDMeasure();
-  }, 500);
 });
+
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
