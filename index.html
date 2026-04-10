@@ -2201,7 +2201,8 @@ function toKSTString(d = new Date()){
   let consentSigned = false;
   let isSubmitting = false;
   const PD_PX_TO_MM = 0.7286;
-  const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s) 
+  const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)
+  const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
@@ -3252,7 +3253,8 @@ function onNPCResults(res){
     return;
   }
 
-  const distCm = Number(((S.pdmm * 110) / pixDist).toFixed(1));
+  const rawDistCm = (S.pdmm * 110) / pixDist;
+  const distCm = Number((rawDistCm * NPC_DIST_SCALE).toFixed(1));
   S.distNow = distCm;
   gid('distNow').textContent = distCm.toFixed(1);
 
