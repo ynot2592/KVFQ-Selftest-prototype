@@ -1999,9 +1999,9 @@ html, body{
       <div class="v">이동 속도: <b id="speedNow">-</b> cm/s</div>
     </div>
 
-    <div class="videoWrap" style="margin-top:8px;">
-      <video id="npc_video" playsinline autoplay muted></video>
-      <canvas id="npc_canvas"></canvas>
+    <div style="display:none;">
+        <video id="npc_video" playsinline autoplay muted></video>
+        <canvas id="npc_canvas"></canvas>
     </div>
 
     <div id="npc_status" class="small" style="margin-top:8px;">
@@ -2200,7 +2200,7 @@ function toKSTString(d = new Date()){
   let fullDocConfirmed = false;
   let consentSigned = false;
   let isSubmitting = false;
-  const PD_PX_TO_MM = 0.7186;
+  const PD_PX_TO_MM = 0.7286;
   const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s) 
 
   function go(id){  
@@ -2217,8 +2217,8 @@ function toKSTString(d = new Date()){
     id !== 'screen_npc';
 
   if(leavingPd){
-    stopPDCam(true);
-  }
+  stopPDCam(false);
+}
 
   if(leavingNpc){
     stopNPCCam(true);
@@ -3242,23 +3242,7 @@ function onNPCResults(res){
   const y2 = rpt.y * npcCanvas.height;
 
   const pixDist = Math.hypot(x2 - x1, y2 - y1);
-
-  npcCtx.strokeStyle = 'rgba(0,255,255,.8)';
-  npcCtx.lineWidth = 2;
-  npcCtx.beginPath();
-  npcCtx.moveTo(x1, y1);
-  npcCtx.lineTo(x2, y2);
-  npcCtx.stroke();
-
-  npcCtx.fillStyle = '#22d3ee';
-  npcCtx.beginPath();
-  npcCtx.arc(x1, y1, 4, 0, Math.PI * 2);
-  npcCtx.fill();
-
-  npcCtx.beginPath();
-  npcCtx.arc(x2, y2, 4, 0, Math.PI * 2);
-  npcCtx.fill();
-
+  
   gid('pixPD2').textContent = pixDist.toFixed(1);
 
   if(!Number.isFinite(pixDist) || pixDist <= 0 || !(S.pdmm > 0)){
@@ -3285,12 +3269,13 @@ function onNPCResults(res){
   S.npc_last_dist = distCm;
   S.npc_last_ts = now;
 
-  gid('speedNow').textContent = speed.toFixed(1);
+  const stableSpeed = speed < 0.8 ? 0 : speed;
+gid('speedNow').textContent = stableSpeed.toFixed(1);
 
-  const warn = gid('speedWarn');
-  if(warn){
-    warn.style.display = speed > NPC_SPEED_MAX ? 'block' : 'none';
-  }
+const warn = gid('speedWarn');
+if(warn){
+  warn.style.display = stableSpeed > NPC_SPEED_MAX ? 'block' : 'none';
+}
 
   if(gid('npc_status')){
     gid('npc_status').textContent = '중앙 빨간 선을 보면서 천천히 이동하세요. 복시가 느껴지면 버튼을 누르세요.';
