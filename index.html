@@ -2170,6 +2170,8 @@ async function sendToSheet(payload){
 
   npc_last_dist: null,
   npc_last_ts: 0,
+  npc_smooth_dist: null,
+  npc_speed_cm_s: 0,
 
   pvt: {
     dur:120,
@@ -2200,7 +2202,7 @@ function toKSTString(d = new Date()){
   let fullDocConfirmed = false;
   let consentSigned = false;
   let isSubmitting = false;
-  const PD_PX_TO_MM = 0.7286;
+  const PD_PX_TO_MM = 0.7186;
   const NPC_SPEED_MAX = 4.0; // NPC 이동 속도 경고 임계값(cm/s)
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
@@ -3202,6 +3204,8 @@ async function startNPCMeasure(){
     npcIsRunning = true;
     S.npc_last_dist = null;
     S.npc_last_ts = 0;
+    S.npc_smooth_dist = null;
+    S.npc_speed_cm_s = 0;
 
     const s = gid('npc_status');
     if(s) s.textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
@@ -3227,6 +3231,8 @@ function onNPCResults(res){
     S.distNow = null;
     S.npc_last_dist = null;
     S.npc_last_ts = 0;
+    S.npc_smooth_dist = null;
+    S.npc_speed_cm_s = 0;
     return;
   }
 
@@ -3243,7 +3249,7 @@ function onNPCResults(res){
   const y2 = rpt.y * npcCanvas.height;
 
   const pixDist = Math.hypot(x2 - x1, y2 - y1);
-  
+
   gid('pixPD2').textContent = pixDist.toFixed(1);
 
   if(!Number.isFinite(pixDist) || pixDist <= 0 || !(S.pdmm > 0)){
@@ -3254,30 +3260,56 @@ function onNPCResults(res){
   }
 
   const rawDistCm = (S.pdmm * 110) / pixDist;
-  const distCm = Number((rawDistCm * NPC_DIST_SCALE).toFixed(1));
-  S.distNow = distCm;
-  gid('distNow').textContent = distCm.toFixed(1);
+  const distCm = rawDistCm * NPC_DIST_SCALE;
 
+  // 1) 거리 smoothing
+  if(S.npc_smooth_dist === null){
+    S.npc_smooth_dist = distCm;
+  }else{
+    S.npc_smooth_dist = (S.npc_smooth_dist * 0.90) + (distCm * 0.10);
+  }
+
+  const shownDist = Number(S.npc_smooth_dist.toFixed(1));
+  S.distNow = shownDist;
+  gid('distNow').textContent = shownDist.toFixed(1);
+
+  // 2) 속도 계산
   const now = performance.now();
-  let speed = 0;
+  let rawSpeed = 0;
 
   if(S.npc_last_dist !== null && S.npc_last_ts){
     const dt = (now - S.npc_last_ts) / 1000;
-    if(dt > 0){
-      speed = Math.abs(distCm - S.npc_last_dist) / dt;
+    const delta = Math.abs(shownDist - S.npc_last_dist);
+
+    if(dt > 0.12){
+      // 0.5cm 이하 변화는 미세 흔들림으로 보고 무시
+      if(delta < 0.5){
+        rawSpeed = 0;
+      }else{
+        rawSpeed = delta / dt;
+      }
     }
   }
 
-  S.npc_last_dist = distCm;
+  // 3) 속도 smoothing
+  S.npc_speed_cm_s = (S.npc_speed_cm_s * 0.85) + (rawSpeed * 0.15);
+
+  let shownSpeed = Number(S.npc_speed_cm_s.toFixed(1));
+
+  // 4) 너무 작은 속도는 0으로 고정
+  if(shownSpeed < 1.0){
+    shownSpeed = 0;
+  }
+
+  S.npc_last_dist = shownDist;
   S.npc_last_ts = now;
 
-  const stableSpeed = speed < 0.8 ? 0 : speed;
-gid('speedNow').textContent = stableSpeed.toFixed(1);
+  gid('speedNow').textContent = shownSpeed.toFixed(1);
 
-const warn = gid('speedWarn');
-if(warn){
-  warn.style.display = stableSpeed > NPC_SPEED_MAX ? 'block' : 'none';
-}
+  const warn = gid('speedWarn');
+  if(warn){
+    warn.style.display = shownSpeed > NPC_SPEED_MAX ? 'block' : 'none';
+  }
 
   if(gid('npc_status')){
     gid('npc_status').textContent = '중앙 빨간 선을 보면서 천천히 이동하세요. 복시가 느껴지면 버튼을 누르세요.';
@@ -3309,7 +3341,18 @@ function markDiplopia(n){
 
 function clearNPC(){
   S.npc = [null, null, null];
+  S.npc_last_dist = null;
+  S.npc_last_ts = 0;
+  S.npc_smooth_dist = null;
+  S.npc_speed_cm_s = 0;
+
   ['npc1','npc2','npc3','npcAvg'].forEach(id => gid(id).textContent='-');
+
+  gid('distNow').textContent = '-';
+  gid('speedNow').textContent = '-';
+
+  const warn = gid('speedWarn');
+  if(warn) warn.style.display = 'none';
 }
 
   // ---------- PVT ----------
