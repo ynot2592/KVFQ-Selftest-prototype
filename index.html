@@ -1990,43 +1990,47 @@ html, body{
 
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
-    <h2>NPC 측정(3회)</h2>
-    <p>중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하며 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요. <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 원형 버튼을 탭하면 그 순간 거리(㎝)가 기록됩니다. 정확도를 위해 <b>총 3번</b>의 측정을 하세요. 너무 빠르게 이동하면 경고가 뜹니다.</p>
-    <div class="row"><span class="badge">교정 기준 D₀ = 40 cm</span><span class="badge">PD = <b id="labPD">-</b> mm</span></div>
-    <div class="kpi" style="margin:8px 0">
-      <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
-      <div class="v">pixel PD: <b id="pixPD2">-</b></div>
-      <div class="v">이동 속도: <b id="speedNow">-</b> cm/s</div>
-    </div>
+     <div class="target" id="npcTarget" style="margin-top:4px; position:relative; flex-direction:column; gap:14px;">
+     <div style="width:2px;height:100px;background:#ef4444;border-radius:2px"></div>
+     <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
+  </div>
 
-    <div style="display:none;">
-        <video id="npc_video" playsinline autoplay muted></video>
-        <canvas id="npc_canvas"></canvas>
-    </div>
+  <div class="kpi" style="margin:10px 0 8px;">
+     <div class="v">NPC1: <b id="npc1">-</b> cm</div>
+     <div class="v">NPC2: <b id="npc2">-</b> cm</div>
+     <div class="v">NPC3: <b id="npc3">-</b> cm</div>
+     <div class="v">평균: <b id="npcAvg">-</b> cm</div>
+  </div>
 
-    <div id="npc_status" class="small" style="margin-top:8px;">
-      얼굴을 화면 중앙에 맞춰 주세요.
-    </div>    
+<h2>NPC 측정(3회)</h2>
+<p>중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하며 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요. <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 버튼을 눌러 그 시점의 거리를 기록합니다. 정확도를 위해 <b>총 3번</b> 측정합니다.</p>
 
-    <div class="target" id="npcTarget">
-      <div style="width:2px;height:120px;background:#ef4444;border-radius:2px"></div>
-    </div>
-    <div class="row" style="margin-top:8px;gap:16px">
-      <button class="btn primary circle" onclick="markDiplopia(1)">복시 #1</button>
-      <button class="btn primary circle" onclick="markDiplopia(2)">#2</button>
-      <button class="btn primary circle" onclick="markDiplopia(3)">#3</button>
-      <button class="btn ghost" onclick="clearNPC()">초기화</button>
-    </div>
-    <div class="small" id="speedWarn" style="color:#fca5a5;display:none">이동이 너무 빠릅니다. 1~4 cm/s 이내로 천천히 이동해주세요.</div>
-    <div class="kpi" style="margin-top:8px">
-      <div class="v">NPC1: <b id="npc1">-</b> cm</div>
-      <div class="v">NPC2: <b id="npc2">-</b> cm</div>
-      <div class="v">NPC3: <b id="npc3">-</b> cm</div>
-      <div class="v">평균: <b id="npcAvg">-</b> cm</div>
-    </div>
+<div class="row">
+  <span class="badge">교정 기준 D₀ = 40 cm</span>
+  <span class="badge">PD = <b id="labPD">-</b> mm</span>
+</div>
+
+<div class="kpi" style="margin:8px 0">
+  <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
+  <div class="v">pixel PD: <b id="pixPD2">-</b></div>
+</div>
+
+<div class="videoWrap" style="margin-top:8px; display:none;">
+  <video id="npc_video" playsinline autoplay muted></video>
+  <canvas id="npc_canvas"></canvas>
+</div>
+
+<div id="npc_status" class="small" style="margin-top:8px;">
+  얼굴을 화면 중앙에 맞춰 주세요.
+</div>
+
+<div class="small" id="speedWarn" style="color:#fca5a5;display:none">
+  이동이 너무 빠릅니다. 조금 더 천천히 이동해 주세요.
+</div>
     <div class="row" style="margin-top:8px">
-      <button class="btn" onclick="go('screen_npa')">다음(NPA 측정)</button>
-      <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
+        <button class="btn ghost" id="btn_npc_clear" type="button">초기화</button>
+        <button class="btn" onclick="go('screen_npa')">다음(NPA 측정)</button>
+        <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
     </div>
   </div>
 
@@ -2166,6 +2170,7 @@ async function sendToSheet(payload){
   distNow: null,
 
   npc: [null, null, null],
+  npc_trial_index: 0,
   npa: null,
 
   npc_last_dist: null,
@@ -3232,8 +3237,7 @@ function onNPCResults(res){
   }else{
     gid('distNow').textContent = '-';
   }
-
-  gid('speedNow').textContent = '0.0';
+  
   if(gid('npc_status')) gid('npc_status').textContent = '얼굴 인식이 잠시 불안정합니다. 현재 값을 유지합니다.';
   S.npc_speed_cm_s = 0;
   return;
@@ -3261,8 +3265,7 @@ function onNPCResults(res){
   }else{
     gid('distNow').textContent = '-';
   }
-
-  gid('speedNow').textContent = '0.0';
+  
   return;
 }
 
@@ -3309,9 +3312,7 @@ function onNPCResults(res){
   }
 
   S.npc_last_dist = shownDist;
-  S.npc_last_ts = now;
-
-  gid('speedNow').textContent = shownSpeed.toFixed(1);
+  S.npc_last_ts = now;  
 
   const warn = gid('speedWarn');
   if(warn){
@@ -3324,8 +3325,8 @@ function onNPCResults(res){
 }
 
 // ---------- NPC 기록 ----------
-function markDiplopia(n){
-  if(!(S.pd_auto_final_mm > 0)){
+function markDiplopia(){
+  if(!(S.pdmm > 0)){
     alert('먼저 PD 측정을 완료해 주세요.');
     return;
   }
@@ -3336,30 +3337,57 @@ function markDiplopia(n){
     return;
   }
 
-  S.npc[n-1] = Number(Dcm.toFixed(1));
-  gid('npc'+n).textContent = S.npc[n-1].toFixed(1);
+  const idx = S.npc_trial_index;
+  if(idx > 2){
+    return;
+  }
+
+  S.npc[idx] = Number(Dcm.toFixed(1));
+  gid('npc' + (idx + 1)).textContent = S.npc[idx].toFixed(1);
 
   const vals = S.npc.filter(v => v != null);
   if(vals.length){
-    const m = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const m = vals.reduce((a,b)=>a+b,0) / vals.length;
     gid('npcAvg').textContent = m.toFixed(1);
+  }
+
+  S.npc_trial_index += 1;
+
+  const btn = gid('btn_npc_mark');
+  if(btn){
+    if(S.npc_trial_index === 1){
+      btn.textContent = '복시 기록 #2';
+    }else if(S.npc_trial_index === 2){
+      btn.textContent = '복시 기록 #3';
+    }else{
+      btn.textContent = '3회 기록 완료';
+      btn.disabled = true;
+    }
   }
 }
 
 function clearNPC(){
   S.npc = [null, null, null];
+  S.npc_trial_index = 0;
   S.npc_last_dist = null;
   S.npc_last_ts = 0;
   S.npc_smooth_dist = null;
   S.npc_speed_cm_s = 0;
+  S.distNow = null;
 
   ['npc1','npc2','npc3','npcAvg'].forEach(id => gid(id).textContent='-');
 
   gid('distNow').textContent = '-';
-  gid('speedNow').textContent = '-';
+  gid('pixPD2').textContent = '-';
 
   const warn = gid('speedWarn');
   if(warn) warn.style.display = 'none';
+
+  const btn = gid('btn_npc_mark');
+  if(btn){
+    btn.textContent = '복시 기록 #1';
+    btn.disabled = false;
+  }
 }
 
   // ---------- PVT ----------
@@ -3947,6 +3975,10 @@ stopPDCam();
 stopNPCCam();
 S.npc_last_dist = null;
 S.npc_last_ts = 0;
+S.npc_trial_index = 0;
+
+S.npc_smooth_dist = null;
+S.npc_speed_cm_s = 0;
 }
 
 gid('btn_pd_start')?.addEventListener('click', () => {
@@ -3982,6 +4014,9 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
 
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
+
+gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
+gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
 </script>
 </body>
