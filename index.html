@@ -1994,6 +1994,7 @@ html, body{
 
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
+  <h1 style="margin-bottom:12px;">폭주근점(NPC) 측정</h1>
      <div class="target" id="npcTarget" style="margin-top:4px; position:relative; flex-direction:column; gap:14px;">
          <div id="npc_fix_bar" style="width:2px;height:130px;background:#ef4444;border-radius:2px"></div>
 
@@ -2011,9 +2012,21 @@ html, body{
      <div class="v">평균: <b id="npcAvg">-</b> cm</div>
   </div>
 
-<h2>NPC 측정(3회)</h2>
-<p>중앙 <b>주시 막대(얇은 빨간 선)</b>를 주시하며 스마트폰을 코 쪽으로 <b>천천히</b> 이동하세요. <b>복시(막대가 2개로 보임)가 느껴지는 순간</b> 아래 버튼을 눌러 그 시점의 거리를 기록합니다. 정확도를 위해 <b>총 3번</b> 측정합니다.</p>
-
+  <p class="summary-note" style="
+      margin-top:12px;
+      font-size:15.5px;
+      line-height:1.5;
+      color:#e6ebff;
+      text-align:center;
+  ">
+      중앙 빨간 선을 보면서 스마트폰을 코쪽으로 천천히 가까이 이동하세요.<br>
+     <span style="color:#fff; font-weight:600;">
+        빨간 선이 두 개로 보이는 순간 버튼을 눌러 주세요.
+     </span>
+     <span style="color:#9ca3af; font-size:14px;">
+       (각 측정 후, 다시 멀리 이동한 뒤 반복합니다)
+</span>
+  </p>
 <div class="row">
   <span class="badge">교정 기준 D₀ = 40 cm</span>
   <span class="badge">PD = <b id="labPD">-</b> mm</span>
