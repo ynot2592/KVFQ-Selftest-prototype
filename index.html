@@ -1997,6 +1997,24 @@ html, body{
   <h1 style="margin-bottom:18px;">폭주근점(NPC) 자가측정</h1>
   <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
 
+  <div id="npc_overlay_msg" style="
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.65);
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:13px;
+  color:#fff;
+  text-align:center;
+  display:none;
+  z-index:10;
+  white-space:nowrap;
+">
+  메시지
+</div>
+
   <!-- 왼쪽 상태값 -->
   <div style="
     position:absolute;
@@ -2008,11 +2026,11 @@ html, body{
     align-items:flex-start;
     text-align:left;
   ">
-    <span class="badge">교정 기준 40 cm</span>
-    <span class="badge">PD <b id="labPD">-</b> mm</span>
-    <span class="badge">거리 <b id="distNow">-</b> cm</span>
-    <span class="badge">pixel PD <b id="pixPD2">-</b></span>
-    <span class="badge">권장 속도 1~2 cm/s</span>
+  <span class="badge" style="font-size:11.5px; padding:2px 6px; opacity:0.75;">교정 기준 40 cm</span>
+  <span class="badge" style="font-size:11.5px; padding:2px 6px; opacity:0.75;">PD <b id="labPD">-</b> mm</span>
+  <span class="badge" style="font-size:11.5px; padding:2px 6px; opacity:0.75;">거리 <b id="distNow">-</b> cm</span>
+  <span class="badge" style="font-size:11.5px; padding:2px 6px; opacity:0.75;">pixel PD <b id="pixPD2">-</b></span>
+  <span class="badge" style="font-size:11.5px; padding:2px 6px; opacity:0.75;">권장 속도 1~2 cm/s</span>
   </div>
 
   <!-- 가운데 타겟/버튼 -->
@@ -2035,16 +2053,16 @@ html, body{
   </div>  
 
   <div style="
-      margin-top:14px;
-      margin-bottom:6px;
-      font-size:15.5px;
+      margin-top:16px;
+      margin-bottom:8px;
+      font-size:17px;
       font-weight:700;
       color:#ffffff;
   ">
      측정 방법
   </div>
 
-  <div style="margin-top:12px; color:#e6ebff; line-height:1.6;">
+  <div style="margin-top:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:20px 1fr; column-gap:8px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
       <div>중앙 빨간 선을 보면서 스마트폰을 천천히 가까이 이동하세요.</div>
@@ -2060,7 +2078,7 @@ html, body{
       <div>정확도를 위해 총 3번 측정합니다.</div>
     </div>
 
-    <div style="margin-top:10px; color:#9ca3af; font-size:14px; padding-left:28px;">
+    <div style="margin-top:4px; color:#9ca3af; font-size:13.5px; padding-left:28px;">
       (1회 측정 후, 다시 멀리 이동한 뒤 총 3회 반복합니다.)
     </div>
   </div>
@@ -2070,13 +2088,6 @@ html, body{
   <canvas id="npc_canvas"></canvas>
 </div>
 
-<div id="npc_status" class="small" style="margin-top:8px;">
-  얼굴을 화면 중앙에 맞춰 주세요.
-</div>
-
-<div class="small" id="speedWarn" style="color:#fca5a5;display:none">
-  이동이 너무 빠릅니다. 조금 더 천천히 이동해 주세요.
-</div>
     <div class="row" style="margin-top:8px">
         <button class="btn ghost" id="btn_npc_clear" type="button">초기화</button>
         <button class="btn" onclick="go('screen_npa')">다음(NPA 측정)</button>
@@ -3293,13 +3304,41 @@ function onNPCResults(res){
     gid('distNow').textContent = '-';
   }
   
-  if(gid('npc_status')) gid('npc_status').textContent = '얼굴 인식이 잠시 불안정합니다. 현재 값을 유지합니다.';
-  S.npc_speed_cm_s = 0;
-  S.npc_prev_pix_dist = null;
-  S.npc_fast_move_flag = false;
+  const overlay = gid('npc_overlay_msg');
 
-  return;
+if(overlay){
+  overlay.style.display = 'block';
+  overlay.textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
 }
+
+S.npc_speed_cm_s = 0;
+S.npc_prev_pix_dist = null;
+S.npc_fast_move_flag = false;
+
+// 상태 저장
+S.npc_last_dist = shownDist;
+S.npc_last_ts = now;
+S.npc_prev_pix_dist = pixDist;
+S.npc_fast_move_flag = fastMove;
+
+// 여기부터 추가
+if(!fastMove){
+  const overlay = gid('npc_overlay_msg');
+  if(overlay){
+    overlay.style.display = 'none';
+  }
+}
+
+// 경고 표시
+const overlay = gid('npc_overlay_msg');
+if(overlay){
+  if(fastMove){
+    overlay.style.display = 'block';
+    overlay.textContent = '너무 빠릅니다. 천천히 이동하세요.';
+  }
+}
+
+return;
 
   const lm = res.multiFaceLandmarks[0];
   const L = [33,133];
@@ -3390,9 +3429,15 @@ S.npc_prev_pix_dist = pixDist;
 S.npc_fast_move_flag = fastMove;
 
 // 경고 표시
-const warn = gid('speedWarn');
-if(warn){
-  warn.style.display = fastMove ? 'block' : 'none';
+const overlay = gid('npc_overlay_msg');
+
+if(overlay){
+  if(fastMove){
+    overlay.style.display = 'block';
+    overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+  }else{
+    overlay.style.display = 'none';
+  }
 }
 
   if(gid('npc_status')){
