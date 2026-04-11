@@ -499,6 +499,11 @@
   padding-top:1px;   /* 측정 화면 */
 }
 
+#screen_npc #npcTarget{
+  min-height: 220px;
+  padding: 18px 14px;
+}
+
 .pdInputField{
   display:grid;
   grid-template-columns: 120px 1fr;
@@ -522,7 +527,6 @@
   flex:0 0 auto;
   white-space:nowrap;
 }
-
 
 .sectionBody{
   padding:12px;
@@ -1991,9 +1995,14 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
      <div class="target" id="npcTarget" style="margin-top:4px; position:relative; flex-direction:column; gap:14px;">
-     <div style="width:2px;height:100px;background:#ef4444;border-radius:2px"></div>
-     <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
-  </div>
+         <div id="npc_fix_bar" style="width:2px;height:130px;background:#ef4444;border-radius:2px"></div>
+
+         <div id="npc_retry_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.45;">
+             스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
+         </div>
+
+         <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
+     </div>
 
   <div class="kpi" style="margin:10px 0 8px;">
      <div class="v">NPC1: <b id="npc1">-</b> cm</div>
@@ -2173,6 +2182,9 @@ async function sendToSheet(payload){
   npc_trial_index: 0,
   npa: null,
 
+  npc_waiting_for_reset: false,
+  npc_reset_reference_dist: null,
+
   npc_last_dist: null,
   npc_last_ts: 0,
   npc_smooth_dist: null,
@@ -2229,8 +2241,8 @@ function toKSTString(d = new Date()){
 }
 
   if(leavingNpc){
-    stopNPCCam(true);
-  }
+  stopNPCCam(false);
+}
 
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
@@ -3283,6 +3295,28 @@ function onNPCResults(res){
   S.distNow = shownDist;
   gid('distNow').textContent = shownDist.toFixed(1);
 
+  // 복시 후 "다시 멀어졌는지" 확인
+if(S.npc_waiting_for_reset && S.npc_reset_reference_dist !== null){
+  const movedBackEnough = shownDist >= (S.npc_reset_reference_dist + 8);
+
+  if(movedBackEnough){
+    S.npc_waiting_for_reset = false;
+    S.npc_reset_reference_dist = null;
+
+    const btn = gid('btn_npc_mark');
+    const guide = gid('npc_retry_guide');
+
+    if(btn){
+      btn.style.display = 'inline-flex';
+      btn.textContent = `복시 기록 #${S.npc_trial_index + 1}`;
+    }
+
+    if(guide){
+      guide.style.display = 'none';
+    }
+  }
+}
+
   // 2) 속도 계산
     const now = performance.now();
   let rawSpeed = 0;
@@ -3326,7 +3360,7 @@ function onNPCResults(res){
 
 // ---------- NPC 기록 ----------
 function markDiplopia(){
-  if(!(S.pdmm > 0)){
+  if(!(S.pd_auto_final_mm > 0)){
     alert('먼저 PD 측정을 완료해 주세요.');
     return;
   }
@@ -3354,15 +3388,29 @@ function markDiplopia(){
   S.npc_trial_index += 1;
 
   const btn = gid('btn_npc_mark');
-  if(btn){
-    if(S.npc_trial_index === 1){
-      btn.textContent = '복시 기록 #2';
-    }else if(S.npc_trial_index === 2){
-      btn.textContent = '복시 기록 #3';
-    }else{
+  const guide = gid('npc_retry_guide');
+
+  if(S.npc_trial_index >= 3){
+    if(btn){
       btn.textContent = '3회 기록 완료';
       btn.disabled = true;
     }
+    if(guide) guide.style.display = 'none';
+    S.npc_waiting_for_reset = false;
+    S.npc_reset_reference_dist = null;
+    return;
+  }
+
+  S.npc_waiting_for_reset = true;
+  S.npc_reset_reference_dist = Dcm;
+
+  if(btn){
+    btn.style.display = 'none';
+    btn.disabled = false;
+  }
+
+  if(guide){
+    guide.style.display = 'block';
   }
 }
 
@@ -3374,6 +3422,8 @@ function clearNPC(){
   S.npc_smooth_dist = null;
   S.npc_speed_cm_s = 0;
   S.distNow = null;
+  S.npc_waiting_for_reset = false;
+  S.npc_reset_reference_dist = null;
 
   ['npc1','npc2','npc3','npcAvg'].forEach(id => gid(id).textContent='-');
 
@@ -3387,6 +3437,16 @@ function clearNPC(){
   if(btn){
     btn.textContent = '복시 기록 #1';
     btn.disabled = false;
+    btn.style.display = 'inline-flex';
+  }
+
+  const guide = gid('npc_retry_guide');
+  if(guide){
+    guide.style.display = 'none';
+  }
+
+  if(gid('npc_status')){
+    gid('npc_status').textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
   }
 }
 
@@ -3972,7 +4032,7 @@ if(sb){
 
 resetPD();
 stopPDCam();
-stopNPCCam();
+stopNPCCam(true);
 S.npc_last_dist = null;
 S.npc_last_ts = 0;
 S.npc_trial_index = 0;
