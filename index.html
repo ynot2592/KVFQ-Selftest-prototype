@@ -1995,7 +1995,7 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
   <h1 style="margin-bottom:18px;">폭주근점(NPC) 자가측정</h1>
-  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npcTarget" style="margin-top:12px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
 
   <div id="npc_overlay_msg" style="
   position:absolute;
@@ -2019,7 +2019,7 @@ html, body{
   <div style="
     position:absolute;
     left:14px;
-    top:14px;
+    top:42px;
     display:flex;
     flex-direction:column;
     gap:8px;
@@ -2053,8 +2053,8 @@ html, body{
   </div>  
 
   <div style="
-      margin-top:16px;
-      margin-bottom:8px;
+      margin-top:20px;
+      margin-bottom:10px;
       font-size:17px;
       font-weight:700;
       color:#ffffff;
@@ -2062,7 +2062,7 @@ html, body{
      측정 방법
   </div>
 
-  <div style="margin-top:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
+  <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:20px 1fr; column-gap:8px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
       <div>중앙 빨간 선을 보면서 스마트폰을 천천히 가까이 이동하세요.</div>
@@ -2078,7 +2078,7 @@ html, body{
       <div>정확도를 위해 총 3번 측정합니다.</div>
     </div>
 
-    <div style="margin-top:4px; color:#9ca3af; font-size:13.5px; padding-left:28px;">
+    <div style="margin-top:2px; color:#9ca3af; font-size:13.5px; padding-left:28px;">
       (1회 측정 후, 다시 멀리 이동한 뒤 총 3회 반복합니다.)
     </div>
   </div>
@@ -2244,6 +2244,8 @@ async function sendToSheet(payload){
   
   npc_prev_pix_dist: null,
   npc_fast_move_flag: false,
+
+  npc_overlay_until: 0,
 
   pvt: {
     dur:120,
@@ -3413,13 +3415,18 @@ function onNPCResults(res){
 
   // 오버레이 표시
   if(overlay){
-    if(fastMove){
+  if(fastMove){
+    S.npc_overlay_until = Date.now() + 900;
+    overlay.style.display = 'block';
+    overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+  }else{
+    if(Date.now() < S.npc_overlay_until){
       overlay.style.display = 'block';
-      overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
     }else{
       overlay.style.display = 'none';
     }
   }
+}
 }
 
 // ---------- NPC 기록 ----------
