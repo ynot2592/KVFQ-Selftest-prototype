@@ -2005,31 +2005,41 @@ html, body{
          <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
      </div>
 
-  <div class="kpi" style="margin:10px 0 8px;">
+    <div class="kpi" style="margin:10px 0 8px;">
      <div class="v">NPC1: <b id="npc1">-</b> cm</div>
      <div class="v">NPC2: <b id="npc2">-</b> cm</div>
      <div class="v">NPC3: <b id="npc3">-</b> cm</div>
      <div class="v">평균: <b id="npcAvg">-</b> cm</div>
   </div>
 
-  <div style="margin-top:14px; color:#e6ebff; line-height:1.6; text-align:left;">
-  <div><b>1.</b> 중앙 빨간 선을 보면서 스마트폰을 천천히 가까이 이동하세요.</div>
-  <div style="margin-top:8px;"><b>2.</b> 빨간 선이 두 개로 보이는 순간 버튼을 눌러 주세요.</div>
-  <div style="margin-top:8px;"><b>3.</b> 정확도를 위해 총 3번 측정합니다.</div>
-</div>
-     <span style="color:#9ca3af; font-size:14px;">
-       (1회 측정 후, 다시 멀리 이동한 뒤 총 3회 반복합니다.)
-</span>
-  </p>
-<div class="row">
-  <span class="badge">교정 기준 D₀ = 40 cm</span>
-  <span class="badge">PD = <b id="labPD">-</b> mm</span>
-</div>
+  <div class="kpi" style="margin:8px 0 12px;">
+     <div class="v">교정 기준: <b>40</b> cm</div>
+     <div class="v">PD: <b id="labPD">-</b> mm</div>
+     <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
+     <div class="v">pixel PD: <b id="pixPD2">-</b></div>
+     <div class="v">권장 속도: <b>1~2</b> cm/s</div>
+  </div>
 
-<div class="kpi" style="margin:8px 0">
-  <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
-  <div class="v">pixel PD: <b id="pixPD2">-</b></div>
-</div>
+  <div style="margin-top:12px; color:#e6ebff; line-height:1.6;">
+    <div style="display:grid; grid-template-columns:20px 1fr; column-gap:8px; align-items:start; margin-top:0;">
+      <div style="font-weight:700;">1.</div>
+      <div>중앙 빨간 선을 보면서 스마트폰을 천천히 가까이 이동하세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:20px 1fr; column-gap:8px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">2.</div>
+      <div>빨간 선이 두 개로 보이는 순간 버튼을 눌러 주세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:20px 1fr; column-gap:8px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">3.</div>
+      <div>정확도를 위해 총 3번 측정합니다.</div>
+    </div>
+
+    <div style="margin-top:10px; color:#9ca3af; font-size:14px; padding-left:28px;">
+      (1회 측정 후, 다시 멀리 이동한 뒤 총 3회 반복합니다.)
+    </div>
+  </div>
 
 <div class="videoWrap" style="margin-top:8px; display:none;">
   <video id="npc_video" playsinline autoplay muted></video>
@@ -2227,7 +2237,7 @@ function toKSTString(d = new Date()){
   let consentSigned = false;
   let isSubmitting = false;
   const PD_PX_TO_MM = 0.7186;
-  const NPC_SPEED_MAX = 2.2; // NPC 이동 속도 경고 임계값(cm/s)
+  const NPC_SPEED_MAX = 1.8; // NPC 이동 속도 경고 임계값(cm/s)
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
@@ -3343,11 +3353,11 @@ if(S.npc_waiting_for_reset && S.npc_reset_reference_dist !== null){
   }
 
   // 속도 smoothing
-  S.npc_speed_cm_s = (S.npc_speed_cm_s * 0.6) + (rawSpeed * 0.4);
+  S.npc_speed_cm_s = (S.npc_speed_cm_s * 0.45) + (rawSpeed * 0.55);
 
   let shownSpeed = Number(S.npc_speed_cm_s.toFixed(1));
 
-  if(shownSpeed < 0.25){
+  if(shownSpeed < 0.2){
    shownSpeed = 0;
   }
 
