@@ -1995,29 +1995,53 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
   <h1 style="margin-bottom:18px;">폭주근점(NPC) 자가측정</h1>
-     <div class="target" id="npcTarget" style="margin-top:4px; position:relative; flex-direction:column; gap:14px;">
-         <div id="npc_fix_bar" style="width:2px;height:130px;background:#ef4444;border-radius:2px"></div>
+  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
 
-         <div id="npc_retry_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.45;">
-             스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
-         </div>
+  <!-- 왼쪽 상태값 -->
+  <div style="
+    position:absolute;
+    left:14px;
+    top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:flex-start;
+    text-align:left;
+  ">
+    <span class="badge">교정 기준 40 cm</span>
+    <span class="badge">PD <b id="labPD">-</b> mm</span>
+    <span class="badge">거리 <b id="distNow">-</b> cm</span>
+    <span class="badge">pixel PD <b id="pixPD2">-</b></span>
+    <span class="badge">권장 속도 1~2 cm/s</span>
+  </div>
 
-         <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
-     </div>
+  <!-- 가운데 타겟/버튼 -->
+  <div style="display:flex; flex-direction:column; align-items:center; gap:14px;">
+    <div id="npc_fix_bar" style="width:2px;height:130px;background:#ef4444;border-radius:2px"></div>
+
+    <div id="npc_retry_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.45;">
+      스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
+    </div>
+
+    <button class="btn primary" id="btn_npc_mark" type="button">복시 기록 #1</button>
+  </div>
+</div>
 
     <div class="kpi" style="margin:10px 0 8px;">
      <div class="v">NPC1: <b id="npc1">-</b> cm</div>
      <div class="v">NPC2: <b id="npc2">-</b> cm</div>
      <div class="v">NPC3: <b id="npc3">-</b> cm</div>
      <div class="v">평균: <b id="npcAvg">-</b> cm</div>
-  </div>
+  </div>  
 
-  <div class="kpi" style="margin:8px 0 12px;">
-     <div class="v">교정 기준: <b>40</b> cm</div>
-     <div class="v">PD: <b id="labPD">-</b> mm</div>
-     <div class="v">실시간 추정 거리: <b id="distNow">-</b> cm</div>
-     <div class="v">pixel PD: <b id="pixPD2">-</b></div>
-     <div class="v">권장 속도: <b>1~2</b> cm/s</div>
+  <div style="
+      margin-top:14px;
+      margin-bottom:6px;
+      font-size:15.5px;
+      font-weight:700;
+      color:#ffffff;
+  ">
+     측정 방법
   </div>
 
   <div style="margin-top:12px; color:#e6ebff; line-height:1.6;">
@@ -2206,6 +2230,9 @@ async function sendToSheet(payload){
   npc_last_ts: 0,
   npc_smooth_dist: null,
   npc_speed_cm_s: 0,
+  
+  npc_prev_pix_dist: null,
+  npc_fast_move_flag: false,
 
   pvt: {
     dur:120,
@@ -2237,7 +2264,6 @@ function toKSTString(d = new Date()){
   let consentSigned = false;
   let isSubmitting = false;
   const PD_PX_TO_MM = 0.7186;
-  const NPC_SPEED_MAX = 1.8; // NPC 이동 속도 경고 임계값(cm/s)
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
@@ -3269,6 +3295,9 @@ function onNPCResults(res){
   
   if(gid('npc_status')) gid('npc_status').textContent = '얼굴 인식이 잠시 불안정합니다. 현재 값을 유지합니다.';
   S.npc_speed_cm_s = 0;
+  S.npc_prev_pix_dist = null;
+  S.npc_fast_move_flag = false;
+
   return;
 }
 
@@ -3335,39 +3364,36 @@ if(S.npc_waiting_for_reset && S.npc_reset_reference_dist !== null){
 }
 
   // 2) 속도 계산
-    const now = performance.now();
-  let rawSpeed = 0;
+  const now = performance.now();
 
-  if(S.npc_last_dist !== null && S.npc_last_ts){
-    const dt = (now - S.npc_last_ts) / 1000;
-    const delta = Math.abs(shownDist - S.npc_last_dist);
+  // 너무 빠른 이동 감지: 거리 변화량 / pixel PD 변화량 기준
+  let fastMove = false;
 
-    if(dt > 0.08){
-      // 0.2cm 이하는 미세 흔들림으로 보고 무시
-      if(delta < 0.2){
-        rawSpeed = 0;
-      }else{
-        rawSpeed = delta / dt;
-      }
+  if(S.npc_last_dist !== null){
+    const distDrop = S.npc_last_dist - shownDist; // 가까워질수록 양수
+    if(distDrop >= 2.5){
+      fastMove = true;
     }
   }
 
-  // 속도 smoothing
-  S.npc_speed_cm_s = (S.npc_speed_cm_s * 0.45) + (rawSpeed * 0.55);
-
-  let shownSpeed = Number(S.npc_speed_cm_s.toFixed(1));
-
-  if(shownSpeed < 0.2){
-   shownSpeed = 0;
+  if(S.npc_prev_pix_dist !== null){
+    const pixJump = pixDist - S.npc_prev_pix_dist; // 가까워질수록 양수
+    if(pixJump >= 12){
+      fastMove = true;
+    }
   }
 
-  S.npc_last_dist = shownDist;
-  S.npc_last_ts = now;  
+// 상태 저장
+S.npc_last_dist = shownDist;
+S.npc_last_ts = now;
+S.npc_prev_pix_dist = pixDist;
+S.npc_fast_move_flag = fastMove;
 
-  const warn = gid('speedWarn');
-  if(warn){
-    warn.style.display = shownSpeed > NPC_SPEED_MAX ? 'block' : 'none';
-  }
+// 경고 표시
+const warn = gid('speedWarn');
+if(warn){
+  warn.style.display = fastMove ? 'block' : 'none';
+}
 
   if(gid('npc_status')){
     gid('npc_status').textContent = '중앙 빨간 선을 보면서 천천히 이동하세요. 복시가 느껴지면 버튼을 누르세요.';
