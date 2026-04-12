@@ -3237,7 +3237,7 @@ function onPDResults(res){
 
   setPDStateMode('normal');
 
-  if(S.pd_hold_frames >= 8){
+  if(S.pd_hold_frames >= 12){
     S.pd_hold_frames = 0;
     S.pd_last_hold_value = null;
     recordPDTrial();
