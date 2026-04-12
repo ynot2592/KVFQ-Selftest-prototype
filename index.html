@@ -53,20 +53,14 @@
   .hidden{display:none}
   .kpi{display:flex;gap:10px;flex-wrap:wrap}
   .kpi .v{padding:8px 10px;border-radius:10px;background:#111a2f;border:1px solid rgba(255,255,255,.08)}
-  .videoWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-  .videoWrap{
-  position:relative;
-  border-radius:14px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);
-}
+  .videoWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}  
 
-.videoWrap video,
-.videoWrap canvas{
-  display:block;
-  width:100%;
-  height:auto;
-}
+  .videoWrap video,
+  .videoWrap canvas{
+     display:block;
+     width:100%;
+     height:auto;
+ }
 
 #pd_video{
   position:relative;
@@ -465,7 +459,6 @@
   background:#0f1528;
 }
 
-
 .sectionHead{
   display:flex;
   align-items:center;
@@ -487,17 +480,8 @@
   padding:10px 12px; 
 }
 
-#screen_pd .sectionBody{
-  padding-top:2px;     /* 핵심: 이게 간격 줄이는 부분 */
-}
-
-/* 필요하면 개별 박스 미세 조정 */
-#screen_pd .sectionBox:nth-of-type(1) .sectionBody{
-  padding-top:1px;   /* PD 입력 */
-}
-
-#screen_pd .sectionBox:nth-of-type(2) .sectionBody{
-  padding-top:1px;   /* 카메라 안내 */
+#screen_pd .pd-box-input .sectionBody{
+  padding-top: 1px;
 }
 
 #screen_pd .pd-box-method{
@@ -513,12 +497,8 @@
   background: transparent;
 }
 
-#screen_pd .sectionBox:nth-of-type(2) .sectionBody{
-  background: transparent;
-}
-
-#screen_pd .sectionBox:nth-of-type(3) .sectionBody{
-  padding-top:1px;   /* 측정 화면 */
+#screen_pd .pd-box-camera .sectionBody{
+  padding-top: 1px;
 }
 
 #screen_npc #npcTarget{
@@ -1411,9 +1391,6 @@ html, body{
 
 #screen_pd h1{
   margin-bottom: 14px;
-}
-
-#screen_pd h1{
   font-size:24px;
 }
 
@@ -1431,27 +1408,28 @@ html, body{
   line-height: 1.55;
 }
 
-#screen_pd .sectionBox:nth-of-type(1) .summary-note{
-  font-size: 14.5px;
-  line-height: 1.5;
+#screen_pd .pd-box-input .sectionHead{
+  font-size: 15px;
 }
 
-#screen_pd .sectionBox:nth-of-type(1) .sectionHead{
-  font-size: 15.2px;
+#screen_pd .pd-box-input .summary-note{
+  font-size: 13.3px;
+  line-height: 1.42;
 }
 
-#screen_pd .sectionBox:nth-of-type(1) .summary-note{
-  font-size: 13.8px;
-  line-height: 1.45;
+#screen_pd .pd-box-input .pdInputField > span{
+  font-size: 13.2px;
+  line-height: 1.15;
 }
 
-#screen_pd .sectionBox:nth-of-type(1) .pdInputField > span{
-  font-size: 14px;
-  line-height: 1.2;
+#screen_pd .pd-box-input .pdInputField > span .small{
+  font-size: 11px;
 }
 
-#screen_pd .sectionBox:nth-of-type(1) .pdInputField > span .small{
-  font-size: 11.5px;
+#screen_pd .pd-box-input .pdUnit{
+  font-size: 12.6px;
+  line-height: 1;
+  color: var(--muted);
 }
 
 .pdStartLayer{
@@ -1990,16 +1968,23 @@ html, body{
   </div>
 
   <div class="sectionBody">
-    <p style="margin:0 0 12px; color:#dbe6ff; line-height:1.5; font-size:14.2px;">
-      전면 카메라는 <b>얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용</b>되며,
-      <b>영상·사진·음성은 저장되지 않습니다.</b><br>
-      보다 안정적인 측정을 위해 <b>측정 중에는 움직임을 최소화</b>해 주세요.
+    <p style="
+        margin:8px 0 14px;
+        padding-left:1.1em;
+        text-indent:-1.1em;
+        color:var(--muted);
+        line-height:1.45;
+        font-size:13.2px;
+    ">
+        ※ 전면 카메라는 <b style="color:#dbe6ff;">얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용</b>되며,
+        <b style="color:#dbe6ff;">영상·사진·음성은 저장되지 않습니다.</b>
+        보다 안정적인 측정을 위해 <b style="color:#dbe6ff;">측정 중에는 움직임을 최소화</b>해 주세요.
     </p>
 
     <div style="margin-top:0; color:#e6ebff; line-height:1.55; font-size:14.6px;">
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
         <div style="font-weight:700;">1.</div>
-        <div>휴대전화를 <b>팔을 살짝 앞으로 편 상태(약 40~50cm)</b>에서 들고, 화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
+        <div>휴대전화를 <b>팔을 살짝 앞으로 편 상태 (약 40~50cm)</b>에서 들고, 화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
       </div>
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2014,13 +1999,13 @@ html, body{
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
         <div style="font-weight:700;">4.</div>
-        <div>준비가 되면 화면 중앙의<b>[측정 시작]</b> 버튼을 누르세요. 자세를 유지하면 <b>자동으로 측정</b>됩니다.</div>
+        <div>준비가 되면 화면 중앙의<b> [ 측정 시작 ]</b> 버튼을 누르세요. 자세를 유지하고 조건이 맞으면 <b>자동으로 측정</b>됩니다.</div>
       </div>
     </div>
   </div>
 </div>
 
-  <div class="sectionBox">
+  <div class="sectionBox pd-box-camera">
     <div class="sectionHead">
       <span>측정 화면</span>
     </div>
@@ -2041,7 +2026,7 @@ html, body{
 
       <div class="kpi" style="margin-top:8px">        
         <div class="v">픽셀 거리: <b id="pd_pix_value">-</b></div>
-        <div class="v">실시간 추정ㄹ PD: <b id="pd_auto_live_value">-</b> mm</div>
+        <div class="v">실시간 추정 PD: <b id="pd_auto_live_value">-</b> mm</div>
       </div>
     </div>
   </div>
@@ -2053,9 +2038,9 @@ html, body{
     <div class="sectionBody">
       <div class="kpi">
         <div class="v">입력 PD: <b id="pd_known_value">-</b></div>
-        <div class="v">1차 자동 PD: <b id="pd_auto_1">-</b></div>
-        <div class="v">2차 자동 PD: <b id="pd_auto_2">-</b></div>
-        <div class="v">3차 자동 PD: <b id="pd_auto_3">-</b></div>
+        <div class="v">1차 추정 PD: <b id="pd_auto_1">-</b></div>
+        <div class="v">2차 추정 PD: <b id="pd_auto_2">-</b></div>
+        <div class="v">3차 추정 PD: <b id="pd_auto_3">-</b></div>
         <div class="v">최종 PD: <b id="pd_auto_final">-</b></div>
       </div>
 
