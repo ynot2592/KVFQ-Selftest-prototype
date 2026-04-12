@@ -1807,7 +1807,8 @@ html, body{
      </p>
 
      <p>
-        이어서 스마트폰 기반 자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)을 진행할 수 있습니다.
+        이어서 스마트폰 기반 
+        <span class="selftest-emphasis">자가측정(동공간거리, 폭주근점, 조절근점, 반응속도)을 진행</span>할 수 있습니다.
      </p>
 
      <p>
@@ -1821,7 +1822,7 @@ html, body{
         원하지 않을 경우 설문만 제출하고 종료할 수 있습니다.
      </p>
 
-     <ul style="margin:10px 0 0 18px; color:var(--muted); line-height:1.6;">
+     <ul style="margin:10px 0 0 20px; color:var(--muted); line-height:1.6;">
          <li>PD(동공간거리)</li>
          <li>폭주근점(NPC)</li>
          <li>조절근점(NPA)</li>
@@ -1968,25 +1969,25 @@ html, body{
   </div>
 
   <div class="sectionBody">
-    <div style="margin:10px 0 20px;">
+    <div style="margin:8px 0 20px;">
   <div style="
     padding-left:1.1em;
     text-indent:-1.1em;
     color:var(--muted);
     line-height:1.45;
-    font-size:13.5px;
+    font-size:13.2px;
   ">
     ※ 전면 카메라는 <b style="color:#dbe6ff;">얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용</b>되며,
     <b style="color:#dbe6ff;">영상·사진·음성은 저장되지 않습니다.</b>
   </div>
 
   <div style="
-    margin-top:4px;
+    margin-top:2px;
     padding-left:1.1em;
     text-indent:-1.1em;
     color:var(--muted);
     line-height:1.45;
-    font-size:13.5px;
+    font-size:13.2px;
   ">
     ※ 보다 안정적인 측정을 위해 <b style="color:#dbe6ff;">측정 중에는 움직임을 최소화</b>해 주세요.
   </div>
@@ -2071,8 +2072,12 @@ html, body{
     <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
     <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
     <button class="btn" id="btn_pd_restart" type="button" style="margin-left:auto;">카메라 다시 시작</button>
-</div>
-</section>
+  </div>
+
+  <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+    <button class="btn ghost" id="btn_pd_finish" type="button">PD 측정만 하고 종료</button>
+  </div>
+  </section>
 
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
@@ -3302,6 +3307,10 @@ function resetPD(){
   gid('pd_start_layer').style.display = 'flex';
 }
 
+function finishFromPD(){
+  openThankyou();
+}
+
 async function setupNPCCam(){
   if(!npcVideo || !npcCanvas || !npcCtx) return;
 
@@ -4269,6 +4278,8 @@ gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
 gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
+
+gid('btn_pd_finish')?.addEventListener('click', () => finishFromPD());
 
 </script>
 </body>
