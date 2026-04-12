@@ -115,16 +115,34 @@
   text-align:center;
 }
 
+.pdOverlayBadge.dotMode{
+  font-size: 20px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 8px 12px;
+  color: #67e8f9;
+}
+
+.pdOverlayBadge.textMode{
+  font-size: 13px;
+  min-width: auto;
+  min-height: auto;
+  padding: 7px 12px;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
 .pdOverlayText{
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
-  color:#e6ebff;
-  font-size: 13.5px;
-  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(15,23,42,.62);
+  border: 1px solid rgba(255,255,255,.14);
+  color:#ffffff;
+  font-size: 14px;
+  line-height:1.4;
   text-align:center;
   max-width:90%;
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
 }
   
   .question-block{
@@ -2025,7 +2043,7 @@ html, body{
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
         <div style="font-weight:700;">4.</div>
-        <div>준비가 되면 화면 중앙의<b> [ 측정 시작 ]</b> 버튼을 누르세요.</div>
+        <div><b>화면 상단의 점을 바라본 상태</b>로 <b>[ 측정 시작 ]</b> 버튼을 누르세요.</div>
       </div>
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2046,8 +2064,25 @@ html, body{
   <canvas id="pd_canvas"></canvas>
 
   <div id="pd_start_layer" class="pdStartLayer">
-      <button id="btn_pd_start" class="pdStartBtn">측정 시작</button>
-  </div>  
+  <div style="display:flex; flex-direction:column; align-items:center; gap:14px;">
+    <div style="
+      color:#ffffff;
+      font-size:14px;
+      line-height:1.4;
+      text-align:center;
+      background:rgba(15,23,42,.62);
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      text-shadow:0 1px 2px rgba(0,0,0,.45);
+    ">
+      화면 상단의 <b style="color:#67e8f9;">점</b>을 바라본 뒤<br>
+      아래 버튼을 눌러 주세요.
+    </div>
+
+    <button id="btn_pd_start" class="pdStartBtn">측정 시작</button>
+  </div>
+</div>  
 
   <div class="pdOverlay">
     <div id="pd_overlay_trial" class="pdOverlayBadge">●</div>
@@ -2943,9 +2978,15 @@ function setPDNormalGuide(){
 }
 
 function setPDStateMode(mode, message=''){
+  const badgeEl = gid('pd_overlay_trial');
   const statusEl = gid('pd_overlay_status');
 
+  if(!badgeEl) return;
+
+  badgeEl.classList.remove('dotMode', 'textMode');
+
   if(mode === 'normal'){
+    badgeEl.classList.add('dotMode');
     setPDTrialDisplay('●');
     setPDStatus('위의 점을 바라봐 주세요.');
     if(statusEl) statusEl.style.display = 'block';
@@ -2953,18 +2994,21 @@ function setPDStateMode(mode, message=''){
   }
 
   if(mode === 'error'){
+    badgeEl.classList.add('textMode');
     setPDTrialDisplay(message);
     if(statusEl) statusEl.style.display = 'none';
     return;
   }
 
   if(mode === 'done'){
+    badgeEl.classList.add('textMode');
     setPDTrialDisplay(message || '완료');
     if(statusEl) statusEl.style.display = 'none';
     return;
   }
 
   if(mode === 'trial'){
+    badgeEl.classList.add('textMode');
     setPDTrialDisplay(message);
     if(statusEl) statusEl.style.display = 'none';
     return;
