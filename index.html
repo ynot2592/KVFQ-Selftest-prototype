@@ -113,6 +113,10 @@
   align-items:center;
   justify-content:center;
   text-align:center;
+  position:absolute;
+  top:14%;
+  left:50%;
+  transform:translate(-50%, -50%);
 }
 
 .pdOverlayBadge.dotMode{
@@ -133,6 +137,11 @@
 }
 
 .pdOverlayText{
+  position:absolute;            /* 추가 */
+  top:22%;                      /* 위치 (점 아래) */
+  left:50%;                     /* 가운데 정렬 */
+  transform:translateX(-50%);   /* 정확한 중앙 */
+
   padding: 6px 10px;
   border-radius: 10px;
   background: rgba(15,23,42,.62);
@@ -2064,20 +2073,7 @@ html, body{
   <canvas id="pd_canvas"></canvas>
 
   <div id="pd_start_layer" class="pdStartLayer">
-
-  <!-- 시작 전 주시점 -->
-  <div id="pd_pre_target" style="
-    position:absolute;
-    top:14%;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:20px;
-    color:#67e8f9;
-    pointer-events:none;
-  ">●</div>
-
   <div style="display:flex; flex-direction:column; align-items:center; gap:14px;">
-    
     <div style="
       color:#ffffff;
       font-size:14px;
@@ -4343,14 +4339,8 @@ S.npc_speed_cm_s = 0;
 
 gid('btn_pd_start')?.addEventListener('click', () => {
   resetPD();
-
-  // 시작 전 점 숨기기 (여기 추가)
-  const preTarget = gid('pd_pre_target');
-  if(preTarget) preTarget.style.display = 'none';
-
   S.pd_started = true;
   gid('pd_start_layer').style.display = 'none';
-
   startPDMeasure();
 });
 
@@ -4364,10 +4354,6 @@ gid('btn_pd_restart')?.addEventListener('click', async () => {
       setPDStateMode('normal');
       gid('pd_start_layer').style.display = 'flex';
       S.pd_started = false;
-
-      // 주시점 다시 표시 (여기 추가)
-      const preTarget = gid('pd_pre_target');
-      if(preTarget) preTarget.style.display = 'block';
     }
   }catch(e){
     alert('카메라를 다시 시작할 수 없습니다: ' + (e.message || e));
@@ -4378,10 +4364,6 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
   resetPD();
   gid('pd_start_layer').style.display = 'flex';
   setPDStateMode('normal');
-
-  // 주시점 다시 표시 (여기 추가)
-  const preTarget = gid('pd_pre_target');
-  if(preTarget) preTarget.style.display = 'block';
 });
 
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
