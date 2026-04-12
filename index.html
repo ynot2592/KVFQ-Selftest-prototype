@@ -1974,7 +1974,7 @@ html, body{
     text-indent:-1.1em;
     color:var(--muted);
     line-height:1.45;
-    font-size:13.2px;
+    font-size:13.5px;
   ">
     ※ 전면 카메라는 <b style="color:#dbe6ff;">얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용</b>되며,
     <b style="color:#dbe6ff;">영상·사진·음성은 저장되지 않습니다.</b>
@@ -1986,7 +1986,7 @@ html, body{
     text-indent:-1.1em;
     color:var(--muted);
     line-height:1.45;
-    font-size:13.2px;
+    font-size:13.5px;
   ">
     ※ 보다 안정적인 측정을 위해 <b style="color:#dbe6ff;">측정 중에는 움직임을 최소화</b>해 주세요.
   </div>
@@ -1995,7 +1995,7 @@ html, body{
     <div style="margin-top:0; color:#e6ebff; line-height:1.55; font-size:14.6px;">
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
         <div style="font-weight:700;">1.</div>
-        <div>휴대전화를 <b>팔을 살짝 앞으로 편 상태<br>(약 40~50cm)</b>에서 들고, 화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
+        <div>휴대전화를 <b>팔을 살짝 앞으로 편 상태 (약 40 ~ 50cm)</b>에서 들고, 화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
       </div>
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2014,7 +2014,7 @@ html, body{
       </div>
 
       <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
-        <div style="font-weight:700;">3.</div>
+        <div style="font-weight:700;">5.</div>
         <div>자세를 유지하고 조건이 맞으면, <b>자동으로 측정</b>됩니다.</div>
       </div>
     </div>
@@ -3080,6 +3080,13 @@ function onPDResults(res){
   pdLastAutoMm = Number((pdLastPix * PD_PX_TO_MM).toFixed(1));
   gid('pd_auto_live_value').textContent = pdLastAutoMm.toFixed(1);
 
+  if(pdLastAutoMm > 75){
+    setPDStatus('스마트폰을 조금 더 멀리 해 주세요.');
+    S.pd_hold_frames = 0;
+    S.pd_last_hold_value = null;
+    return;
+  }
+
   if(!quality.ok){
     setPDStatus(quality.reason);
     S.pd_hold_frames = 0;
@@ -3138,7 +3145,7 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
     return { ok:false, reason:'스마트폰을 조금 더 가까이 해 주세요.' };
   }
 
-  if(pixDist > 220){
+  if(pixDist > 150){
     return { ok:false, reason:'스마트폰을 조금 더 멀리 해 주세요.' };
   }
 
