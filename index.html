@@ -71,6 +71,7 @@
 #pd_video{
   position:relative;
   z-index:1;
+  transform: scaleX(-1);
 }
 
 #pd_canvas{
@@ -78,6 +79,7 @@
   inset:0;
   z-index:2;
   pointer-events:none;
+  transform: scaleX(-1);
 }
 
   .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#12203a;border:1px solid rgba(255,255,255,.1)}
@@ -90,22 +92,23 @@
 
   .pdOverlay{
   position:absolute;
+  top:10px;
   left:10px;
   right:10px;
-  bottom:10px;
   display:flex;
   flex-direction:column;
   gap:8px;
   pointer-events:none;
   z-index:3;
+  align-items:center;
 }
 
 .pdOverlayBadge{
-  align-self:flex-start;
-  padding:6px 10px;
+  align-self:center;
+  padding:6px 12px;
   border-radius:999px;
-  background:rgba(15,23,42,.78);
-  border:1px solid rgba(255,255,255,.18);
+  background:rgba(15,23,42,.82);
+  border:1px solid rgba(255,255,255,.22);
   color:#fff;
   font-size:13px;
   font-weight:700;
@@ -119,6 +122,8 @@
   color:#e6ebff;
   font-size:13px;
   line-height:1.35;
+  text-align:center;
+  max-width:90%;
 }
   
   .question-block{
@@ -493,6 +498,19 @@
 
 #screen_pd .sectionBox:nth-of-type(2) .sectionBody{
   padding-top:1px;   /* 카메라 안내 */
+}
+
+#screen_pd .sectionBox:nth-of-type(2){
+  background: rgba(34,211,238,.06);
+  border: 1px solid rgba(34,211,238,.22);
+}
+
+#screen_pd .sectionBox:nth-of-type(2) .sectionHead{
+  background: rgba(34,211,238,.04);
+}
+
+#screen_pd .sectionBox:nth-of-type(2) .sectionBody{
+  background: transparent;
 }
 
 #screen_pd .sectionBox:nth-of-type(3) .sectionBody{
@@ -1391,6 +1409,16 @@ html, body{
   margin-bottom: 14px;
 }
 
+#screen_pd h1{
+  font-size:24px;
+}
+
+@media (max-width:430px){
+  #screen_pd h1{
+    font-size:22px;
+  }
+}
+
 #screen_pd .pdIntroNote{
   margin-top: 0;
   margin-bottom: 20px;
@@ -1402,6 +1430,24 @@ html, body{
 #screen_pd .sectionBox:nth-of-type(1) .summary-note{
   font-size: 14.5px;
   line-height: 1.5;
+}
+
+#screen_pd .sectionBox:nth-of-type(1) .sectionHead{
+  font-size: 15.2px;
+}
+
+#screen_pd .sectionBox:nth-of-type(1) .summary-note{
+  font-size: 13.8px;
+  line-height: 1.45;
+}
+
+#screen_pd .sectionBox:nth-of-type(1) .pdInputField > span{
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+#screen_pd .sectionBox:nth-of-type(1) .pdInputField > span .small{
+  font-size: 11.5px;
 }
 
 .pdStartLayer{
@@ -1927,16 +1973,39 @@ html, body{
 
   <div class="sectionBox">
     <div class="sectionHead">
-      <span>카메라 안내</span>
+      <span>측정 방법</span>
     </div>
     <div class="sectionBody">
-      <p class="summary-note">
-          전면 카메라를 사용하여 <span class="selftest-emphasis">얼굴 위치와 눈의 간격을 확인합니다.</span><br><br>
-          <span class="selftest-emphasis">스마트폰을 얼굴 정면에 위치</span>시키고, 눈과 얼굴이 화면에 잘 보이도록 해주세요.<br><br>
-          <span class="selftest-emphasis">얼굴이 화면 중앙</span>에 오도록 하고, <span class="selftest-emphasis">기울어지지 않게 유지</span>해 주세요.<br><br>
-          <span class="selftest-emphasis">영상·사진·음성은 수집 및 저장되지 않습니다.</span>
-      </p>
+  <div style="margin-top:2px; color:#e6ebff; line-height:1.55; font-size:14.6px;">
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
+      <div style="font-weight:700;">1.</div>
+      <div>화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
     </div>
+
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">2.</div>
+      <div>휴대전화를 <b>눈높이</b>에 맞추고, 얼굴이 <b>화면 중앙</b>에 오도록 맞춰 주세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">3.</div>
+      <div><b>고개를 기울이지 않고</b> 정면을 바라본 상태로 유지해 주세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">4.</div>
+      <div>준비가 되면 아래의 <b>[측정 시작]</b> 버튼을 눌러 주세요.</div>
+    </div>
+
+    <div style="margin-top:10px; color:#9ca3af; font-size:13.5px; line-height:1.35; padding-left:14px;">
+      ※ 전면 카메라는 얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용되며, 영상·사진·음성은 저장되지 않습니다.
+    </div>
+
+    <div style="margin-top:4px; color:#9ca3af; font-size:13.5px; line-height:1.35; padding-left:14px;">
+      ※ 측정 중에는 움직임을 최소화해 주세요.
+    </div>
+  </div>
+</div>
   </div>
 
   <div class="sectionBox">
@@ -1985,10 +2054,10 @@ html, body{
   </div>
 
   <div class="row" style="margin-top:12px">
-      <button class="btn ghost" onclick="go('screen_home')">이전</button>
-      <button class="btn" id="btn_pd_restart" type="button">카메라 다시 시작</button>    
-      <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
-      <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
+    <button class="btn ghost" onclick="go('screen_home')">이전</button>
+    <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
+    <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
+    <button class="btn" id="btn_pd_restart" type="button" style="margin-left:auto;">카메라 다시 시작</button>
 </div>
 </section>
 
