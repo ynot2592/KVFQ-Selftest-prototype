@@ -500,13 +500,17 @@
   padding-top:1px;   /* 카메라 안내 */
 }
 
-#screen_pd .sectionBox:nth-of-type(2){
+#screen_pd .pd-box-method{
   background: rgba(34,211,238,.06);
   border: 1px solid rgba(34,211,238,.22);
 }
 
-#screen_pd .sectionBox:nth-of-type(2) .sectionHead{
+#screen_pd .pd-box-method .sectionHead{
   background: rgba(34,211,238,.04);
+}
+
+#screen_pd .pd-box-method .sectionBody{
+  background: transparent;
 }
 
 #screen_pd .sectionBox:nth-of-type(2) .sectionBody{
@@ -1473,6 +1477,15 @@ html, body{
   box-shadow:0 4px 16px rgba(0,0,0,0.3);
 }
 
+#screen_pd .pd-box-result .kpi .v{
+  font-size: 13.2px;
+  line-height: 1.35;
+}
+
+#screen_pd .pd-box-result .kpi .v b{
+  font-size: 13.8px;
+}
+
 </style>
 </head>
 <body>
@@ -1950,11 +1963,11 @@ html, body{
   이 단계에서는 <b>양안 동공 중심 간 거리(PD)</b>를 측정합니다.
   </p>
 
-  <div class="sectionBox">
-    <div class="sectionHead">
-      <span>PD 입력</span>
-      <span class="badgeOptional">선택</span>
-    </div>
+  <div class="sectionBox pd-box-input">
+  <div class="sectionHead">
+    <span>PD 입력</span>
+    <span class="badgeOptional">선택</span>
+  </div>
     <div class="sectionBody">
       <p class="summary-note">
         <b>본인의 PD를 알고 있는 경우에만 입력해 주세요.</b><br>
@@ -1971,42 +1984,41 @@ html, body{
     </div>
   </div>
 
-  <div class="sectionBox">
-    <div class="sectionHead">
-      <span>측정 방법</span>
-    </div>
-    <div class="sectionBody">
-  <div style="margin-top:2px; color:#e6ebff; line-height:1.55; font-size:14.6px;">
-    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
-      <div style="font-weight:700;">1.</div>
-      <div>화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
-    </div>
+  <div class="sectionBox pd-box-method">
+  <div class="sectionHead">
+    <span>측정 방법</span>
+  </div>
 
-    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
-      <div style="font-weight:700;">2.</div>
-      <div>휴대전화를 <b>눈높이</b>에 맞추고, 얼굴이 <b>화면 중앙</b>에 오도록 맞춰 주세요.</div>
-    </div>
+  <div class="sectionBody">
+    <p style="margin:0 0 12px; color:#dbe6ff; line-height:1.5; font-size:14.2px;">
+      전면 카메라는 <b>얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용</b>되며,
+      <b>영상·사진·음성은 저장되지 않습니다.</b><br>
+      보다 안정적인 측정을 위해 <b>측정 중에는 움직임을 최소화</b>해 주세요.
+    </p>
 
-    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
-      <div style="font-weight:700;">3.</div>
-      <div><b>고개를 기울이지 않고</b> 정면을 바라본 상태로 유지해 주세요.</div>
-    </div>
+    <div style="margin-top:0; color:#e6ebff; line-height:1.55; font-size:14.6px;">
+      <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
+        <div style="font-weight:700;">1.</div>
+        <div>휴대전화를 <b>팔을 살짝 앞으로 편 상태(약 40~50cm)</b>에서 들고, 화면에 얼굴이 잘 보이도록 <b>정면</b>을 향해 주세요.</div>
+      </div>
 
-    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
-      <div style="font-weight:700;">4.</div>
-      <div>준비가 되면 아래의 <b>[측정 시작]</b> 버튼을 눌러 주세요.</div>
-    </div>
+      <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+        <div style="font-weight:700;">2.</div>
+        <div>휴대전화를 <b>눈높이</b>에 맞추고, 얼굴이 <b>화면 중앙</b>에 오도록 맞춰 주세요.</div>
+      </div>
 
-    <div style="margin-top:10px; color:#9ca3af; font-size:13.5px; line-height:1.35; padding-left:14px;">
-      ※ 전면 카메라는 얼굴 위치와 눈 사이 간격을 확인하는 데에만 사용되며, 영상·사진·음성은 저장되지 않습니다.
-    </div>
+      <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+        <div style="font-weight:700;">3.</div>
+        <div><b>고개를 기울이지 않고</b> 정면을 바라본 상태로 유지해 주세요.</div>
+      </div>
 
-    <div style="margin-top:4px; color:#9ca3af; font-size:13.5px; line-height:1.35; padding-left:14px;">
-      ※ 측정 중에는 움직임을 최소화해 주세요.
+      <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+        <div style="font-weight:700;">4.</div>
+        <div>준비가 되면 화면 중앙의<b>[측정 시작]</b> 버튼을 누르세요. 자세를 유지하면 <b>자동으로 측정</b>됩니다.</div>
+      </div>
     </div>
   </div>
 </div>
-  </div>
 
   <div class="sectionBox">
     <div class="sectionHead">
@@ -2029,12 +2041,12 @@ html, body{
 
       <div class="kpi" style="margin-top:8px">        
         <div class="v">픽셀 거리: <b id="pd_pix_value">-</b></div>
-        <div class="v">자동 추정 PD: <b id="pd_auto_live_value">-</b> mm</div>
+        <div class="v">실시간 추정ㄹ PD: <b id="pd_auto_live_value">-</b> mm</div>
       </div>
     </div>
   </div>
 
-  <div class="sectionBox">
+  <div class="sectionBox pd-box-result">
     <div class="sectionHead">
       <span>측정 결과</span>
     </div>
@@ -2044,7 +2056,7 @@ html, body{
         <div class="v">1차 자동 PD: <b id="pd_auto_1">-</b></div>
         <div class="v">2차 자동 PD: <b id="pd_auto_2">-</b></div>
         <div class="v">3차 자동 PD: <b id="pd_auto_3">-</b></div>
-        <div class="v">최종 자동 PD: <b id="pd_auto_final">-</b></div>
+        <div class="v">최종 PD: <b id="pd_auto_final">-</b></div>
       </div>
 
       <p id="pd_retry_note" class="warn-note" style="display:none; color:#fca5a5; margin-top:10px;">
