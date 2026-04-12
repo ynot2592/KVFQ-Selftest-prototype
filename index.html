@@ -2064,7 +2064,20 @@ html, body{
   <canvas id="pd_canvas"></canvas>
 
   <div id="pd_start_layer" class="pdStartLayer">
+
+  <!-- 시작 전 주시점 -->
+  <div id="pd_pre_target" style="
+    position:absolute;
+    top:14%;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:20px;
+    color:#67e8f9;
+    pointer-events:none;
+  ">●</div>
+
   <div style="display:flex; flex-direction:column; align-items:center; gap:14px;">
+    
     <div style="
       color:#ffffff;
       font-size:14px;
@@ -3096,8 +3109,14 @@ function stopPDCam(fullClose = false){
 
 function onPDResults(res){
   if(!S.pd_started){
-  return;
+    return;
   }
+
+  // 회차 전환 직후 잠깐 대기
+  if(S.pd_rearm_until && Date.now() < S.pd_rearm_until){
+    return;
+  }
+
   if(!pdVideo || !pdCanvas || !pdCtx) return;
 
   pdCanvas.width = pdVideo.videoWidth || 640;
@@ -3105,7 +3124,7 @@ function onPDResults(res){
 
   pdCtx.clearRect(0, 0, pdCanvas.width, pdCanvas.height);
 
-    if(S.pd_completed){
+  if(S.pd_completed){
     setPDTrialDisplay('완료');
     setPDStatus('PD 측정이 완료되었습니다. 다음 버튼을 눌러 주세요.');
     return;
@@ -3192,12 +3211,7 @@ function onPDResults(res){
   if(!pdIsRunning || !S.pd_auto_recording || S.pd_completed){
     setPDStatus(quality.reason);
     return;
-  }
-
-  // 재정렬 대기 시간
-  if(Date.now() < S.pd_rearm_until){
-    return;
-  }
+  }  
 
   const rounded = Number(pdLastAutoMm.toFixed(1));
 
@@ -3302,7 +3316,7 @@ function recordPDTrial(){
   // 1차 완료
   if(S.pd_trial_count === 1){
   setPDStateMode('done', '1차 완료');
-  S.pd_rearm_until = Date.now() + 1200;
+  S.pd_rearm_until = Date.now() + 1800;
 
   setTimeout(() => {
     if(!S.pd_completed && S.pd_trial_count === 1){
@@ -3321,7 +3335,7 @@ function recordPDTrial(){
       S.pd_measure_needed = 3;
       gid('pd_retry_note').style.display = 'block';
       setPDStateMode('trial', '3차');
-      S.pd_rearm_until = Date.now() + 1200;
+      S.pd_rearm_until = Date.now() + 1800;
       return;
     }else{
       finalizePD();
@@ -4329,8 +4343,14 @@ S.npc_speed_cm_s = 0;
 
 gid('btn_pd_start')?.addEventListener('click', () => {
   resetPD();
+
+  // 시작 전 점 숨기기 (여기 추가)
+  const preTarget = gid('pd_pre_target');
+  if(preTarget) preTarget.style.display = 'none';
+
   S.pd_started = true;
   gid('pd_start_layer').style.display = 'none';
+
   startPDMeasure();
 });
 
@@ -4344,6 +4364,10 @@ gid('btn_pd_restart')?.addEventListener('click', async () => {
       setPDStateMode('normal');
       gid('pd_start_layer').style.display = 'flex';
       S.pd_started = false;
+
+      // 주시점 다시 표시 (여기 추가)
+      const preTarget = gid('pd_pre_target');
+      if(preTarget) preTarget.style.display = 'block';
     }
   }catch(e){
     alert('카메라를 다시 시작할 수 없습니다: ' + (e.message || e));
@@ -4354,6 +4378,10 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
   resetPD();
   gid('pd_start_layer').style.display = 'flex';
   setPDStateMode('normal');
+
+  // 주시점 다시 표시 (여기 추가)
+  const preTarget = gid('pd_pre_target');
+  if(preTarget) preTarget.style.display = 'block';
 });
 
 gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
