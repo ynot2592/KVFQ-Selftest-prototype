@@ -1829,8 +1829,15 @@ html, body{
          <li>반응속도(RT)</li>
      </ul>
 
-     <p class="small" style="margin-top:12px;">
-         ※ 자가측정 결과는 연구용 참고자료로 활용되며, 임상적 진단이나 정밀 측정을 대체하지 않습니다.
+     <p style="
+         margin-top:14px;
+         padding-left:1.2em;
+         text-indent:-1.2em;
+         color:#ffffff;
+         font-size:14.6px;
+         line-height:1.55;
+     ">
+        ※ 자가측정 결과는 연구용 참고자료로 활용되며, 임상적 진단이나 정밀 측정을 대체하지 않습니다.
      </p>
 
      <div class="row" style="margin-top:14px">
@@ -2071,12 +2078,12 @@ html, body{
     <button class="btn ghost" onclick="go('screen_home')">이전</button>
     <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
     <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
-    <button class="btn" id="btn_pd_restart" type="button" style="margin-left:auto;">카메라 다시 시작</button>
-  </div>
+</div>
 
-  <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+<div class="row" style="margin-top:10px; justify-content:flex-end;">
     <button class="btn ghost" id="btn_pd_finish" type="button">PD 측정만 하고 종료</button>
-  </div>
+    <button class="btn" id="btn_pd_restart" type="button">카메라 다시 시작</button>
+</div>
   </section>
 
 <!-- NPC 측정 -->
