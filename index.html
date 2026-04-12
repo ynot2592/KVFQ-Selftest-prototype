@@ -3293,6 +3293,13 @@ async function startNPCMeasure(){
   try{
     await setupNPCCam();
     npcIsRunning = true;
+    
+    S.npc_overlay_until = 0;
+    const overlay = gid('npc_overlay_msg');
+    if(overlay){
+      overlay.style.display = 'none';
+    }
+    
     S.npc_last_dist = null;
     S.npc_last_ts = 0;
     S.npc_smooth_dist = null;
@@ -3537,6 +3544,13 @@ function clearNPC(){
   if(gid('npc_status')){
     gid('npc_status').textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
   }
+
+  const overlay = gid('npc_overlay_msg');
+  if(overlay){
+    overlay.style.display = 'none';
+  }
+  S.npc_overlay_until = 0;
+
 }
 
   // ---------- PVT ----------
