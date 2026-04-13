@@ -2174,8 +2174,8 @@ html, body{
 
   <div class="row" style="margin-top:12px">
     <button class="btn ghost" onclick="go('screen_home')">이전</button>
-    <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
     <button class="btn primary" id="btn_pd_next" type="button" disabled>다음(NPC 측정)</button>
+    <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>    
 </div>
 
 <div class="row" style="margin-top:10px;">
@@ -2191,18 +2191,20 @@ html, body{
 
   <div id="npc_overlay_msg" style="
   position:absolute;
-  top:10px;
+  top:42px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(0,0,0,0.65);
+  background:rgba(15,23,42,0.82);
   padding:6px 10px;
   border-radius:8px;
   font-size:13px;
-  color:#fff;
+  color:#fde68a;
+  border:1px solid rgba(253,230,138,.35);
   text-align:center;
   display:none;
   z-index:10;
   white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,0,0,.45);
 ">
   메시지
 </div>
@@ -2240,7 +2242,7 @@ html, body{
 
           <div id="npc_fix_bar" style="
               width:3px;
-              height:110px;
+              height:88px;
               background:#ef4444;
               border-radius:3px;
           "></div>
@@ -2286,12 +2288,12 @@ html, body{
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
-      <div>빨간 선의 <b>맨 위 꼭지점</b>을 주시한 상태로 팔을 앞으로 살짝 편 위치에서(약40~50cm) 스마트폰을 코쪽으로 천천히 가까이 이동하세요.</div>
+      <div>빨간 선의 <b>맨 위 꼭지점</b>을 주시한 상태로 팔을 앞으로 살짝 편 위치에서(약40~50cm) 스마트폰을 코쪽으로 <b>천천히</b> 가까이 이동하세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>빨간 선이 두 개로 보이는 순간 빨간 선 아래의 [복시 기록 #1] 버튼을 눌러 주세요.</div>
+      <div>빨간 선이 두 개로 보이는 순간 빨간 선 아래의<br>[복시 기록 #1] 버튼을 눌러 주세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2311,8 +2313,8 @@ html, body{
 
     <div class="row" style="margin-top:20px">
           <button class="btn ghost" onclick="go('screen_pd')">이전</button>
-          <button class="btn ghost" id="btn_npc_clear" type="button">다시 측정</button>
           <button class="btn primary" id="btn_npc_next" type="button" disabled>다음(NPA 측정)</button>
+          <button class="btn ghost" id="btn_npc_clear" type="button">다시 측정</button>          
     </div>
 
     <div class="row" style="margin-top:10px;">
@@ -2341,26 +2343,7 @@ html, body{
       white-space:nowrap;
     ">
       메시지
-    </div>
-
-    <!-- 왼쪽 상태값 -->
-    <div style="
-       position:absolute;
-       left:10px;
-       bottom:14px;
-       z-index:1;
-       display:flex;
-       flex-direction:column;
-       gap:6px;
-       align-items:flex-start;
-       text-align:left;
-    ">
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">권장 속도 1~2 cm/s</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">교정 기준 40 cm</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">현재 검사 <b id="npa_eye_badge">우안</b></span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">거리 <b id="npa_distNow">-</b> cm</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">pixel PD <b id="npa_pixPD">-</b></span>
-    </div>
+    </div>    
 
     <!-- 가운데 시표/버튼 -->
     <div style="display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:24px;">
@@ -2380,11 +2363,34 @@ html, body{
         스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
       </div>
 
-      <div id="npa_eye_switch_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.5; position:relative; z-index:5; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 8px;">
-        우안 측정이 완료되었습니다.<br>이번에는 오른쪽 눈을 가리고 왼쪽 눈으로 진행해 주세요.
+      <div id="npa_eye_switch_guide" class="small" style="
+         display:none;
+         margin-top:12px;
+         padding:10px 12px;
+         border-radius:10px;
+         background:rgba(15,23,42,.82);
+         border:1px solid rgba(253,230,138,.35);
+         color:#fde68a;
+         font-size:14px;
+         line-height:1.45;
+         text-align:center;
+         position:relative;
+         z-index:5;
+      ">
+         우안 측정이 완료되었습니다.<br>
+         이번에는 오른쪽 눈을 가리고 왼쪽 눈으로 진행해 주세요.
       </div>
 
-      <button class="btn primary" id="btn_npa_mark" type="button">흐림 기록 #1</button>
+      <div id="npa_mark_wrap" style="
+          position:relative;
+          z-index:3;
+          width:100%;
+          display:flex;
+          justify-content:flex-start;
+          margin-top:12px;
+      ">
+         <button class="btn primary" id="btn_npa_mark" type="button">흐림 기록 #1</button>
+      </div>
       <button class="btn primary" id="btn_npa_next_eye" type="button" style="display:none;">좌안 측정 시작</button>
     </div>
   </div>
@@ -2439,6 +2445,25 @@ html, body{
              조절력: <b id="npa_os_D">-</b> D
          </div>
       </div>
+
+   <div id="npa_status_grid" style="
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:2;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:6px 8px;
+   ">
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">권장 속도 1~2 cm/s</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">교정 기준 40 cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">PD <b id="npa_labPD">-</b> mm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">거리 <b id="npa_distNow">-</b> cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">pixel PD <b id="npa_pixPD">-</b></span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">측정안 <b id="npa_eye_label">우안</b></span>
+   </div>
 
    </div>
 
@@ -2649,6 +2674,8 @@ async function sendToSheet(payload){
   npa_completed: false,
   npa_waiting_for_reset: false,
   npa_reset_reference_dist: null,
+  npa_pix_now: null,
+  npa_dist_now: null,
 
   npc_waiting_for_reset: false,
   npc_reset_reference_dist: null,
@@ -3322,6 +3349,27 @@ function updateNpaUI(){
 
   const nextBtn = gid('btn_npa_next');
   if(nextBtn) nextBtn.disabled = !S.npa_completed;
+}
+
+function updateNpaButtonSide(){
+  const wrap = gid('npa_mark_wrap');
+  if(!wrap) return;
+
+  if(S.npa_eye === 'OD'){
+    wrap.style.justifyContent = 'flex-start';
+  }else{
+    wrap.style.justifyContent = 'flex-end';
+  }
+
+  updateNpaButtonSide();
+  updateNpaStatusBadges();
+}
+
+function updateNpaStatusBadges(){
+  if(gid('npa_labPD'))   gid('npa_labPD').textContent = Number.isFinite(S.pdmm) ? S.pdmm.toFixed(1) : '-';
+  if(gid('npa_distNow')) gid('npa_distNow').textContent = Number.isFinite(S.npa_dist_now) ? S.npa_dist_now.toFixed(1) : '-';
+  if(gid('npa_pixPD'))   gid('npa_pixPD').textContent = Number.isFinite(S.npa_pix_now) ? S.npa_pix_now.toFixed(1) : '-';
+  if(gid('npa_eye_label')) gid('npa_eye_label').textContent = (S.npa_eye === 'OS') ? '좌안' : '우안';
 }
 
 function setPDStatus(text){
@@ -4182,6 +4230,10 @@ function onNPAResults(res){
   S.distNow = shownDist;
   gid('npa_distNow').textContent = shownDist.toFixed(1);
 
+  S.npa_pix_now = pixDist;
+  S.npa_dist_now = shownDist;
+  updateNpaStatusBadges();
+
   if(S.npa_waiting_for_reset && S.npa_reset_reference_dist !== null){
     const movedBackEnough = shownDist >= (S.npa_reset_reference_dist + 8);
 
@@ -4267,7 +4319,7 @@ function markDiplopia(){
 
   if(S.npc_trial_index >= 3){
     if(btn){
-      btn.textContent = '3회 기록 완료';
+      btn.textContent = '3회 측정 완료';
       btn.disabled = true;
     }
     if(guide) guide.style.display = 'none';
