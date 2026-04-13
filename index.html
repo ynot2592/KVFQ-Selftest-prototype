@@ -2389,23 +2389,58 @@ html, body{
     </div>
   </div>
 
-  <div class="kpi" style="margin:10px 0 8px;">
-    <div class="v">우안 1차: <b id="npa_od_1">-</b> cm</div>
-    <div class="v">우안 2차: <b id="npa_od_2">-</b> cm</div>
-    <div class="v">우안 3차: <b id="npa_od_3">-</b> cm</div>
-    <div class="v">우안 중앙값: <b id="npa_od_final">-</b> cm</div>
-  </div>
+  <div style="
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin:10px 0 12px;
+  ">
 
-  <div class="kpi" style="margin:0 0 8px;">
-    <div class="v">좌안 1차: <b id="npa_os_1">-</b> cm</div>
-    <div class="v">좌안 2차: <b id="npa_os_2">-</b> cm</div>
-    <div class="v">좌안 3차: <b id="npa_os_3">-</b> cm</div>
-    <div class="v">좌안 중앙값: <b id="npa_os_final">-</b> cm</div>
-  </div>
+      <!-- 우안 -->
+      <div style="
+          background:rgba(15,23,42,.55);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:12px;
+          padding:12px 10px;
+      ">
+         <div style="font-size:13px; color:#9ca3af; margin-bottom:6px;">우안 (OD)</div>
 
-  <div class="kpi" style="margin:0 0 8px;">
-    <div class="v">평균 NPA: <b id="npa_avg_final">-</b> cm</div>
-  </div>
+         <div class="v">1차: <b id="npa_od_1">-</b> cm</div>
+         <div class="v">2차: <b id="npa_od_2">-</b> cm</div>
+         <div class="v">3차: <b id="npa_od_3">-</b> cm</div>
+
+         <div style="margin-top:6px; font-size:13.5px;">
+             평균: <b id="npa_od_avg">-</b> cm
+         </div>
+
+         <div style="font-size:13px; color:#cbd5f5;">
+             조절력: <b id="npa_od_D">-</b> D
+         </div>
+      </div>
+
+      <!-- 좌안 -->
+      <div style="
+          background:rgba(15,23,42,.55);
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:12px;
+          padding:12px 10px;
+      ">
+         <div style="font-size:13px; color:#9ca3af; margin-bottom:6px;">좌안 (OS)</div>
+
+         <div class="v">1차: <b id="npa_os_1">-</b> cm</div>
+         <div class="v">2차: <b id="npa_os_2">-</b> cm</div>
+         <div class="v">3차: <b id="npa_os_3">-</b> cm</div>
+
+         <div style="margin-top:6px; font-size:13.5px;">
+             평균: <b id="npa_os_avg">-</b> cm
+         </div>
+
+         <div style="font-size:13px; color:#cbd5f5;">
+             조절력: <b id="npa_os_D">-</b> D
+         </div>
+      </div>
+
+   </div>
 
   <div style="
       margin-top:16px;
@@ -3155,6 +3190,10 @@ const npcVideo = gid('npc_video');
 const npcCanvas = gid('npc_canvas');
 const npcCtx = npcCanvas ? npcCanvas.getContext('2d') : null;
 
+const npaVideo = gid('npa_video');
+const npaCanvas = gid('npa_canvas');
+const npaCtx = npaCanvas ? npaCanvas.getContext('2d') : null;
+
 let pdFaceMesh = null;
 let pdLastPix = 0;
 let pdLastAutoMm = null;
@@ -3167,6 +3206,10 @@ let sharedSelfieStream = null;
 let npcFaceMesh = null;
 let npcLoopRunning = false;
 let npcIsRunning = false;
+
+let npaFaceMesh = null;
+let npaLoopRunning = false;
+let npaIsRunning = false;
 
 function parseKnownPdInput(){
   const el = gid('pd_known_input');
@@ -3197,6 +3240,17 @@ function getMedian(arr){
   return Number(((vals[mid - 1] + vals[mid]) / 2).toFixed(1));
 }
 
+function getMean(arr){
+  const vals = arr.filter(v => Number.isFinite(v));
+  if(!vals.length) return null;
+  return Number((vals.reduce((a,b)=>a+b,0) / vals.length).toFixed(1));
+}
+
+function cmToDiopter(cm){
+  if(!Number.isFinite(cm) || cm <= 0) return null;
+  return Number((100 / cm).toFixed(2));
+}
+
 function updatePdResultUI(){
   gid('pd_auto_1').textContent = Number.isFinite(S.pd_auto_trials[0]) ? `${S.pd_auto_trials[0].toFixed(1)} mm` : '-';
   gid('pd_auto_2').textContent = Number.isFinite(S.pd_auto_trials[1]) ? `${S.pd_auto_trials[1].toFixed(1)} mm` : '-';
@@ -3210,6 +3264,64 @@ function updateNpcResultUI(){
   const done = S.npc_trial_index >= 3;
   const btn = gid('btn_npc_next');
   if(btn) btn.disabled = !done;
+}
+
+function updateNpaUI(){
+  gid('npa_od_1').textContent = Number.isFinite(S.npa_OD[0]) ? S.npa_OD[0].toFixed(1) : '-';
+  gid('npa_od_2').textContent = Number.isFinite(S.npa_OD[1]) ? S.npa_OD[1].toFixed(1) : '-';
+  gid('npa_od_3').textContent = Number.isFinite(S.npa_OD[2]) ? S.npa_OD[2].toFixed(1) : '-';
+
+  gid('npa_os_1').textContent = Number.isFinite(S.npa_OS[0]) ? S.npa_OS[0].toFixed(1) : '-';
+  gid('npa_os_2').textContent = Number.isFinite(S.npa_OS[1]) ? S.npa_OS[1].toFixed(1) : '-';
+  gid('npa_os_3').textContent = Number.isFinite(S.npa_OS[2]) ? S.npa_OS[2].toFixed(1) : '-';
+
+  const odAvg = getMean(S.npa_OD);
+  const osAvg = getMean(S.npa_OS);
+
+  gid('npa_od_avg').textContent = Number.isFinite(odAvg) ? odAvg.toFixed(1) : '-';
+  gid('npa_os_avg').textContent = Number.isFinite(osAvg) ? osAvg.toFixed(1) : '-';
+
+  const odD = cmToDiopter(odAvg);
+  const osD = cmToDiopter(osAvg);
+
+  gid('npa_od_D').textContent = Number.isFinite(odD) ? odD.toFixed(2) : '-';
+  gid('npa_os_D').textContent = Number.isFinite(osD) ? osD.toFixed(2) : '-';
+
+  const eyeBadge = gid('npa_eye_badge');
+  if(eyeBadge) eyeBadge.textContent = S.npa_eye === 'OD' ? '우안' : '좌안';
+
+  const eyeGuide = gid('npa_eye_guide');
+  if(eyeGuide){
+    if(S.npa_eye === 'OD'){
+      eyeGuide.innerHTML = '※ <b style="color:#ffffff;">왼쪽 눈을 가리고 오른쪽 눈</b>으로 가운데 숫자를 보세요.';
+    }else{
+      eyeGuide.innerHTML = '※ <b style="color:#ffffff;">오른쪽 눈을 가리고 왼쪽 눈</b>으로 가운데 숫자를 보세요.';
+    }
+  }
+
+  const markBtn = gid('btn_npa_mark');
+  if(markBtn){
+    if(S.npa_completed){
+      markBtn.textContent = '6회 기록 완료';
+      markBtn.disabled = true;
+      markBtn.style.display = 'inline-flex';
+    }else{
+      markBtn.disabled = false;
+      markBtn.style.display = S.npa_waiting_for_reset ? 'none' : 'inline-flex';
+      markBtn.textContent = `흐림 기록 #${S.npa_trial_index + 1}`;
+    }
+  }
+
+  const switchGuide = gid('npa_eye_switch_guide');
+  const nextEyeBtn = gid('btn_npa_next_eye');
+
+  if(S.npa_eye === 'OS' || S.npa_completed){
+    if(switchGuide) switchGuide.style.display = 'none';
+    if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+  }
+
+  const nextBtn = gid('btn_npa_next');
+  if(nextBtn) nextBtn.disabled = !S.npa_completed;
 }
 
 function setPDStatus(text){
@@ -3722,12 +3834,82 @@ async function setupNPCCam(){
   }
 }
 
+async function setupNPACam(){
+  if(!npaVideo || !npaCanvas || !npaCtx) return;
+
+  if(!npaFaceMesh){
+    npaFaceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    npaFaceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6
+    });
+
+    npaFaceMesh.onResults(onNPAResults);
+  }
+
+  if(sharedSelfieStream && sharedSelfieStream.active){
+    npaVideo.srcObject = sharedSelfieStream;
+  }else{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'user' },
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
+    sharedSelfieStream = stream;
+    npaVideo.srcObject = stream;
+  }
+
+  if(npaVideo.paused){
+    await npaVideo.play();
+  }
+
+  if(!npaLoopRunning){
+    npaLoopRunning = true;
+
+    const tick = async () => {
+      if(!npaLoopRunning) return;
+
+      if(npaVideo.readyState >= 2 && npaFaceMesh){
+        try{
+          await npaFaceMesh.send({ image: npaVideo });
+        }catch(e){}
+      }
+
+      requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  }
+}
+
 function stopNPCCam(fullClose = false){
   npcLoopRunning = false;
   npcIsRunning = false;
 
   if(npcVideo){
     npcVideo.srcObject = null;
+  }
+
+  if(fullClose && sharedSelfieStream){
+    sharedSelfieStream.getTracks().forEach(track => track.stop());
+    sharedSelfieStream = null;
+  }
+}
+
+function stopNPACam(fullClose = false){
+  npaLoopRunning = false;
+  npaIsRunning = false;
+
+  if(npaVideo){
+    npaVideo.srcObject = null;
   }
 
   if(fullClose && sharedSelfieStream){
@@ -3762,6 +3944,29 @@ async function startNPCMeasure(){
     if(s) s.textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
   }catch(e){
     alert('NPC 측정을 시작할 수 없습니다: ' + (e.message || e));
+  }
+}
+
+async function startNPAMeasure(){
+  if(!(S.pdmm > 0)){
+    alert('먼저 PD 측정을 완료해 주세요.');
+    return;
+  }
+
+  try{
+    await setupNPACam();
+    npaIsRunning = true;
+
+    const overlay = gid('npa_overlay_msg');
+    if(overlay){
+      overlay.style.display = 'none';
+    }
+
+    if(!S.npa_completed){
+      updateNpaUI();
+    }
+  }catch(e){
+    alert('NPA 측정을 시작할 수 없습니다: ' + (e.message || e));
   }
 }
 
@@ -3907,6 +4112,127 @@ function onNPCResults(res){
 }
 }
 
+function onNPAResults(res){
+  if(!npaVideo || !npaCanvas || !npaCtx) return;
+  if(!npaIsRunning) return;
+
+  const overlay = gid('npa_overlay_msg');
+
+  npaCanvas.width = npaVideo.videoWidth || 640;
+  npaCanvas.height = npaVideo.videoHeight || 480;
+
+  npaCtx.clearRect(0, 0, npaCanvas.width, npaCanvas.height);
+
+  if(!(res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0)){
+    gid('npa_pixPD').textContent = '-';
+
+    if(S.distNow !== null){
+      gid('npa_distNow').textContent = Number(S.distNow).toFixed(1);
+    }else{
+      gid('npa_distNow').textContent = '-';
+    }
+
+    if(overlay){
+      overlay.style.display = 'block';
+      overlay.textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+    }
+    return;
+  }
+
+  const lm = res.multiFaceLandmarks[0];
+  const L = [33,133];
+  const R = [362,263];
+
+  const lpt = avgPts(L.map(i => lm[i]));
+  const rpt = avgPts(R.map(i => lm[i]));
+
+  const x1 = lpt.x * npaCanvas.width;
+  const y1 = lpt.y * npaCanvas.height;
+  const x2 = rpt.x * npaCanvas.width;
+  const y2 = rpt.y * npaCanvas.height;
+
+  const pixDist = Math.hypot(x2 - x1, y2 - y1);
+
+  gid('npa_pixPD').textContent = pixDist.toFixed(1);
+
+  if(!Number.isFinite(pixDist) || pixDist <= 0 || !(S.pdmm > 0)){
+    if(S.distNow !== null){
+      gid('npa_distNow').textContent = Number(S.distNow).toFixed(1);
+    }else{
+      gid('npa_distNow').textContent = '-';
+    }
+
+    if(overlay){
+      overlay.style.display = 'block';
+      overlay.textContent = '거리 계산이 잠시 불안정합니다.';
+    }
+    return;
+  }
+
+  const rawDistCm = (S.pdmm * 110) / pixDist;
+  const distCm = rawDistCm * NPC_DIST_SCALE;
+
+  if(S.npc_smooth_dist === null){
+    S.npc_smooth_dist = distCm;
+  }else{
+    S.npc_smooth_dist = (S.npc_smooth_dist * 0.90) + (distCm * 0.10);
+  }
+
+  const shownDist = Number(S.npc_smooth_dist.toFixed(1));
+  S.distNow = shownDist;
+  gid('npa_distNow').textContent = shownDist.toFixed(1);
+
+  if(S.npa_waiting_for_reset && S.npa_reset_reference_dist !== null){
+    const movedBackEnough = shownDist >= (S.npa_reset_reference_dist + 8);
+
+    if(movedBackEnough){
+      S.npa_waiting_for_reset = false;
+      S.npa_reset_reference_dist = null;
+
+      const retryGuide = gid('npa_retry_guide');
+      if(retryGuide) retryGuide.style.display = 'none';
+
+      updateNpaUI();
+    }
+  }
+
+  const now = performance.now();
+  let fastMove = false;
+
+  if(S.npc_last_dist !== null){
+    const distDrop = S.npc_last_dist - shownDist;
+    if(distDrop >= 2.5){
+      fastMove = true;
+    }
+  }
+
+  if(S.npc_prev_pix_dist !== null){
+    const pixJump = pixDist - S.npc_prev_pix_dist;
+    if(pixJump >= 12){
+      fastMove = true;
+    }
+  }
+
+  S.npc_last_dist = shownDist;
+  S.npc_last_ts = now;
+  S.npc_prev_pix_dist = pixDist;
+  S.npc_fast_move_flag = fastMove;
+
+  if(overlay){
+    if(fastMove){
+      S.npc_overlay_until = Date.now() + 900;
+      overlay.style.display = 'block';
+      overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+    }else{
+      if(Date.now() < S.npc_overlay_until){
+        overlay.style.display = 'block';
+      }else{
+        overlay.style.display = 'none';
+      }
+    }
+  }
+}
+
 // ---------- NPC 기록 ----------
 function markDiplopia(){
   if(!(S.pd_auto_final_mm > 0)){
@@ -3965,6 +4291,89 @@ function markDiplopia(){
   }
 }
 
+function markNPA(){
+  if(!(S.pd_auto_final_mm > 0)){
+    alert('먼저 PD 측정을 완료해 주세요.');
+    return;
+  }
+
+  const Dcm = S.distNow;
+  if(!isFinite(Dcm)){
+    alert('거리 추정 불가');
+    return;
+  }
+
+  if(S.npa_completed) return;
+
+  const idx = S.npa_trial_index;
+  if(idx > 2) return;
+
+  if(S.npa_eye === 'OD'){
+    S.npa_OD[idx] = Number(Dcm.toFixed(1));
+  }else{
+    S.npa_OS[idx] = Number(Dcm.toFixed(1));
+  }
+
+  S.npa_trial_index += 1;
+  updateNpaUI();
+
+  if(S.npa_trial_index >= 3){
+    if(S.npa_eye === 'OD'){
+      S.npa_waiting_for_reset = false;
+      S.npa_reset_reference_dist = null;
+
+      const retryGuide = gid('npa_retry_guide');
+      if(retryGuide) retryGuide.style.display = 'none';
+
+      const switchGuide = gid('npa_eye_switch_guide');
+      const nextEyeBtn = gid('btn_npa_next_eye');
+      const markBtn = gid('btn_npa_mark');
+
+      if(markBtn) markBtn.style.display = 'none';
+      if(switchGuide) switchGuide.style.display = 'block';
+      if(nextEyeBtn) nextEyeBtn.style.display = 'inline-flex';
+      return;
+    }else{
+      S.npa_completed = true;
+      S.npa_waiting_for_reset = false;
+      S.npa_reset_reference_dist = null;
+
+      const retryGuide = gid('npa_retry_guide');
+      if(retryGuide) retryGuide.style.display = 'none';
+
+      updateNpaUI();
+      return;
+    }
+  }
+
+  S.npa_waiting_for_reset = true;
+  S.npa_reset_reference_dist = Dcm;
+
+  const retryGuide = gid('npa_retry_guide');
+  if(retryGuide) retryGuide.style.display = 'block';
+
+  updateNpaUI();
+}
+
+function startNpaLeftEye(){
+  S.npa_eye = 'OS';
+  S.npa_trial_index = 0;
+  S.npa_waiting_for_reset = false;
+  S.npa_reset_reference_dist = null;
+
+  const switchGuide = gid('npa_eye_switch_guide');
+  const nextEyeBtn = gid('btn_npa_next_eye');
+  const retryGuide = gid('npa_retry_guide');
+  const overlay = gid('npa_overlay_msg');
+
+  if(switchGuide) switchGuide.style.display = 'none';
+  if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+  if(retryGuide) retryGuide.style.display = 'none';
+  if(overlay) overlay.style.display = 'none';
+
+  updateNpaUI();
+}
+
 function clearNPC(){
   S.npc = [null, null, null];
   S.npc_trial_index = 0;
@@ -4007,6 +4416,39 @@ function clearNPC(){
   S.npc_overlay_until = 0;
 
   updateNpcResultUI();
+}
+
+function clearNPA(){
+  S.npa_eye = 'OD';
+  S.npa_trial_index = 0;
+  S.npa_OD = [null, null, null];
+  S.npa_OS = [null, null, null];
+  S.npa_completed = false;
+  S.npa_waiting_for_reset = false;
+  S.npa_reset_reference_dist = null;
+
+  S.distNow = null;
+  S.npc_last_dist = null;
+  S.npc_last_ts = 0;
+  S.npc_smooth_dist = null;
+  S.npc_prev_pix_dist = null;
+  S.npc_fast_move_flag = false;
+  S.npc_overlay_until = 0;
+
+  gid('npa_distNow').textContent = '-';
+  gid('npa_pixPD').textContent = '-';
+
+  const retryGuide = gid('npa_retry_guide');
+  const switchGuide = gid('npa_eye_switch_guide');
+  const nextEyeBtn = gid('btn_npa_next_eye');
+  const overlay = gid('npa_overlay_msg');
+
+  if(retryGuide) retryGuide.style.display = 'none';
+  if(switchGuide) switchGuide.style.display = 'none';
+  if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+  if(overlay) overlay.style.display = 'none';
+
+  updateNpaUI();
 }
 
   // ---------- PVT ----------
@@ -4660,6 +5102,26 @@ gid('btn_npc_next')?.addEventListener('click', () => {
 });
 
 gid('btn_npc_finish')?.addEventListener('click', () => openThankyou());
+
+gid('btn_npa_mark')?.addEventListener('click', () => markNPA());
+
+gid('btn_npa_next_eye')?.addEventListener('click', () => {
+  startNpaLeftEye();
+});
+
+gid('btn_npa_clear')?.addEventListener('click', () => {
+  clearNPA();
+});
+
+gid('btn_npa_next')?.addEventListener('click', () => {
+  if(!S.npa_completed){
+    alert('조절근점 측정을 우안 3회, 좌안 3회 완료한 뒤 다음 단계로 진행해 주세요.');
+    return;
+  }
+  go('screen_pvt');
+});
+
+gid('btn_npa_finish')?.addEventListener('click', () => openThankyou());
 
 </script>
 </body>
