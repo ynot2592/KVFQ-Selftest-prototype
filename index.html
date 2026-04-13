@@ -2453,7 +2453,7 @@ function toKSTString(d = new Date()){
   let fullDocConfirmed = false;
   let consentSigned = false;
   let isSubmitting = false;
-  const PD_PX_TO_MM = 0.7186;
+  const PD_PX_TO_MM = 0.738;
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
@@ -3339,7 +3339,7 @@ function recordPDTrial(){
 
   // 1차 완료
   if(S.pd_trial_count === 1){
-  setPDStateMode('done', '1차 완료\n잠시 후 2차 측정을 시작합니다.');
+  setPDStateMode('done', '1차 완료, 잠시 후 2차 측정을 시작합니다.');
   S.pd_rearm_until = Date.now() + 1800;
 
   setTimeout(() => {
@@ -3357,7 +3357,7 @@ function recordPDTrial(){
 
   if(Math.abs(a - b) > 2){
     S.pd_measure_needed = 3;    
-    setPDStateMode('done', '2차 측정 완료\n측정값 차이로 인해 잠시 후 3차 측정을 시작합니다.');
+    setPDStateMode('done', '2차 측정 완료, 측정값 차이로 인해 잠시 후 3차 측정을 시작합니다.');
     S.pd_rearm_until = Date.now() + 1800;
 
     setTimeout(() => {
