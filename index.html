@@ -2115,10 +2115,10 @@ html, body{
 
               <div style="
                   color:rgba(230,235,255,.92);
-                  font-size:13.8px;
+                  font-size:13.4px;
                   line-height:1.4;
                   text-align:center;
-                  background:rgba(15,23,42,.62);
+                  background:rgba(15,23,42,.55);
                   padding:5px 10px;
                   border-radius:10px;
                   border:1px solid rgba(255,255,255,.14);
@@ -2170,7 +2170,7 @@ html, body{
   <div class="row" style="margin-top:12px">
     <button class="btn ghost" onclick="go('screen_home')">이전</button>
     <button class="btn ghost" id="btn_pd_reset" type="button">다시 측정</button>
-    <button class="btn primary" id="btn_pd_next" type="button" disabled>다음</button>
+    <button class="btn primary" id="btn_pd_next" type="button" disabled>다음(NPC 측정)</button>
 </div>
 
 <div class="row" style="margin-top:10px;">
@@ -2267,6 +2267,17 @@ html, body{
      측정 방법
   </div>
 
+  <div style="
+      margin:0 0 10px 10px;
+      padding-left:1.05em;
+      text-indent:-1.05em;
+      color:rgba(230,235,255,.78);
+      font-size:13.4px;
+      line-height:1.45;
+  ">
+     ※ 정확한 측정을 위해 <b style="color:#fde68a;">평소 사용하는 안경 또는 콘택트렌즈를 착용한 상태</b>에서 진행해 주세요.
+  </div>
+
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
@@ -2294,9 +2305,13 @@ html, body{
 </div>
 
     <div class="row" style="margin-top:20px">
-        <button class="btn ghost" id="btn_npc_clear" type="button">초기화</button>
-        <button class="btn" onclick="go('screen_npa')">다음(NPA 측정)</button>
-        <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
+          <button class="btn ghost" onclick="go('screen_pd')">이전</button>
+          <button class="btn ghost" id="btn_npc_clear" type="button">다시 측정</button>
+          <button class="btn primary" id="btn_npc_next" type="button" disabled>다음(NPA 측정)</button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+          <button class="btn ghost" id="btn_npc_finish" type="button">NPC 측정만 하고 종료</button>
     </div>
   </div>
 
@@ -2535,6 +2550,7 @@ function toKSTString(d = new Date()){
 }
 
   if(id === 'screen_npc'){
+  updateNpcResultUI();
   setTimeout(() => {
     startNPCMeasure();
   }, 300);
@@ -3012,6 +3028,12 @@ function updatePdResultUI(){
   gid('pd_auto_final').textContent = Number.isFinite(S.pd_auto_final_mm) ? `${S.pd_auto_final_mm.toFixed(1)} mm` : '-';
 
   gid('btn_pd_next').disabled = !S.pd_completed;
+}
+
+function updateNpcResultUI(){
+  const done = S.npc_trial_index >= 3;
+  const btn = gid('btn_npc_next');
+  if(btn) btn.disabled = !done;
 }
 
 function setPDStatus(text){
@@ -3749,6 +3771,8 @@ function markDiplopia(){
     if(guide) guide.style.display = 'none';
     S.npc_waiting_for_reset = false;
     S.npc_reset_reference_dist = null;
+
+    updateNpcResultUI();
     return;
   }
 
@@ -3800,12 +3824,13 @@ function clearNPC(){
     gid('npc_status').textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
   }
 
-  const overlay = gid('npc_overlay_msg');
+    const overlay = gid('npc_overlay_msg');
   if(overlay){
     overlay.style.display = 'none';
   }
   S.npc_overlay_until = 0;
 
+  updateNpcResultUI();
 }
 
   // ---------- PVT ----------
@@ -4438,6 +4463,16 @@ gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
 gid('btn_pd_finish')?.addEventListener('click', () => finishFromPD());
+
+gid('btn_npc_next')?.addEventListener('click', () => {
+  if(S.npc_trial_index < 3){
+    alert('폭주근점 측정을 3회 완료한 뒤 다음 단계로 진행해 주세요.');
+    return;
+  }
+  go('screen_npa');
+});
+
+gid('btn_npc_finish')?.addEventListener('click', () => openThankyou());
 
 </script>
 </body>
