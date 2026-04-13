@@ -2405,6 +2405,7 @@ async function sendToSheet(payload){
   pd_last_hold_value: null, 
   pd_rearm_until: 0,
   pd_started: false,
+  pd_prev_pix_for_motion: null,
 
   focal_px: null,
   pixPD: null,
@@ -3125,8 +3126,9 @@ function onPDResults(res){
     return;
   }
 
-  // 회차 전환 직후 잠깐 대기
+   // 회차 전환 직후 잠깐 대기
   if(S.pd_rearm_until && Date.now() < S.pd_rearm_until){
+    S.pd_prev_pix_for_motion = pdLastPix;
     return;
   }
 
@@ -3226,6 +3228,20 @@ function onPDResults(res){
     return;
   }  
 
+    const motionDelta = (S.pd_prev_pix_for_motion === null)
+    ? 0
+    : Math.abs(pdLastPix - S.pd_prev_pix_for_motion);
+
+  S.pd_prev_pix_for_motion = pdLastPix;
+
+  // 아직 휴대전화를 움직이는 중이면 측정하지 않음
+  if(motionDelta > 2.3){
+    S.pd_hold_frames = 0;
+    S.pd_last_hold_value = null;
+    setPDStateMode('error', '휴대전화를 멈춘 뒤 잠시 유지해 주세요.');
+    return;
+  }
+
   const rounded = Number(pdLastAutoMm.toFixed(1));
 
   if(S.pd_last_hold_value !== null && Math.abs(rounded - S.pd_last_hold_value) <= 2.0){
@@ -3240,6 +3256,7 @@ function onPDResults(res){
   if(S.pd_hold_frames >= 12){
     S.pd_hold_frames = 0;
     S.pd_last_hold_value = null;
+    S.pd_prev_pix_for_motion = null;
     recordPDTrial();
   }
 }
@@ -3262,17 +3279,6 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
 
   const eyeTilt = Math.abs(leftPt.y - rightPt.y);
 
-  // 얼굴 세로 기준
-  const faceTopY = lm[10].y * canvasH;
-  const faceBottomY = lm[152].y * canvasH;
-  const faceHeight = Math.max(1, faceBottomY - faceTopY);
-
-  // 코끝
-  const noseTipY = lm[1].y * canvasH;
-
-  // 눈중심~코끝 상대 비율
-  const eyeToNoseRatio = (noseTipY - eyeMidY) / faceHeight;
-
   // 너무 멀거나 너무 가까운 경우
   if(pixDist < 80){
     return { ok:false, reason:'스마트폰을 조금 더 가까이 해 주세요.' };
@@ -3285,17 +3291,7 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
   // 얼굴이 중앙에서 너무 벗어난 경우
   if(dx > canvasW * 0.18 || dy > canvasH * 0.18){
     return { ok:false, reason:'얼굴을 화면 중앙에 맞춰 주세요.' };
-  }
-
-  // 아래에서 올려다보는 자세 차단
-  if(eyeToNoseRatio > 0.22){
-    return { ok:false, reason:'휴대전화를 너무 아래로 두지 말고 눈높이에 맞춰 주세요.' };
-  }
-
-  // 너무 위에서 내려다보는 경우도 약하게 차단
-  if(eyeToNoseRatio < 0.11){
-    return { ok:false, reason:'휴대전화를 눈높이에 맞춰 정면에서 측정해 주세요.' };
-  }
+  }  
 
   // 고개가 기울어진 경우
   if(eyeTilt > canvasH * 0.03){
@@ -3422,6 +3418,7 @@ function resetPD(){
   S.pd_last_hold_value = null;
   S.pd_rearm_until = 0;
   S.pd_started = false; 
+  S.pd_prev_pix_for_motion = null;
  
   pdLastPix = 0;
   pdLastAutoMm = null;
