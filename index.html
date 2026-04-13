@@ -3262,7 +3262,13 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
 
   const eyeTilt = Math.abs(leftPt.y - rightPt.y);
 
-  // 너무 멀거나 너무 가까운 경우를 대략 막는 기준
+  // 얼굴 내부에서 눈의 상대 위치 확인용 랜드마크
+  const faceTopY = lm[10].y * canvasH;      // 이마 쪽
+  const faceBottomY = lm[152].y * canvasH;  // 턱 쪽
+  const faceHeight = Math.max(1, faceBottomY - faceTopY);
+  const eyeRatioInFace = (eyeMidY - faceTopY) / faceHeight;
+
+  // 너무 멀거나 너무 가까운 경우
   if(pixDist < 80){
     return { ok:false, reason:'스마트폰을 조금 더 가까이 해 주세요.' };
   }
@@ -3274,6 +3280,15 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
   // 얼굴이 중앙에서 너무 벗어난 경우
   if(dx > canvasW * 0.18 || dy > canvasH * 0.18){
     return { ok:false, reason:'얼굴을 화면 중앙에 맞춰 주세요.' };
+  }
+
+  // 휴대폰이 너무 아래 / 위에 있는 경우 차단
+  if(eyeRatioInFace < 0.30){
+    return { ok:false, reason:'휴대전화를 조금 더 눈높이에 맞춰 주세요.' };
+  }
+
+  if(eyeRatioInFace > 0.50){
+    return { ok:false, reason:'휴대전화를 너무 높게 들지 말고 눈높이에 맞춰 주세요.' };
   }
 
   // 고개가 기울어진 경우
