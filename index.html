@@ -3298,9 +3298,7 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
 }
 
 async function startPDMeasure(){
-  updateKnownPdState();
-
-  gid('pd_retry_note').style.display = 'none';
+  updateKnownPdState();  
 
   S.pd_auto_recording = !S.pd_completed;
   S.pd_hold_frames = 0;
@@ -3358,8 +3356,7 @@ function recordPDTrial(){
   const b = S.pd_auto_trials[1];
 
   if(Math.abs(a - b) > 2){
-    S.pd_measure_needed = 3;
-    gid('pd_retry_note').style.display = 'block';
+    S.pd_measure_needed = 3;    
     setPDStateMode('done', '2차 측정 완료\n측정값 차이로 인해 잠시 후 3차 측정을 시작합니다.');
     S.pd_rearm_until = Date.now() + 1800;
 
@@ -3397,8 +3394,7 @@ function finalizePD(){
   pdIsRunning = false;
 
   gid('labPD').textContent = S.pd_auto_final_mm.toFixed(1);
-  setPDStateMode('done', '완료');
-  gid('pd_retry_note').style.display = 'none';
+  setPDStateMode('done', '완료');  
 
   updatePdResultUI();
 
