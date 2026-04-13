@@ -2134,11 +2134,7 @@ html, body{
         <div class="v">2차 추정 PD: <b id="pd_auto_2">-</b></div>
         <div class="v">3차 추정 PD: <b id="pd_auto_3">-</b></div>
         <div class="v">최종 PD: <b id="pd_auto_final">-</b></div>
-      </div>
-
-      <p id="pd_retry_note" class="warn-note" style="display:none; color:#fca5a5; margin-top:10px;">
-        1차와 2차 측정값 차이가 커서 3차 측정이 필요합니다.
-      </p>
+      </div>      
     </div>
   </div>
 
@@ -3281,7 +3277,7 @@ function assessPDQuality(lm, canvasW, canvasH, leftPt, rightPt, pixDist){
 
   // 너무 멀거나 너무 가까운 경우
   if(pixDist < 80){
-    return { ok:false, reason:'스마트폰을 조금 더 가까이 해 주세요.' };
+    return { ok:false, reason:'스마트폰을 천천히 조금 더 가까이 해 주세요.' };
   }
 
   if(pixDist > 150){
@@ -3345,7 +3341,7 @@ function recordPDTrial(){
 
   // 1차 완료
   if(S.pd_trial_count === 1){
-  setPDStateMode('done', '1차 완료');
+  setPDStateMode('done', '1차 완료\n잠시 후 2차 측정을 시작합니다.');
   S.pd_rearm_until = Date.now() + 1800;
 
   setTimeout(() => {
@@ -3358,20 +3354,27 @@ function recordPDTrial(){
 
   // 2차 후 비교
   if(S.pd_trial_count === 2){
-    const a = S.pd_auto_trials[0];
-    const b = S.pd_auto_trials[1];
+  const a = S.pd_auto_trials[0];
+  const b = S.pd_auto_trials[1];
 
-    if(Math.abs(a - b) > 2){
-      S.pd_measure_needed = 3;
-      gid('pd_retry_note').style.display = 'block';
-      setPDStateMode('trial', '3차');
-      S.pd_rearm_until = Date.now() + 1800;
-      return;
-    }else{
-      finalizePD();
-      return;
-    }
+  if(Math.abs(a - b) > 2){
+    S.pd_measure_needed = 3;
+    gid('pd_retry_note').style.display = 'block';
+    setPDStateMode('done', '2차 측정 완료\n측정값 차이로 인해 잠시 후 3차 측정을 시작합니다.');
+    S.pd_rearm_until = Date.now() + 1800;
+
+    setTimeout(() => {
+      if(!S.pd_completed && S.pd_trial_count === 2){
+        setPDStateMode('trial', '3차');
+      }
+    }, 1200);
+
+    return;
+  }else{
+    finalizePD();
+    return;
   }
+}
 
   // 3차 후 완료
   if(S.pd_trial_count === 3){
