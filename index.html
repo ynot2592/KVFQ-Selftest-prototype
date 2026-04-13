@@ -531,6 +531,11 @@
   padding: 18px 14px;
 }
 
+#screen_npa #npaTarget{
+  min-height: 220px;
+  padding: 18px 14px;
+}
+
 .pdInputField{
   display:grid;
   grid-template-columns: 120px 1fr;
@@ -2316,13 +2321,161 @@ html, body{
   </div>
 
   <section id="screen_npa" class="card hidden">
-     <h1>NPA(조절근점) 자가측정</h1>
-     <p>여기는 NPA 측정 페이지입니다.</p>
-     <div class="row">
-        <button class="btn ghost" onclick="go('screen_npc')">이전</button>
-        <button class="btn primary" onclick="go('screen_pvt')">다음</button>
-     </div>
-  </section>
+  <h1 style="margin-bottom:18px;">조절근점(NPA) 자가측정</h1>
+
+  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
+
+    <div id="npa_overlay_msg" style="
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,0.65);
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:13px;
+      color:#fff;
+      text-align:center;
+      display:none;
+      z-index:10;
+      white-space:nowrap;
+    ">
+      메시지
+    </div>
+
+    <!-- 왼쪽 상태값 -->
+    <div style="
+       position:absolute;
+       left:10px;
+       bottom:14px;
+       z-index:1;
+       display:flex;
+       flex-direction:column;
+       gap:6px;
+       align-items:flex-start;
+       text-align:left;
+    ">
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">권장 속도 1~2 cm/s</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">교정 기준 40 cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">현재 검사 <b id="npa_eye_badge">우안</b></span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">거리 <b id="npa_distNow">-</b> cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.75;">pixel PD <b id="npa_pixPD">-</b></span>
+    </div>
+
+    <!-- 가운데 시표/버튼 -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:24px;">
+      <div id="npa_target_text" style="
+        font-size:30px;
+        font-weight:700;
+        letter-spacing:2px;
+        color:#ffffff;
+        background:rgba(15,23,42,.55);
+        border:1px solid rgba(255,255,255,.14);
+        border-radius:12px;
+        padding:14px 18px;
+        line-height:1;
+      ">12345</div>
+
+      <div id="npa_retry_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.45; position:relative; z-index:5; background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 8px;">
+        스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
+      </div>
+
+      <div id="npa_eye_switch_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.5; position:relative; z-index:5; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 8px;">
+        우안 측정이 완료되었습니다.<br>이번에는 오른쪽 눈을 가리고 왼쪽 눈으로 진행해 주세요.
+      </div>
+
+      <button class="btn primary" id="btn_npa_mark" type="button">흐림 기록 #1</button>
+      <button class="btn primary" id="btn_npa_next_eye" type="button" style="display:none;">좌안 측정 시작</button>
+    </div>
+  </div>
+
+  <div class="kpi" style="margin:10px 0 8px;">
+    <div class="v">우안 1차: <b id="npa_od_1">-</b> cm</div>
+    <div class="v">우안 2차: <b id="npa_od_2">-</b> cm</div>
+    <div class="v">우안 3차: <b id="npa_od_3">-</b> cm</div>
+    <div class="v">우안 중앙값: <b id="npa_od_final">-</b> cm</div>
+  </div>
+
+  <div class="kpi" style="margin:0 0 8px;">
+    <div class="v">좌안 1차: <b id="npa_os_1">-</b> cm</div>
+    <div class="v">좌안 2차: <b id="npa_os_2">-</b> cm</div>
+    <div class="v">좌안 3차: <b id="npa_os_3">-</b> cm</div>
+    <div class="v">좌안 중앙값: <b id="npa_os_final">-</b> cm</div>
+  </div>
+
+  <div class="kpi" style="margin:0 0 8px;">
+    <div class="v">평균 NPA: <b id="npa_avg_final">-</b> cm</div>
+  </div>
+
+  <div style="
+      margin-top:16px;
+      margin-bottom:8px;
+      margin-left:8px;
+      font-size:17px;
+      font-weight:700;
+      color:#ffffff;
+  ">
+     측정 방법
+  </div>
+
+  <div style="
+      margin:0 0 10px 10px;
+      padding-left:1.05em;
+      text-indent:-1.05em;
+      color:rgba(230,235,255,.78);
+      font-size:13.4px;
+      line-height:1.45;
+  ">
+     ※ 정확한 측정을 위해 <b style="color:#fde68a;">평소 사용하는 안경 또는 콘택트렌즈를 착용한 상태</b>에서 진행해 주세요.
+  </div>
+
+  <div id="npa_eye_guide" style="
+      margin:0 0 10px 10px;
+      padding-left:1.05em;
+      text-indent:-1.05em;
+      color:rgba(230,235,255,.88);
+      font-size:13.8px;
+      line-height:1.45;
+  ">
+     ※ <b style="color:#ffffff;">왼쪽 눈을 가리고 오른쪽 눈</b>으로 가운데 숫자를 보세요.
+  </div>
+
+  <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
+      <div style="font-weight:700;">1.</div>
+      <div>가운데 숫자를 주시한 상태로 팔을 앞으로 살짝 편 위치에서(약 40~50cm) 스마트폰을 코쪽으로 천천히 가까이 이동하세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">2.</div>
+      <div>숫자가 <b>처음 흐려지는 순간</b> 아래의 <b>[흐림 기록 #1]</b> 버튼을 눌러 주세요.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
+      <div style="font-weight:700;">3.</div>
+      <div>우안을 먼저 3회 측정한 뒤, 좌안을 동일하게 3회 측정합니다.</div>
+    </div>
+
+    <div style="margin-top:0; color:#9ca3af; font-size:13.5px; line-height:1.3; padding-left:14px;">
+      (1회 측정 후, 다시 뒤로 이동한 뒤 반복합니다.)
+    </div>
+  </div>
+
+  <div class="videoWrap" style="margin-top:8px; display:none;">
+    <video id="npa_video" playsinline autoplay muted></video>
+    <canvas id="npa_canvas"></canvas>
+  </div>
+
+  <div class="row" style="margin-top:20px">
+    <button class="btn ghost" onclick="go('screen_npc')">이전</button>
+    <button class="btn ghost" id="btn_npa_clear" type="button">다시 측정</button>
+    <button class="btn primary" id="btn_npa_next" type="button" disabled>다음(RT 측정)</button>
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <button class="btn ghost" id="btn_npa_finish" type="button">NPA 측정만 하고 종료</button>
+  </div>
+</section>
 
 
   <!-- PVT -->
@@ -2453,7 +2606,14 @@ async function sendToSheet(payload){
 
   npc: [null, null, null],
   npc_trial_index: 0,
-  npa: null,
+
+  npa_eye: 'OD',
+  npa_trial_index: 0,
+  npa_OD: [null, null, null],
+  npa_OS: [null, null, null],
+  npa_completed: false,
+  npa_waiting_for_reset: false,
+  npa_reset_reference_dist: null,
 
   npc_waiting_for_reset: false,
   npc_reset_reference_dist: null,
@@ -2503,23 +2663,32 @@ function toKSTString(d = new Date()){
   function go(id){  
   const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
 
-    const leavingPd =
-    gid('screen_pd') &&
-    !gid('screen_pd').classList.contains('hidden') &&
-    id !== 'screen_pd';
+   const leavingPd =
+     gid('screen_pd') &&
+     !gid('screen_pd').classList.contains('hidden') &&
+     id !== 'screen_pd';
 
-  const leavingNpc =
-    gid('screen_npc') &&
-    !gid('screen_npc').classList.contains('hidden') &&
-    id !== 'screen_npc';
+   const leavingNpc =
+     gid('screen_npc') &&
+     !gid('screen_npc').classList.contains('hidden') &&
+     id !== 'screen_npc';
+
+   const leavingNpa =
+     gid('screen_npa') &&
+     !gid('screen_npa').classList.contains('hidden') &&
+     id !== 'screen_npa';
 
   if(leavingPd){
-  stopPDCam(false);
+   stopPDCam(false);
 }
 
   if(leavingNpc){
-  stopNPCCam(false);
+   stopNPCCam(false);
 }
+
+  if(leavingNpa){
+   stopNPACam(false);
+  }
 
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
@@ -2550,11 +2719,18 @@ function toKSTString(d = new Date()){
 }
 
   if(id === 'screen_npc'){
-  updateNpcResultUI();
-  setTimeout(() => {
-    startNPCMeasure();
-  }, 300);
- }
+    updateNpcResultUI();
+    setTimeout(() => {
+      startNPCMeasure();
+    }, 300);
+  }
+
+  if(id === 'screen_npa'){
+    updateNpaUI();
+    setTimeout(() => {
+      startNPAMeasure();
+    }, 300);
+  }
 }
 
   // ---------- VFQ VAS 17문항 (오늘 만든 캔버스 버전) ----------
@@ -4416,12 +4592,23 @@ if(sb){
 resetPD();
 stopPDCam();
 stopNPCCam(true);
+stopNPACam(true);
+
 S.npc_last_dist = null;
 S.npc_last_ts = 0;
 S.npc_trial_index = 0;
-
 S.npc_smooth_dist = null;
 S.npc_speed_cm_s = 0;
+S.npc = [null, null, null];
+
+S.npa_eye = 'OD';
+S.npa_trial_index = 0;
+S.npa_OD = [null, null, null];
+S.npa_OS = [null, null, null];
+S.npa_completed = false;
+S.npa_waiting_for_reset = false;
+S.npa_reset_reference_dist = null;
+S.distNow = null;
 }
 
 gid('btn_pd_start')?.addEventListener('click', () => {
