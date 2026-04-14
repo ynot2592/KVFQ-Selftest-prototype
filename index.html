@@ -2187,14 +2187,32 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
   <h1 style="margin-bottom:18px;">폭주근점(NPC) 자가측정</h1>
-  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:230px; display:flex; align-items:center; justify-content:center;">
 
   <div id="npc_overlay_msg" style="
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.65);
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:13px;
+  color:#fff;
+  text-align:center;
+  display:none;
+  z-index:10;
+  white-space:nowrap;
+">
+  메시지
+</div>
+
+<div id="npc_speed_msg" style="
   position:absolute;
   top:42px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(15,23,42,0.82);
+  background:rgba(15,23,42,.82);
   padding:6px 10px;
   border-radius:8px;
   font-size:13px;
@@ -2202,11 +2220,11 @@ html, body{
   border:1px solid rgba(253,230,138,.35);
   text-align:center;
   display:none;
-  z-index:10;
+  z-index:11;
   white-space:nowrap;
   text-shadow:0 1px 2px rgba(0,0,0,.45);
 ">
-  메시지
+  이동이 너무 빠릅니다. 천천히 이동해 주세요.
 </div>
 
   <!-- 왼쪽 상태값 -->
@@ -2242,7 +2260,7 @@ html, body{
 
           <div id="npc_fix_bar" style="
               width:3px;
-              height:88px;
+              height:100px;
               background:#ef4444;
               border-radius:3px;
           "></div>
@@ -2288,7 +2306,8 @@ html, body{
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
-      <div>빨간 선의 <b style="color:#c7f9f1;">맨 위 꼭지점</b>을 주시한 상태로 팔을 앞으로 살짝 편 위치에서(약40~50cm) 스마트폰을 <b style="color:#c7f9f1;">얼굴 중앙</b>에 위치시킨 뒤, 코쪽으로 <b style="color:#c7f9f1;">천천히</b> 가까이 이동하세요.</div>
+      <div>빨간 선의 <b style="color:#c7f9f1;">맨 위 꼭지점</b>을 주시한 상태로 팔을 앞으로 살짝 편 위치에서(약40~50cm),<br>
+              스마트폰을 <b style="color:#c7f9f1;">얼굴 중앙</b>에 위치시킨 뒤, 코쪽으로 <b style="color:#c7f9f1;">천천히</b> 가까이 이동하세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2325,7 +2344,7 @@ html, body{
   <section id="screen_npa" class="card hidden">
   <h1 style="margin-bottom:18px;">조절근점(NPA) 자가측정</h1>
 
-  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:230px; display:flex; align-items:center; justify-content:center;">
 
     <div id="npa_overlay_msg" style="
       position:absolute;
@@ -2382,17 +2401,42 @@ html, body{
       </div>
 
       <div id="npa_mark_wrap" style="
-          position:relative;
-          z-index:3;
-          width:100%;
-          display:flex;
-          justify-content:flex-start;
-          margin-top:12px;
-      ">
-         <button class="btn primary" id="btn_npa_mark" type="button">흐림 기록 #1</button>
-      </div>
+  position:absolute;
+  top:92px;
+  left:0;
+  right:0;
+  z-index:3;
+  display:flex;
+  justify-content:flex-start;
+  padding:0 22px;
+  pointer-events:none;
+">
+  <button class="btn primary circle" id="btn_npa_mark" type="button" style="pointer-events:auto; width:72px; height:72px; font-size:13px;">
+    흐림 기록 #1
+  </button>
+</div>
       <button class="btn primary" id="btn_npa_next_eye" type="button" style="display:none;">좌안 측정 시작</button>
     </div>
+
+<div id="npa_status_grid" style="
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:2;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:6px 8px;
+   ">
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">권장 속도 1~2 cm/s</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">교정 기준 40 cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">PD <b id="npa_labPD">-</b> mm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">거리 <b id="npa_distNow">-</b> cm</span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">pixel PD <b id="npa_pixPD">-</b></span>
+      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">측정안 <b id="npa_eye_label">우안</b></span>
+   </div>
+
   </div>
 
   <div style="
@@ -2444,26 +2488,7 @@ html, body{
          <div style="font-size:13px; color:#cbd5f5;">
              조절력: <b id="npa_os_D">-</b> D
          </div>
-      </div>
-
-   <div id="npa_status_grid" style="
-      position:absolute;
-      left:12px;
-      right:12px;
-      bottom:12px;
-      z-index:2;
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:6px 8px;
-   ">
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">권장 속도 1~2 cm/s</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">교정 기준 40 cm</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">PD <b id="npa_labPD">-</b> mm</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">거리 <b id="npa_distNow">-</b> cm</span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">pixel PD <b id="npa_pixPD">-</b></span>
-      <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">측정안 <b id="npa_eye_label">우안</b></span>
-   </div>
+      </div>   
 
    </div>
 
@@ -4023,6 +4048,7 @@ function onNPCResults(res){
   if(!npcIsRunning) return;
 
   const overlay = gid('npc_overlay_msg');
+  const speedOverlay = gid('npc_speed_msg');
 
   npcCanvas.width = npcVideo.videoWidth || 640;
   npcCanvas.height = npcVideo.videoHeight || 480;
@@ -4042,6 +4068,10 @@ function onNPCResults(res){
     if(overlay){
       overlay.style.display = 'block';
       overlay.textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
+    }
+
+    if(speedOverlay){
+      speedOverlay.style.display = 'none';
     }
 
     S.npc_speed_cm_s = 0;
@@ -4078,6 +4108,10 @@ function onNPCResults(res){
     if(overlay){
       overlay.style.display = 'block';
       overlay.textContent = '거리 계산이 잠시 불안정합니다.';
+    }
+
+    if(speedOverlay){
+      speedOverlay.style.display = 'none';
     }
 
     return;
@@ -4145,16 +4179,23 @@ function onNPCResults(res){
   S.npc_fast_move_flag = fastMove;
 
   // 오버레이 표시
-  if(overlay){
   if(fastMove){
-    S.npc_overlay_until = Date.now() + 900;
-    overlay.style.display = 'block';
-    overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
-  }else{
+  S.npc_overlay_until = Date.now() + 900;
+
+  if(overlay){
+    overlay.style.display = 'none';
+  }
+
+  if(speedOverlay){
+    speedOverlay.style.display = 'block';
+    speedOverlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+  }
+}else{
+  if(speedOverlay){
     if(Date.now() < S.npc_overlay_until){
-      overlay.style.display = 'block';
+      speedOverlay.style.display = 'block';
     }else{
-      overlay.style.display = 'none';
+      speedOverlay.style.display = 'none';
     }
   }
 }
@@ -4461,10 +4502,15 @@ function clearNPC(){
     gid('npc_status').textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
   }
 
-    const overlay = gid('npc_overlay_msg');
+  const overlay = gid('npc_overlay_msg');
   if(overlay){
     overlay.style.display = 'none';
   }
+
+  const speedOverlay = gid('npc_speed_msg');
+  if(speedOverlay){
+    speedOverlay.style.display = 'none';
+  } 
   S.npc_overlay_until = 0;
 
   updateNpcResultUI();
