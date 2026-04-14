@@ -2384,20 +2384,23 @@ html, body{
 
       <div id="npa_eye_switch_guide" class="small" style="
          display:none;
-         margin-top:12px;
-         padding:10px 12px;
+         position:absolute;
+         left:14px;
+         right:14px;
+         top:74px;
+         z-index:8;
+         padding:8px 10px;
          border-radius:10px;
-         background:rgba(15,23,42,.82);
-         border:1px solid rgba(253,230,138,.35);
-         color:#fde68a;
-         font-size:14px;
-         line-height:1.45;
+         background:rgba(15,23,42,.78);
+         border:1px solid rgba(253,230,138,.22);
+         color:rgba(253,230,138,.88);
+         font-size:12.5px;
+         line-height:1.4;
          text-align:center;
-         position:relative;
-         z-index:5;
+         text-shadow:0 1px 2px rgba(0,0,0,.35);
       ">
          우안 측정이 완료되었습니다.<br>
-         이번에는 오른쪽 눈을 가리고 왼쪽 눈으로 진행해 주세요.
+         이제 오른쪽 눈을 가리고 왼쪽 눈으로 진행해 주세요.
       </div>
 
       <div id="npa_mark_wrap" style="
@@ -2424,14 +2427,32 @@ html, body{
     흐림 기록 #1
   </button>
 </div>
-      <button class="btn primary" id="btn_npa_next_eye" type="button" style="display:none;">좌안 측정 시작</button>
-    </div>
+
+<div id="npa_left_start_wrap" style="
+  display:none;
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:54px;
+  z-index:9;
+  justify-content:center;
+  pointer-events:none;
+">
+  <button class="btn primary" id="btn_npa_next_eye" type="button" style="
+    pointer-events:auto;
+    min-width:120px;
+    font-size:13px;
+    padding:10px 14px;
+  ">
+    좌안 측정 시작
+  </button>
+</div>
 
 <div id="npa_status_grid" style="
   position:absolute;
   left:10px;
   right:10px;
-  bottom:4px;
+  bottom:2px;
   z-index:2;
   display:flex;
   flex-wrap:wrap;
@@ -2527,12 +2548,12 @@ html, body{
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
-      <div><b style="color:#c7f9f1;">측정하는 눈</b>으로 가운데 숫자를 주시한 상태로, 팔을 앞으로 살짝 편 위치에서(약 40~50cm) 스마트폰을 <b style="color:#c7f9f1;">해당 눈 앞쪽<b>에 두고 코쪽으로 천천히 가까이 이동하세요.</div>
+      <div>왼쪽 눈을 가리고<b style="color:#c7f9f1;">오른쪽 눈</b>으로 가운데 숫자를 주시한 상태로, 팔을 앞으로 살짝 편 위치에서(약 40~50cm) 스마트폰을 <b style="color:#c7f9f1;">해당 눈 앞쪽<b>에서 코쪽으로 천천히 가까이 이동하세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>숫자가 <b>처음 흐려지는 순간</b> 아래의 <b>[흐림 기록 #1]</b> 버튼을 눌러 주세요.</div>
+      <div>숫자가 <b>처음 흐려지는 순간</b> 옆쪽의 <b>[흐림 기록 #1]</b> 버튼을 눌러 주세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -3364,11 +3385,11 @@ function updateNpaUI(){
   }
 
   const switchGuide = gid('npa_eye_switch_guide');
-  const nextEyeBtn = gid('btn_npa_next_eye');
+  const nextEyeWrap = gid('npa_left_start_wrap');
 
   if(S.npa_eye === 'OS' || S.npa_completed){
     if(switchGuide) switchGuide.style.display = 'none';
-    if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+    if(nextEyeWrap) nextEyeWrap.style.display = 'none';
   }
 
   const nextBtn = gid('btn_npa_next');
@@ -4423,12 +4444,12 @@ function markNPA(){
       if(retryGuide) retryGuide.style.display = 'none';
 
       const switchGuide = gid('npa_eye_switch_guide');
-      const nextEyeBtn = gid('btn_npa_next_eye');
+      const nextEyeWrap = gid('npa_left_start_wrap');
       const markBtn = gid('btn_npa_mark');
 
       if(markBtn) markBtn.style.display = 'none';
       if(switchGuide) switchGuide.style.display = 'block';
-      if(nextEyeBtn) nextEyeBtn.style.display = 'inline-flex';
+      if(nextEyeWrap) nextEyeWrap.style.display = 'flex';
       return;
     }else{
       S.npa_completed = true;
@@ -4459,14 +4480,14 @@ function startNpaLeftEye(){
   S.npa_reset_reference_dist = null;
 
   const switchGuide = gid('npa_eye_switch_guide');
-  const nextEyeBtn = gid('btn_npa_next_eye');
+  const nextEyeWrap = gid('npa_left_start_wrap');
   const retryGuide = gid('npa_retry_guide');
   const overlay = gid('npa_overlay_msg');
 
   if(switchGuide) switchGuide.style.display = 'none';
-  if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+  if(nextEyeWrap) nextEyeWrap.style.display = 'none';
   if(retryGuide) retryGuide.style.display = 'none';
-  if(overlay) overlay.style.display = 'none';
+  if(overlay) overlay.style.display = 'none';;
 
   updateNpaUI();
 }
@@ -4542,12 +4563,12 @@ function clearNPA(){
 
   const retryGuide = gid('npa_retry_guide');
   const switchGuide = gid('npa_eye_switch_guide');
-  const nextEyeBtn = gid('btn_npa_next_eye');
+  const nextEyeWrap = gid('npa_left_start_wrap');
   const overlay = gid('npa_overlay_msg');
 
   if(retryGuide) retryGuide.style.display = 'none';
   if(switchGuide) switchGuide.style.display = 'none';
-  if(nextEyeBtn) nextEyeBtn.style.display = 'none';
+  if(nextEyeWrap) nextEyeWrap.style.display = 'none';
   if(overlay) overlay.style.display = 'none';
 
   updateNpaUI();
