@@ -81,8 +81,7 @@
   .target.go{background:#0ea5e9}
   .target.tap{background:#10b981}
   .vfq-item{padding:10px;border-radius:10px;background:#10172a;border:1px solid rgba(255,255,255,.08)}
-  .vfq-item h4{margin:0 0 6px}
-  .btn.circle{border-radius:9999px;height:64px;width:64px;display:flex;align-items:center;justify-content:center}
+  .vfq-item h4{margin:0 0 6px}  
 
   .pdOverlay{
   position:absolute;
@@ -1529,6 +1528,12 @@ html, body{
   font-size: 13.8px;
 }
 
+#btn_npa_mark{
+  white-space: normal !important;
+  line-height: 1.2;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
@@ -1909,28 +1914,7 @@ html, body{
          <button class="btn ghost" onclick="openThankyou()">설문만 제출하고 종료</button>
          <button class="btn primary" onclick="startSelftest()">자가측정 계속하기</button>
      </div>
-  </section>
-
-  <!-- screen_camtest 삭제 보관용 시작
-  <div class="card hidden" id="screen_camtest">
-    <h2>카메라 권한 테스트</h2>
-    <p class="small">아래 <b>카메라 권한 요청(전면)</b> 버튼을 눌러주세요. 전면 카메라 접근을 확인합니다. 실패 시 원인 힌트를 표시합니다. 카메라 화면이 나오면 <b>교정 화면으로 이동</b> 버튼을 눌러주시면 다음 화면으로 넘어갑니다.</p>
-    <div class="row" style="margin:8px 0">
-      <button class="btn primary" onclick="requestCam()">카메라 권한 요청(전면)</button>
-      <button class="btn" id="btn_to_calib" onclick="go('screen_calib')">다음(카메라 교정)</button>
-      <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
-    </div>
-    <div class="videoWrap"><video id="testV" playsinline></video><canvas id="testC"></canvas></div>
-    <div class="kpi" style="margin-top:8px">
-      <div class="v">상태: <b id="camStatus">대기</b></div>
-      <div class="v">오류: <b id="camError">-</b></div>
-      <div class="v">보안: <b id="secCtx">-</b></div>
-      <div class="v">프로토콜: <b id="proto">-</b></div>
-      <div class="v">카메라 수: <b id="camCount">-</b></div>
-      <div class="v">권한상태: <b id="permState">-</b></div>
-    </div>
-  </div>
-  screen_camtest 삭제 보관용 끝 -->
+  </section>  
 
     <!-- VFQ VAS 17문항 -->
   <div class="card hidden" id="screen_vfq">
@@ -1986,25 +1970,7 @@ html, body{
 
     
     <div id="vfqResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
-  </div>
-
-  <!-- screen_calib 삭제 보관용 시작
-  <div class="card hidden" id="screen_calib">
-    <h2>카메라 교정(40 cm)</h2>
-    <p>스마트폰을 눈앞 <b>40 cm</b> 위치에 고정해주세요. 아래 첫번째 <b>교정</b> 버튼을 눌러주세요. 버튼을 누른 후 얼굴을 인식하면 <b>픽셀 PD</b>가 표시됩니다. 안정화 후 스크롤을 내려 <b>교정</b>을 한번 더 누르고 <b>다음(NPC 측정)</b> 버튼을 눌러주세요.</p>
-    <div class="videoWrap"><video id="v" playsinline></video><canvas id="c"></canvas></div>
-    <div class="kpi" style="margin-top:8px">
-      <div class="v">pixel PD: <b id="pixPD">-</b></div>
-      <div class="v">focal_px: <b id="focal">-</b></div>
-      <div class="v">신뢰도: <b id="conf">-</b></div>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <button class="btn primary" onclick="doCalib()">교정</button>
-      <button class="btn" onclick="go('screen_npc')">다음(NPC 측정)</button>
-      <button class="btn ghost" onclick="go('screen_home')">처음으로</button>
-    </div>
-  </div>
-  screen_calib 삭제 보관용 끝 -->
+  </div>  
 
   <section id="screen_pd" class="card hidden">
   <h1>동공간거리(PD) 자가측정</h1>
@@ -2419,7 +2385,7 @@ html, body{
   font-size:13px;
   padding:10px 12px;
   border-radius:10px;
-  white-space:normal; !important;
+  white-space: normal !important;
   line-height:1.2;
   text-align:center;
 ">
@@ -3181,77 +3147,7 @@ try{
   function calcVFQ(){
     S.vfqSum = vfqAnswers.reduce((sum,v)=> sum + (typeof v === 'number' ? v : 0), 0);
   }
-
-  // ---------- 권한 테스트 ----------
-  async function requestCam(){
-  const camStatus = gid('camStatus');
-  const camError  = gid('camError');
-  const secCtx    = gid('secCtx');
-  const proto     = gid('proto');
-  const camCount  = gid('camCount');
-  const permState = gid('permState');
-
-  if(camStatus) camStatus.textContent = '대기';
-  if(camError)  camError.textContent = '-';
-  if(secCtx)    secCtx.textContent = window.isSecureContext ? 'Secure(OK)' : 'Not secure(문제)';
-  if(proto)     proto.textContent = location.protocol;
-
-  try{const p = await navigator.permissions.query({name:'camera'});
-    if(permState) permState.textContent = p.state;}catch{if(permState) permState.textContent = 'unknown';
-  }
-
-  try{const devices = await navigator.mediaDevices.enumerateDevices();
-    if(camCount) camCount.textContent = devices.filter(d=>d.kind==='videoinput').length;}catch{
-    if(camCount) camCount.textContent = 'unknown';
-  }
-
-  if(camStatus) camStatus.textContent = '요청 중…';
-  if(camError) camError.textContent = '-';
-
-  try{
-    const constraints = { video:{facingMode:{ideal:'user'}}, audio:false };
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-    const tv = gid('testV');
-    const tc = gid('testC');
-
-    if(!tv || !tc){
-      if(camStatus) camStatus.textContent = '테스트 화면 없음';
-      return;
-    }
-
-    tv.srcObject = stream;
-    await tv.play();
-
-    tc.width = tv.videoWidth;
-    tc.height = tv.videoHeight;
-
-    const tctx = tc.getContext('2d');
-    if(!tctx){
-      if(camStatus) camStatus.textContent = 'canvas 초기화 실패';
-      return;
-    }
-
-    if(camStatus) camStatus.textContent = '전면 카메라 연결됨';
-
-    (function draw(){
-      tctx.drawImage(tv, 0, 0, tc.width, tc.height);
-      requestAnimationFrame(draw);
-    })();
-
-  }catch(e){
-    if(camStatus) camStatus.textContent = '실패';
-    let hint = '';
-    if(!window.isSecureContext && location.protocol!=='http:'){
-      hint = 'file:// 또는 비보안 출처입니다. http:// 또는 https:// 로 열어주세요.';
-    }else if(location.protocol==='http:' && !/localhost|127\.0\.0\.1/.test(location.host)){
-      hint = 'http 비보안 출처입니다. https:// 또는 http://localhost 로 열어주세요.';
-    }else{
-      hint = '브라우저 사이트 권한에서 이 도메인의 카메라를 허용하세요. 다른 앱이 카메라 점유 중인지도 확인.';
-    }
-    if(camError) camError.textContent = (e && e.message ? e.message : String(e)) + ' | 힌트: ' + hint;
-  }
-}
+  
 
   // ---------- PD 카메라/FaceMesh ----------
 const pdVideo = gid('pd_video');
@@ -3358,31 +3254,20 @@ function updateNpaUI(){
 
   gid('npa_od_D').textContent = Number.isFinite(odD) ? odD.toFixed(2) : '-';
   gid('npa_os_D').textContent = Number.isFinite(osD) ? osD.toFixed(2) : '-';
-
-  const eyeBadge = gid('npa_eye_badge');
-  if(eyeBadge) eyeBadge.textContent = S.npa_eye === 'OD' ? '우안' : '좌안';
-
-  const eyeGuide = gid('npa_eye_guide');
-  if(eyeGuide){
-    if(S.npa_eye === 'OD'){
-      eyeGuide.innerHTML = '※ <b style="color:#ffffff;">왼쪽 눈을 가리고 오른쪽 눈</b>으로 가운데 숫자를 보세요.';
-    }else{
-      eyeGuide.innerHTML = '※ <b style="color:#ffffff;">오른쪽 눈을 가리고 왼쪽 눈</b>으로 가운데 숫자를 보세요.';
-    }
-  }
+  
 
   const markBtn = gid('btn_npa_mark');
   if(markBtn){
-    if(S.npa_completed){
-      markBtn.textContent = '6회 기록 완료';
-      markBtn.disabled = true;
-      markBtn.style.display = 'inline-flex';
-    }else{
-      markBtn.disabled = false;
-      markBtn.style.display = S.npa_waiting_for_reset ? 'none' : 'inline-flex';
-      markBtn.textContent = `흐림 기록 #${S.npa_trial_index + 1}`;
-    }
+  if(S.npa_completed){
+    markBtn.innerHTML = '6회 기록 완료';
+    markBtn.disabled = true;
+    markBtn.style.display = 'inline-flex';
+  }else{
+    markBtn.disabled = false;
+    markBtn.style.display = S.npa_waiting_for_reset ? 'none' : 'inline-flex';
+    markBtn.innerHTML = `흐림 기록<br>#${S.npa_trial_index + 1}`;
   }
+}
 
   const switchGuide = gid('npa_eye_switch_guide');
   const nextEyeWrap = gid('npa_left_start_wrap');
@@ -4012,9 +3897,7 @@ function stopNPACam(fullClose = false){
 }
 
 async function startNPCMeasure(){
-  if(!(S.pdmm > 0)){
-    const s = gid('npc_status');
-    if(s) s.textContent = '먼저 PD 측정을 완료해 주세요.';
+  if(!(S.pdmm > 0)){    
     return;
   }
 
@@ -4506,10 +4389,7 @@ function clearNPC(){
   ['npc1','npc2','npc3','npcAvg'].forEach(id => gid(id).textContent='-');
 
   gid('distNow').textContent = '-';
-  gid('pixPD2').textContent = '-';
-
-  const warn = gid('speedWarn');
-  if(warn) warn.style.display = 'none';
+  gid('pixPD2').textContent = '-';  
 
   const btn = gid('btn_npc_mark');
   if(btn){
@@ -4736,10 +4616,7 @@ async function shareCSV(){
 
       if(d.open) setDone();
       d.addEventListener('toggle', ()=>{ if(d.open) setDone(); });
-    })();
-  
-      const f = gid('home_pid_field');
-      if(f) f.classList.add('hidden');
+    })();       
         
     setupVFQ();
     go('screen_consent');
@@ -5057,14 +4934,7 @@ go('screen_pd');
     openThankyou(); // 종료
   }
 }
-}
-
-  // 보조: CSV 양식 다운로드 (빈 헤더)
-  function downloadTemplate(){
-    const header=['pid','timestamp','birth','sex','pdmm','focal_px','pixPD_calib','VFQ_sum','NPC1_cm','NPC2_cm','NPC3_cm','NPC_mean_cm','RT_trials','RT_median_ms','RT_p90_ms','RT_lapses','RT_list_ms'].join(',')+ '\\n';
-    const blob=new Blob([header],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download='template.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
-  }
+}  
 
 function resetAll(){
   // 상태 초기화
