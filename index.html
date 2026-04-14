@@ -2310,7 +2310,7 @@ html, body{
   <section id="screen_npa" class="card hidden">
   <h1 style="margin-bottom:18px;">조절근점(NPA) 자가측정</h1>
 
-  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:flex-start; justify-content:center;">
 
     <div id="npa_overlay_msg" style="
       position:absolute;
@@ -2328,10 +2328,30 @@ html, body{
       white-space:nowrap;
     ">
       메시지
-    </div>    
+    </div>
+
+    <div id="npa_speed_msg" style="
+       position:absolute;
+       left:14px;
+       right:14px;
+       top:74px;
+       z-index:11;
+       padding:8px 10px;
+       border-radius:10px;
+       background:rgba(15,23,42,.82);
+       border:1px solid rgba(253,230,138,.35);
+       color:#fde68a;
+       font-size:12.5px;
+       line-height:1.4;
+       text-align:center;
+       display:none;
+       text-shadow:0 1px 2px rgba(0,0,0,.45);
+    ">
+       이동이 너무 빠릅니다. 천천히 이동해 주세요.
+    </div>     
 
     <!-- npa 가운데 시표/버튼 -->
-    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:20px;">
       <div id="npa_target_text" style="
         font-size:30px;
         font-weight:700;
@@ -4114,6 +4134,7 @@ function onNPAResults(res){
   if(!npaIsRunning) return;
 
   const overlay = gid('npa_overlay_msg');
+  const speedOverlay = gid('npa_speed_msg');
 
   npaCanvas.width = npaVideo.videoWidth || 640;
   npaCanvas.height = npaVideo.videoHeight || 480;
@@ -4133,6 +4154,11 @@ function onNPAResults(res){
       overlay.style.display = 'block';
       overlay.textContent = '얼굴을 화면 중앙에 맞춰 주세요.';
     }
+ 
+   if(speedOverlay){
+     speedOverlay.style.display = 'none';
+   }
+
     return;
   }
 
@@ -4159,12 +4185,17 @@ function onNPAResults(res){
       gid('npa_distNow').textContent = '-';
     }
 
-    if(overlay){
-      overlay.style.display = 'block';
-      overlay.textContent = '거리 계산이 잠시 불안정합니다.';
-    }
-    return;
+  if(overlay){
+    overlay.style.display = 'block';
+    overlay.textContent = '거리 계산이 잠시 불안정합니다.';
   }
+
+  if(speedOverlay){
+    speedOverlay.style.display = 'none';
+  }
+
+  return;
+}
 
   const rawDistCm = (S.pdmm * 110) / pixDist;
   const distCm = rawDistCm * NPC_DIST_SCALE;
@@ -4219,19 +4250,30 @@ function onNPAResults(res){
   S.npc_prev_pix_dist = pixDist;
   S.npc_fast_move_flag = fastMove;
 
+  if(fastMove){
+  S.npc_overlay_until = Date.now() + 900;
+
   if(overlay){
-    if(fastMove){
-      S.npc_overlay_until = Date.now() + 900;
-      overlay.style.display = 'block';
-      overlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+    overlay.style.display = 'none';
+  }
+
+  if(speedOverlay){
+    speedOverlay.style.display = 'block';
+    speedOverlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
+  }
+}else{
+  if(overlay){
+    overlay.style.display = 'none';
+  }
+
+  if(speedOverlay){
+    if(Date.now() < S.npc_overlay_until){
+      speedOverlay.style.display = 'block';
     }else{
-      if(Date.now() < S.npc_overlay_until){
-        overlay.style.display = 'block';
-      }else{
-        overlay.style.display = 'none';
-      }
+      speedOverlay.style.display = 'none';
     }
   }
+}
 }
 
 // ---------- NPC 기록 ----------
@@ -4445,11 +4487,13 @@ function clearNPA(){
   const switchGuide = gid('npa_eye_switch_guide');
   const nextEyeWrap = gid('npa_left_start_wrap');
   const overlay = gid('npa_overlay_msg');
+  const speedOverlay = gid('npa_speed_msg');
 
   if(retryGuide) retryGuide.style.display = 'none';
   if(switchGuide) switchGuide.style.display = 'none';
   if(nextEyeWrap) nextEyeWrap.style.display = 'none';
   if(overlay) overlay.style.display = 'none';
+  if(speedOverlay) speedOverlay.style.display = 'none';
 
   updateNpaUI();
 }
