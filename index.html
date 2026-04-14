@@ -2187,7 +2187,7 @@ html, body{
 <!-- NPC 측정 -->
   <div class="card hidden" id="screen_npc">
   <h1 style="margin-bottom:18px;">폭주근점(NPC) 자가측정</h1>
-  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:230px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npcTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
 
   <div id="npc_overlay_msg" style="
   position:absolute;
@@ -2344,7 +2344,7 @@ html, body{
   <section id="screen_npa" class="card hidden">
   <h1 style="margin-bottom:18px;">조절근점(NPA) 자가측정</h1>
 
-  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:230px; display:flex; align-items:center; justify-content:center;">
+  <div class="target" id="npaTarget" style="margin-top:4px; position:relative; height:250px; display:flex; align-items:center; justify-content:center;">
 
     <div id="npa_overlay_msg" style="
       position:absolute;
@@ -2364,8 +2364,8 @@ html, body{
       메시지
     </div>    
 
-    <!-- 가운데 시표/버튼 -->
-    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:24px;">
+    <!-- npa 가운데 시표/버튼 -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:20px;">
       <div id="npa_target_text" style="
         font-size:30px;
         font-weight:700;
@@ -2402,16 +2402,25 @@ html, body{
 
       <div id="npa_mark_wrap" style="
   position:absolute;
-  top:92px;
+  top:88px;
   left:0;
   right:0;
   z-index:3;
   display:flex;
   justify-content:flex-start;
-  padding:0 22px;
+  padding:0 10px;
   pointer-events:none;
 ">
-  <button class="btn primary circle" id="btn_npa_mark" type="button" style="pointer-events:auto; width:72px; height:72px; font-size:13px;">
+  <button class="btn primary circle" id="btn_npa_mark" type="button" style="
+    pointer-events:auto;
+    width:94px;
+    height:94px;
+    font-size:12px;
+    line-height:1.2;
+    text-align:center;
+    padding:0 8px;
+    white-space:normal;
+  ">
     흐림 기록 #1
   </button>
 </div>
@@ -2419,16 +2428,17 @@ html, body{
     </div>
 
 <div id="npa_status_grid" style="
-      position:absolute;
-      left:12px;
-      right:12px;
-      bottom:12px;
-      z-index:2;
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:6px 8px;
-   ">
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:4px;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-start;
+  align-content:flex-end;
+  gap:5px 7px;
+">
       <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">권장 속도 1~2 cm/s</span>
       <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">교정 기준 40 cm</span>
       <span class="badge" style="font-size:10.5px; padding:2px 6px; opacity:0.78;">PD <b id="npa_labPD">-</b> mm</span>
@@ -2512,18 +2522,7 @@ html, body{
       line-height:1.45;
   ">
      ※ 정확한 측정을 위해 <b style="color:#fde68a;">평소 사용하는 안경 또는 콘택트렌즈를 착용한 상태</b>에서 진행해 주세요.
-  </div>
-
-  <div id="npa_eye_guide" style="
-      margin:0 0 10px 10px;
-      padding-left:1.05em;
-      text-indent:-1.05em;
-      color:rgba(230,235,255,.88);
-      font-size:13.8px;
-      line-height:1.45;
-  ">
-     ※ <b style="color:#ffffff;">왼쪽 눈을 가리고 오른쪽 눈</b>으로 가운데 숫자를 보세요.
-  </div>
+  </div>  
 
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
@@ -3374,20 +3373,20 @@ function updateNpaUI(){
 
   const nextBtn = gid('btn_npa_next');
   if(nextBtn) nextBtn.disabled = !S.npa_completed;
+
+  updateNpaButtonSide();
+  updateNpaStatusBadges();
 }
 
-function updateNpaButtonSide(){
+function updateNpaButtonSide(){ 
   const wrap = gid('npa_mark_wrap');
   if(!wrap) return;
 
   if(S.npa_eye === 'OD'){
-    wrap.style.justifyContent = 'flex-start';
-  }else{
     wrap.style.justifyContent = 'flex-end';
+  }else{
+    wrap.style.justifyContent = 'flex-start';
   }
-
-  updateNpaButtonSide();
-  updateNpaStatusBadges();
 }
 
 function updateNpaStatusBadges(){
@@ -4130,6 +4129,7 @@ function onNPCResults(res){
   const shownDist = Number(S.npc_smooth_dist.toFixed(1));
   S.distNow = shownDist;
   gid('distNow').textContent = shownDist.toFixed(1);
+  
 
   // 복시 후 다시 멀어졌는지 확인
   if(S.npc_waiting_for_reset && S.npc_reset_reference_dist !== null){
@@ -4191,6 +4191,10 @@ function onNPCResults(res){
     speedOverlay.textContent = '이동이 너무 빠릅니다. 천천히 이동해 주세요.';
   }
 }else{
+  if(overlay){
+    overlay.style.display = 'none';
+  }
+
   if(speedOverlay){
     if(Date.now() < S.npc_overlay_until){
       speedOverlay.style.display = 'block';
