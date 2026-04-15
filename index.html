@@ -2796,8 +2796,12 @@ function toKSTString(d = new Date()){
    stopNPACam(false);
   }
 
-  screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  screens.forEach(s => {
+  const el = document.getElementById(s);
+  if(el) el.classList.add('hidden');
+  });
+  const target = document.getElementById(id);
+  if(target) target.classList.remove('hidden');
 
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
