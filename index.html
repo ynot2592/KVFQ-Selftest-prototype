@@ -2585,7 +2585,7 @@ html, body{
       font-size:13.4px;
       line-height:1.45;
   ">
-    ※ 숫자가 나타나면 가능한 한 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
+    ※ 가운데에 숫자가 나타나면 가능한 한 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
   </div>
 
   <div style="margin-top:10px; margin-left:2px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
@@ -2596,7 +2596,7 @@ html, body{
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>가운데 <b style="color:#93c5fd;">십자(＋)</b>를 주시하다가, 숫자가 나타나는 순간 바로 터치해 주세요.</div>
+      <div>검정색 화면을 보고 기다리다가, 가운데 숫자가 나타나는 순간 바로 터치해 주세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2611,19 +2611,23 @@ html, body{
   </div>
 
   <div id="rtBox" class="target" style="
-      margin-top:18px;
-      min-height:220px;
-      font-size:42px;
-      letter-spacing:1px;
-      user-select:none;
-      -webkit-user-select:none;
-      touch-action:manipulation;
-      font-variant-numeric: tabular-nums;
-  ">+</div>
+    margin-top:18px;
+    min-height:220px;
+    background:#000000;
+    border:1px solid rgba(255,255,255,.12);
+    font-size:34px;
+    font-weight:700;
+    letter-spacing:2px;
+    color:#ef4444;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+">READY</div>
 
   <div class="kpi" style="margin-top:12px;">
     <div class="v">경과 시간: <b id="rtElapsed">0</b> / 120 s</div>
     <div class="v">유효 반응 수: <b id="rtValidN">0</b></div>
+    <div class="v">False Start: <b id="rtFS">0</b></div>
     <div class="v">무반응 수: <b id="rtNoResp">0</b></div>
     <div class="v">현재 RT: <b id="rtCurrent">-</b> ms</div>
     <div class="v">평균 RT: <b id="rtMean">-</b> ms</div>
@@ -2894,7 +2898,7 @@ function toKSTString(d = new Date()){
 if(id === 'screen_pvt'){
   updateRTUI();
   if(rtBox && !S.rt.started){
-    rtBox.textContent = '+';
+    rtBox.textContent = '';
     rtBox.className = 'target';
   }
 }
@@ -4575,6 +4579,16 @@ function clearNPA(){
 // ---------- RT ----------
 const rtBox = gid('rtBox');
 
+const RT_ISI_MIN_MS = 2000;      // PC-PVT min ISI
+const RT_ISI_MAX_MS = 10000;     // PC-PVT max ISI (상한 미포함처럼 운용)
+const RT_FEEDBACK_MS = 1000;     // PC-PVT feedback duration
+const RT_RESPONSE_LIMIT_MS = 65000; // PC-PVT no response upper limit
+
+function getRandomPostFeedbackDelayMs(){
+  return Math.floor(Math.random() * ((RT_ISI_MAX_MS - RT_FEEDBACK_MS) - (RT_ISI_MIN_MS - RT_FEEDBACK_MS)))
+       + (RT_ISI_MIN_MS - RT_FEEDBACK_MS);
+}
+
 function calcMean(arr){
   if(!arr.length) return null;
   return arr.reduce((a,b)=>a+b,0) / arr.length;
@@ -4603,6 +4617,7 @@ function updateRTUI(){
   gid('rtElapsed').textContent = S.rt.elapsedSec;
   gid('rtValidN').textContent = S.rt.validCount;
   gid('rtNoResp').textContent = S.rt.noResponse;
+  gid('rtFS').textContent = S.rt.falseStart;
   gid('rtCurrent').textContent = Number.isFinite(S.rt.current) ? Math.round(S.rt.current) : '-';
 
   const mean = calcMean(S.rt.values);
@@ -4623,8 +4638,8 @@ function updateRTUI(){
 function clearRTTimers(){
   clearTimeout(S.rt.timeoutId);
   clearTimeout(S.rt.responseTimerId);
-  clearInterval(S.rt.displayTimerId);
-  clearInterval(S.rt.elapsedTimerId);
+  clearTimeout(S.rt.displayTimerId);
+  clearTimeout(S.rt.elapsedTimerId);
 
   S.rt.timeoutId = null;
   S.rt.responseTimerId = null;
@@ -4660,7 +4675,7 @@ function resetRT(){
   };
 
   if(rtBox){
-    rtBox.textContent = '+';
+    rtBox.textContent = '';
     rtBox.className = 'target';
   }
 
@@ -4690,8 +4705,10 @@ function scheduleRTStimulus(){
     return;
   }
 
-  const isi = 2000 + Math.random() * 8000; // 2~10초
-  S.rt.isiList.push(Math.round(isi));
+  // PC-PVT: 1초 feedback 포함 총 ISI 2~10초
+  // 따라서 feedback 후 추가 대기시간은 1.000~8.999초
+  const delay = getRandomPostFeedbackDelayMs();
+  S.rt.isiList.push(delay + RT_FEEDBACK_MS);
 
   S.rt.timeoutId = setTimeout(() => {
     if(!S.rt.started || S.rt.finished) return;
@@ -4706,20 +4723,26 @@ function scheduleRTStimulus(){
     S.rt.stimulusAt = performance.now();
 
     if(rtBox){
-      rtBox.className = 'target go';
-      rtBox.textContent = '000';
+      rtBox.className = 'target';
+      rtBox.textContent = '0000';
     }
 
-    S.rt.displayTimerId = setInterval(() => {
+    const tickDisplay = () => {
       if(!S.rt.waiting || S.rt.finished) return;
+
       const ms = Math.floor(performance.now() - S.rt.stimulusAt);
-      if(rtBox) rtBox.textContent = String(ms).padStart(3, '0');
-    }, 16);
+      if(rtBox){
+        rtBox.textContent = String(ms).padStart(4, '0');
+      }
+
+      S.rt.displayTimerId = setTimeout(tickDisplay, 16);
+    };
+    tickDisplay();
 
     S.rt.responseTimerId = setTimeout(() => {
       if(!S.rt.waiting || S.rt.finished) return;
 
-      clearInterval(S.rt.displayTimerId);
+      clearTimeout(S.rt.displayTimerId);
       S.rt.displayTimerId = null;
 
       S.rt.waiting = false;
@@ -4728,23 +4751,31 @@ function scheduleRTStimulus(){
       S.rt.lapse += 1;
 
       if(rtBox){
+        rtBox.textContent = 'ET';
         rtBox.className = 'target';
-        rtBox.textContent = 'MISS';
       }
 
       updateRTUI();
 
-      setTimeout(() => {
+      S.rt.timeoutId = setTimeout(() => {
         if(S.rt.finished) return;
-        if(rtBox){
-          rtBox.className = 'target';
-          rtBox.textContent = '+';
-        }
-        scheduleRTStimulus();
-      }, 600);
 
-    }, 1000); // 1초 안에 반응 없으면 무반응 처리
-  }, isi);
+        const elapsedAfterFeedback = performance.now() - S.rt.testStartAt;
+        if(elapsedAfterFeedback >= S.rt.durationMs){
+          finishRT();
+          return;
+        }
+
+        if(rtBox){
+          rtBox.textContent = '';
+          rtBox.className = 'target';
+        }
+
+        scheduleRTStimulus();
+      }, RT_FEEDBACK_MS);
+
+    }, RT_RESPONSE_LIMIT_MS);
+  }, delay);
 }
 
 function startRT(){
@@ -4754,7 +4785,7 @@ function startRT(){
   S.rt.finished = false;
   S.rt.testStartAt = performance.now();
 
-  S.rt.elapsedTimerId = setInterval(() => {
+  const tickElapsed = () => {
     if(!S.rt.started || S.rt.finished) return;
 
     const elapsedMs = performance.now() - S.rt.testStartAt;
@@ -4764,29 +4795,64 @@ function startRT(){
 
     if(elapsedMs >= S.rt.durationMs){
       finishRT();
+      return;
     }
-  }, 200);
+
+    S.rt.elapsedTimerId = setTimeout(tickElapsed, 200);
+  };
+  tickElapsed();
 
   if(rtBox){
-    rtBox.textContent = '+';
+    rtBox.textContent = '';
     rtBox.className = 'target';
   }
 
-  scheduleRTStimulus();
+  // Ready click 후 500 ms black delay
+  S.rt.timeoutId = setTimeout(() => {
+    if(!S.rt.started || S.rt.finished) return;
+    scheduleRTStimulus();
+  }, 500);
 }
 
 function handleRTTap(){
   if(!S.rt.started || S.rt.finished) return;
 
-  // 자극 전에 누른 경우
+  // 자극 전 클릭 = False Start
   if(!S.rt.waiting){
+    S.rt.falseStart += 1;
+
+    if(rtBox){
+      rtBox.textContent = 'FS';
+      rtBox.className = 'target';
+    }
+
+    clearRTTimers();
+
+    S.rt.timeoutId = setTimeout(() => {
+      if(S.rt.finished) return;
+
+      const elapsedAfterFeedback = performance.now() - S.rt.testStartAt;
+      if(elapsedAfterFeedback >= S.rt.durationMs){
+        finishRT();
+        return;
+      }
+
+      if(rtBox){
+        rtBox.textContent = '';
+        rtBox.className = 'target';
+      }
+
+      scheduleRTStimulus();
+    }, RT_FEEDBACK_MS);
+
+    updateRTUI();
     return;
   }
 
   const rt = performance.now() - S.rt.stimulusAt;
 
   clearTimeout(S.rt.responseTimerId);
-  clearInterval(S.rt.displayTimerId);
+  clearTimeout(S.rt.displayTimerId);
   S.rt.responseTimerId = null;
   S.rt.displayTimerId = null;
 
@@ -4795,33 +4861,33 @@ function handleRTTap(){
   S.rt.values.push(rt);
   S.rt.validCount += 1;
 
-  if(rt > 500){
+  if(rt >= 500){
     S.rt.lapse += 1;
   }
 
   if(rtBox){
-    rtBox.className = 'target tap';
-    rtBox.textContent = String(Math.round(rt)).padStart(3, '0');
+    rtBox.className = 'target';
+    rtBox.textContent = String(Math.round(rt));
   }
 
   updateRTUI();
 
-  setTimeout(() => {
+  S.rt.timeoutId = setTimeout(() => {
     if(S.rt.finished) return;
 
-    const elapsed = performance.now() - S.rt.testStartAt;
-    if(elapsed >= S.rt.durationMs){
+    const elapsedAfterFeedback = performance.now() - S.rt.testStartAt;
+    if(elapsedAfterFeedback >= S.rt.durationMs){
       finishRT();
       return;
     }
 
     if(rtBox){
       rtBox.className = 'target';
-      rtBox.textContent = '+';
+      rtBox.textContent = '';
     }
 
     scheduleRTStimulus();
-  }, 500);
+  }, RT_FEEDBACK_MS);
 }
 
   // ---------- 초기 ----------
