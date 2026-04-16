@@ -4635,20 +4635,24 @@ function updateRTUI(){
   if(nextBtn) nextBtn.disabled = !S.rt.finished;
 }
 
-function clearRTTimers(){
+function clearRTStimulusTimers(){
   clearTimeout(S.rt.timeoutId);
   clearTimeout(S.rt.responseTimerId);
   clearTimeout(S.rt.displayTimerId);
-  clearTimeout(S.rt.elapsedTimerId);
 
   S.rt.timeoutId = null;
   S.rt.responseTimerId = null;
   S.rt.displayTimerId = null;
+}
+
+function clearRTAllTimers(){
+  clearRTStimulusTimers();
+  clearTimeout(S.rt.elapsedTimerId);
   S.rt.elapsedTimerId = null;
 }
 
 function resetRT(){
-  clearRTTimers();
+  clearRTAllTimers();
 
   S.rt = {
     durationMs: 120000,
@@ -4683,7 +4687,7 @@ function resetRT(){
 }
 
 function finishRT(){
-  clearRTTimers();
+  clearRTAllTimers();
 
   S.rt.waiting = false;
   S.rt.finished = true;
@@ -4803,15 +4807,23 @@ function startRT(){
   tickElapsed();
 
   if(rtBox){
+  rtBox.textContent = 'READY';
+  rtBox.className = 'target';
+}
+
+S.rt.timeoutId = setTimeout(() => {
+  if(!S.rt.started || S.rt.finished) return;
+
+  if(rtBox){
     rtBox.textContent = '';
     rtBox.className = 'target';
   }
 
-  // Ready click 후 500 ms black delay
   S.rt.timeoutId = setTimeout(() => {
     if(!S.rt.started || S.rt.finished) return;
     scheduleRTStimulus();
-  }, 500);
+  }, 400); // READY 후 짧은 검정 공백
+}, 800);   // READY 표시 시간
 }
 
 function handleRTTap(){
@@ -4826,7 +4838,7 @@ function handleRTTap(){
       rtBox.className = 'target';
     }
 
-    clearRTTimers();
+    clearRTStimulusTimers();
 
     S.rt.timeoutId = setTimeout(() => {
       if(S.rt.finished) return;
