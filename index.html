@@ -2585,7 +2585,7 @@ html, body{
       font-size:13.4px;
       line-height:1.45;
   ">
-    ※ 파란색 화면이 나타나면 가능한 한 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
+    ※ 숫자가 나타나면 가능한 한 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
   </div>
 
   <div style="margin-top:10px; margin-left:2px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
@@ -2596,36 +2596,41 @@ html, body{
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>아래 상자가 <b style="color:#93c5fd;">파란색</b>으로 바뀌는 순간 바로 터치해 주세요.</div>
+      <div>가운데 <b style="color:#93c5fd;">십자(＋)</b>를 주시하다가, 숫자가 나타나는 순간 바로 터치해 주세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">3.</div>
-      <div>자극은 일정하지 않고 <b>무작위 간격</b>으로 나타납니다.</div>
+      <div>자극은 <b>2~10초 사이의 무작위 간격</b>으로 나타납니다.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">4.</div>
-      <div>총 <b>20회</b> 측정 후 자동으로 결과가 정리됩니다.</div>
+      <div>측정은 <b>총 2분간</b> 진행되며, 자동으로 종료됩니다.</div>
     </div>
   </div>
 
   <div id="rtBox" class="target" style="
       margin-top:18px;
       min-height:220px;
-      font-size:28px;
+      font-size:42px;
       letter-spacing:1px;
       user-select:none;
       -webkit-user-select:none;
       touch-action:manipulation;
-  ">READY</div>
+      font-variant-numeric: tabular-nums;
+  ">+</div>
 
   <div class="kpi" style="margin-top:12px;">
-    <div class="v">진행: <b id="rtTrialNow">0</b> / 20</div>
+    <div class="v">경과 시간: <b id="rtElapsed">0</b> / 120 s</div>
+    <div class="v">유효 반응 수: <b id="rtValidN">0</b></div>
+    <div class="v">무반응 수: <b id="rtNoResp">0</b></div>
     <div class="v">현재 RT: <b id="rtCurrent">-</b> ms</div>
     <div class="v">평균 RT: <b id="rtMean">-</b> ms</div>
     <div class="v">중앙 RT: <b id="rtMedian">-</b> ms</div>
+    <div class="v">RT SD: <b id="rtStd">-</b> ms</div>
     <div class="v">Lapse: <b id="rtLapse">0</b></div>
+    <div class="v">Speed (1/RT): <b id="rtSpeed">-</b> 1/ms</div>
   </div>
 
   <div class="row" style="margin-top:18px">
@@ -2772,17 +2777,28 @@ async function sendToSheet(payload){
   npc_overlay_until: 0,
 
   rt: {
-    totalTrials: 20,
-    currentTrial: 0,
-    waiting: false,
-    started: false,
-    finished: false,
-    timeoutId: null,
-    startAt: 0,
-    values: [],
-    lapse: 0,
-    current: null
-  }
+  durationMs: 120000,
+  started: false,
+  finished: false,
+
+  testStartAt: 0,
+  stimulusAt: 0,
+
+  waiting: false,
+  timeoutId: null,
+  responseTimerId: null,
+  displayTimerId: null,
+  elapsedTimerId: null,
+
+  values: [],
+  current: null,
+  lapse: 0,
+  noResponse: 0,
+  falseStart: 0,
+  validCount: 0,
+  elapsedSec: 0,
+  isiList: []
+}
 };
 
 function toKSTString(d = new Date()){
@@ -2874,6 +2890,14 @@ function toKSTString(d = new Date()){
       startNPAMeasure();
     }, 300);
   }
+
+if(id === 'screen_pvt'){
+  updateRTUI();
+  if(rtBox && !S.rt.started){
+    rtBox.textContent = '+';
+    rtBox.className = 'target';
+  }
+}
 }
 
   // ---------- VFQ VAS 17문항 (오늘 만든 캔버스 버전) ----------
@@ -4563,39 +4587,94 @@ function calcMedian(arr){
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
+function calcStd(arr){
+  if(arr.length < 2) return null;
+  const mean = calcMean(arr);
+  const variance = arr.reduce((sum,v)=>sum + Math.pow(v - mean, 2), 0) / (arr.length - 1);
+  return Math.sqrt(variance);
+}
+
+function calcSpeed(meanRt){
+  if(!Number.isFinite(meanRt) || meanRt <= 0) return null;
+  return 1 / meanRt;
+}
+
 function updateRTUI(){
-  gid('rtTrialNow').textContent = S.rt.currentTrial;
+  gid('rtElapsed').textContent = S.rt.elapsedSec;
+  gid('rtValidN').textContent = S.rt.validCount;
+  gid('rtNoResp').textContent = S.rt.noResponse;
   gid('rtCurrent').textContent = Number.isFinite(S.rt.current) ? Math.round(S.rt.current) : '-';
 
   const mean = calcMean(S.rt.values);
   const median = calcMedian(S.rt.values);
+  const std = calcStd(S.rt.values);
+  const speed = calcSpeed(mean);
 
   gid('rtMean').textContent = Number.isFinite(mean) ? Math.round(mean) : '-';
   gid('rtMedian').textContent = Number.isFinite(median) ? Math.round(median) : '-';
+  gid('rtStd').textContent = Number.isFinite(std) ? Math.round(std) : '-';
   gid('rtLapse').textContent = S.rt.lapse;
+  gid('rtSpeed').textContent = Number.isFinite(speed) ? speed.toFixed(5) : '-';
 
   const nextBtn = gid('btn_rt_next');
   if(nextBtn) nextBtn.disabled = !S.rt.finished;
 }
 
-function resetRT(){
+function clearRTTimers(){
   clearTimeout(S.rt.timeoutId);
+  clearTimeout(S.rt.responseTimerId);
+  clearInterval(S.rt.displayTimerId);
+  clearInterval(S.rt.elapsedTimerId);
+
+  S.rt.timeoutId = null;
+  S.rt.responseTimerId = null;
+  S.rt.displayTimerId = null;
+  S.rt.elapsedTimerId = null;
+}
+
+function resetRT(){
+  clearRTTimers();
 
   S.rt = {
-    totalTrials: 20,
-    currentTrial: 0,
-    waiting: false,
+    durationMs: 120000,
     started: false,
     finished: false,
+
+    testStartAt: 0,
+    stimulusAt: 0,
+
+    waiting: false,
     timeoutId: null,
-    startAt: 0,
+    responseTimerId: null,
+    displayTimerId: null,
+    elapsedTimerId: null,
+
     values: [],
+    current: null,
     lapse: 0,
-    current: null
+    noResponse: 0,
+    falseStart: 0,
+    validCount: 0,
+    elapsedSec: 0,
+    isiList: []
   };
 
   if(rtBox){
-    rtBox.textContent = 'READY';
+    rtBox.textContent = '+';
+    rtBox.className = 'target';
+  }
+
+  updateRTUI();
+}
+
+function finishRT(){
+  clearRTTimers();
+
+  S.rt.waiting = false;
+  S.rt.finished = true;
+
+  if(rtBox){
+    rtBox.textContent = '완료';
     rtBox.className = 'target';
   }
 
@@ -4603,162 +4682,147 @@ function resetRT(){
 }
 
 function scheduleRTStimulus(){
-  if(S.rt.finished) return;
+  if(!S.rt.started || S.rt.finished) return;
 
-  const delay = 800 + Math.random() * 1200; // 800~2000ms 랜덤
+  const elapsed = performance.now() - S.rt.testStartAt;
+  if(elapsed >= S.rt.durationMs){
+    finishRT();
+    return;
+  }
+
+  const isi = 2000 + Math.random() * 8000; // 2~10초
+  S.rt.isiList.push(Math.round(isi));
 
   S.rt.timeoutId = setTimeout(() => {
-    if(S.rt.finished) return;
+    if(!S.rt.started || S.rt.finished) return;
+
+    const elapsedNow = performance.now() - S.rt.testStartAt;
+    if(elapsedNow >= S.rt.durationMs){
+      finishRT();
+      return;
+    }
 
     S.rt.waiting = true;
-    S.rt.startAt = performance.now();
+    S.rt.stimulusAt = performance.now();
 
     if(rtBox){
-      rtBox.textContent = 'TAP!';
       rtBox.className = 'target go';
+      rtBox.textContent = '000';
     }
-  }, delay);
+
+    S.rt.displayTimerId = setInterval(() => {
+      if(!S.rt.waiting || S.rt.finished) return;
+      const ms = Math.floor(performance.now() - S.rt.stimulusAt);
+      if(rtBox) rtBox.textContent = String(ms).padStart(3, '0');
+    }, 16);
+
+    S.rt.responseTimerId = setTimeout(() => {
+      if(!S.rt.waiting || S.rt.finished) return;
+
+      clearInterval(S.rt.displayTimerId);
+      S.rt.displayTimerId = null;
+
+      S.rt.waiting = false;
+      S.rt.current = null;
+      S.rt.noResponse += 1;
+      S.rt.lapse += 1;
+
+      if(rtBox){
+        rtBox.className = 'target';
+        rtBox.textContent = 'MISS';
+      }
+
+      updateRTUI();
+
+      setTimeout(() => {
+        if(S.rt.finished) return;
+        if(rtBox){
+          rtBox.className = 'target';
+          rtBox.textContent = '+';
+        }
+        scheduleRTStimulus();
+      }, 600);
+
+    }, 1000); // 1초 안에 반응 없으면 무반응 처리
+  }, isi);
 }
 
 function startRT(){
   resetRT();
+
   S.rt.started = true;
+  S.rt.finished = false;
+  S.rt.testStartAt = performance.now();
+
+  S.rt.elapsedTimerId = setInterval(() => {
+    if(!S.rt.started || S.rt.finished) return;
+
+    const elapsedMs = performance.now() - S.rt.testStartAt;
+    S.rt.elapsedSec = Math.min(120, Math.floor(elapsedMs / 1000));
+
+    updateRTUI();
+
+    if(elapsedMs >= S.rt.durationMs){
+      finishRT();
+    }
+  }, 200);
+
+  if(rtBox){
+    rtBox.textContent = '+';
+    rtBox.className = 'target';
+  }
+
   scheduleRTStimulus();
 }
 
 function handleRTTap(){
   if(!S.rt.started || S.rt.finished) return;
-  if(!S.rt.waiting) return;
 
-  const rt = performance.now() - S.rt.startAt;
+  // 자극 전에 누른 경우
+  if(!S.rt.waiting){
+    return;
+  }
+
+  const rt = performance.now() - S.rt.stimulusAt;
+
+  clearTimeout(S.rt.responseTimerId);
+  clearInterval(S.rt.displayTimerId);
+  S.rt.responseTimerId = null;
+  S.rt.displayTimerId = null;
 
   S.rt.waiting = false;
   S.rt.current = rt;
-
-  // anticipatory response 제거는 waiting=false라서 이미 대부분 막힘
   S.rt.values.push(rt);
-  if(rt > 500) S.rt.lapse++;
+  S.rt.validCount += 1;
 
-  S.rt.currentTrial += 1;
+  if(rt > 500){
+    S.rt.lapse += 1;
+  }
 
   if(rtBox){
-    rtBox.textContent = 'OK';
     rtBox.className = 'target tap';
+    rtBox.textContent = String(Math.round(rt)).padStart(3, '0');
   }
 
   updateRTUI();
 
-  if(S.rt.currentTrial >= S.rt.totalTrials){
-    S.rt.finished = true;
-    if(rtBox){
-      rtBox.textContent = '완료';
-      rtBox.className = 'target';
-    }
-    updateRTUI();
-    return;
-  }
-
   setTimeout(() => {
+    if(S.rt.finished) return;
+
+    const elapsed = performance.now() - S.rt.testStartAt;
+    if(elapsed >= S.rt.durationMs){
+      finishRT();
+      return;
+    }
+
     if(rtBox){
-      rtBox.textContent = 'WAIT';
       rtBox.className = 'target';
+      rtBox.textContent = '+';
     }
+
     scheduleRTStimulus();
-  }, 450);
+  }, 500);
 }
-
-  // ---------- CSV ----------
-  // 공통: CSV Blob/텍스트/파일명 생성
-  function makeCSV(){
-    calcVFQ();
-    const ts = new Date().toISOString().replace(/:/g,'-');
-    const pidSafe = (S.pid || gid('pid').value || 'NA');
-    const header = ['pid','timestamp','consent_at','birth','sex','pdmm','focal_px','pixPD_calib','VFQ_sum','NPC1_cm','NPC2_cm','NPC3_cm','NPC_mean_cm','RT_trials','RT_median_ms','RT_p90_ms','RT_lapses','RT_list_ms'].join(',')+'\\n';
-    const rts = S.pvt.rt.slice().sort((a,b)=>a-b);
-    const med = isFinite(q(rts,0.5))?Math.round(q(rts,0.5)):'';
-    const p90 = isFinite(q(rts,0.9))?Math.round(q(rts,0.9)):'';
-    const npcVals = S.npc.filter(v=>v!=null);
-    const npcMean = npcVals.length? (npcVals.reduce((a,b)=>a+b,0)/npcVals.length).toFixed(1):'';
-    const row = [csv(pidSafe), new Date().toISOString(), S.consentAtISO || '',S.birth||'', S.sex||'', S.pdmm, S.focal_px?S.focal_px.toFixed(1):'', S.pixPD?S.pixPD.toFixed(1):'', S.vfqSum, S.npc[0]??'', S.npc[1]??'', S.npc[2]??'', npcMean, S.pvt.rt.length, med, p90, S.pvt.lapse, '"'+S.pvt.rt.join(' ')+'"'].join(',')+'\\n';
-    const text = header + row;
-    const blob = new Blob([text], {type:'text/csv;charset=utf-8'});
-    const filename = `fatigue_${pidSafe}_${ts}.csv`;
-    return { blob, text, filename };
-  }
-
-  // 저장(다운로드)
-  function downloadCSV(){
-    const { blob, filename } = makeCSV();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    // 사용 PID 기록(중복 방지)
-    try{
-      const used=JSON.parse(localStorage.getItem('used_ids')||'[]');
-      const pid=(S.pid||gid('pid').value||'NA');
-      if(!used.includes(pid)){ used.push(pid); localStorage.setItem('used_ids',JSON.stringify(used)) }
-    }catch{}
-    alert('다운로드 완료 — 파일앱/다운로드 폴더에서 확인하세요.');
-  }
-
-async function saveWithPicker(){
-  // File System Access API: 안드로이드 크롬 등에서 지원
-  try{
-    if(!window.showSaveFilePicker){
-      alert('이 브라우저는 저장 위치 선택을 지원하지 않습니다. 외부 브라우저(Chrome/Safari)로 열어주세요.');
-      return;
-    }
-    const { blob, filename } = makeCSV();
-    const handle = await window.showSaveFilePicker({
-      suggestedName: filename,
-      types: [{ description:'CSV file', accept: {'text/csv':['.csv']} }]
-    });
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    alert('저장 완료! 파일 앱/다운로드 폴더에서 확인하세요.');
-  }catch(e){
-    if(e && e.name==='AbortError') return; // 사용자가 취소
-    alert('저장 위치 선택 실패: ' + (e?.message||e));
-  }
-}
-
-async function shareCSV(){
-  const { blob, text, filename } = makeCSV();
-  const file = new File([blob], filename, {type:'text/csv'});
-
-  // 1) 파일 공유 먼저 시도
-  if(navigator.canShare && navigator.canShare({ files: [file] })){
-    try{
-      await navigator.share({ title:'안정피로 측정 CSV', text:'측정 결과 CSV 파일입니다.', files:[file] });
-      return;
-    }catch(e){ /* 사용자가 취소할 수 있음 → 텍스트 폴백 시도 */ }
-  }
-  // 2) 텍스트만 공유 (인앱 브라우저에서 종종 가능)
-  if(navigator.share){
-    try{
-      await navigator.share({ title:'안정피로 측정 CSV(텍스트)', text });
-      return;
-    }catch(e){ /* 취소 가능 */ }
-  }
-  // 3) 최종 폴백: 다운로드 시도
-  downloadCSV();
-}
-
-  // 미리보기(복사/붙여넣기 용이)
-  function previewCSV(){
-    const { text, filename } = makeCSV();
-    const win = window.open('', '_blank');
-    if(!win){ alert('팝업이 차단되었습니다. 브라우저에서 팝업 허용을 켜주세요.'); return; }
-    win.document.write('<pre style="white-space:pre-wrap;word-wrap:break-word;padding:12px;background:#0f172a;color:#e6ebff;line-height:1.4">'+
-                       text.replace(/[&<>]/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[s]))+
-                       '</pre>');
-    win.document.title = filename;
-  }
-
-  function csv(s){ const t=String(s).replaceAll('"','""'); return '"'+t+'"' }
 
   // ---------- 초기 ----------
 (function init(){
