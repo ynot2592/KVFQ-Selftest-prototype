@@ -2391,7 +2391,7 @@ html, body{
 
       <div id="npa_mark_wrap" style="
   position:absolute;
-  top:100px;
+  top:120px;
   left:0;
   right:0;
   z-index:3;
@@ -2409,7 +2409,7 @@ html, body{
   line-height:1.2;
   text-align:center;
 ">
-  흐림 기록<br>#1
+  흐림 기록 #1
 </button>
 </div>
 
@@ -3363,7 +3363,7 @@ function updateNpaUI(){
   }else{
     markBtn.disabled = false;
     markBtn.style.display = S.npa_waiting_for_reset ? 'none' : 'inline-flex';
-    markBtn.innerHTML = `흐림 기록<br>#${S.npa_trial_index + 1}`;
+    markBtn.innerHTML = `흐림 기록 #${S.npa_trial_index + 1}`;
   }
 }
 
