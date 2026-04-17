@@ -5154,6 +5154,31 @@ function buildParticipantId(yyyymmdd, ini, dig){
   return baseDate;
 }
 
+function calcVFQ(){
+  let sum = 0;
+  const out = {};
+
+  for(let i = 0; i < vfqAnswers.length; i++){
+    const v = vfqAnswers[i];
+
+    if(v === null || v === undefined || v === ''){
+      out['q' + (i + 1)] = '';
+      continue;
+    }
+
+    const num = Number(v);
+    out['q' + (i + 1)] = num;
+
+    if(Number.isFinite(num)){
+      sum += num;
+    }
+  }
+
+  S.vfq = out;
+  S.vfqSum = Math.round(sum);
+  return S.vfqSum;
+}
+
 function onConsentSign(){
   const requiredChecks = ['c_main','c_esign','c_camera'];
 
