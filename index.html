@@ -3189,9 +3189,21 @@ if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.conse
 
 const now2 = new Date();
 
-// ✅ 여기 추가 (이 2줄)
+// 설문 제출 시각 기록
 S.submitAtISO = now2.toISOString();
 S.submitAtKST = toKSTString(now2);
+
+const ok = await saveSummarySnapshot();
+
+if(!ok){
+  alert('설문 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+  isSubmitting = false;
+  btn.disabled = false;
+  btn.textContent = '설문 완료';
+  resultDiv.textContent = '';
+  if(backBtn) backBtn.disabled = false;
+  return;
+}
 
 go('screen_home');
 return;
@@ -5235,12 +5247,15 @@ function buildSummaryRow(){
   const odD = cmToDiopter(odAvg);
   const osD = cmToDiopter(osAvg);
 
+  const now = new Date();
+  const nowKST = toKSTString(now);
+
   return {
     pid: S.pid || "",
     consent_at: S.consentAtISO || "",
     consent_at_kst: S.consentAtKST || "",
-    timestamp: S.submitAtISO || "",
-    timestamp_kst: S.submitAtKST || "",
+    timestamp: S.submitAtISO || now.toISOString(),
+    timestamp_kst: S.submitAtKST || nowKST,
     birth: S.birth || "",
     sex: S.sex || "",
     retest_code: S.retest2 || "",
@@ -5300,6 +5315,12 @@ function buildSummaryRow(){
   };
 }
 
+async function saveSummarySnapshot(){
+  const summaryRow = buildSummaryRow();
+  const ok = await sendToSheet('DATA', [summaryRow]);
+  return ok;
+}
+
 async function saveAllResults(){
   const summaryRow = buildSummaryRow();
   const rtRows = (S.rt.trialLogs || []).map(row => ({
@@ -5315,7 +5336,7 @@ async function saveAllResults(){
     completed_trial: row.completed_trial ?? 1
   }));
 
-  const ok1 = await sendToSheet('summary', [summaryRow]);
+  const ok1 = await sendToSheet('DATA', [summaryRow]);
   if(!ok1) return false;
 
   if(rtRows.length > 0){
@@ -5543,23 +5564,51 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
   setPDStateMode('normal');
 });
 
-gid('btn_pd_next')?.addEventListener('click', () => go('screen_npc'));
+gid('btn_pd_next')?.addEventListener('click', async () => {
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  go('screen_npc');
+});
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
 gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
-gid('btn_pd_finish')?.addEventListener('click', () => finishFromPD());
+gid('btn_pd_finish')?.addEventListener('click', async () => {
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  finishFromPD();
+});
 
-gid('btn_npc_next')?.addEventListener('click', () => {
+gid('btn_npc_next')?.addEventListener('click', async () => {
   if(S.npc_trial_index < 3){
     alert('폭주근점 측정을 3회 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
+
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
   go('screen_npa');
 });
 
-gid('btn_npc_finish')?.addEventListener('click', () => openThankyou());
+gid('btn_npc_finish')?.addEventListener('click', async () => {
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  openThankyou();
+});
 
 gid('btn_npa_mark')?.addEventListener('click', () => markNPA());
 
@@ -5571,15 +5620,29 @@ gid('btn_npa_clear')?.addEventListener('click', () => {
   clearNPA();
 });
 
-gid('btn_npa_next')?.addEventListener('click', () => {
+gid('btn_npa_next')?.addEventListener('click', async () => {
   if(!S.npa_completed){
     alert('조절근점 측정을 우안 3회, 좌안 3회 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
+
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
   go('screen_rt');
 });
 
-gid('btn_npa_finish')?.addEventListener('click', () => openThankyou());
+gid('btn_npa_finish')?.addEventListener('click', async () => {
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  openThankyou();
+});
 
 gid('btn_rt_start')?.addEventListener('click', () => {
   startRT();
