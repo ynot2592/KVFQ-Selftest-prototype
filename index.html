@@ -5622,16 +5622,7 @@ gid('btn_npc_next')?.addEventListener('click', () => {
   }
   goNextWithAutosave('screen_npa');
 });
-
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-
-  go('screen_npa');
-});
-
+  
 gid('btn_npc_finish')?.addEventListener('click', async () => {
   await finishWithSave();
 });
