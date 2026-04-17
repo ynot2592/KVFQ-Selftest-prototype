@@ -2570,7 +2570,7 @@ html, body{
 
 
   <!-- RT -->
-<div class="card hidden" id="screen_pvt">
+<div class="card hidden" id="screen_rt">
   <h1 style="margin-bottom:18px;">반응속도(RT) 자가측정</h1>
 
   <p style="margin-top:0; color:#dbe6ff; font-size:15.5px; line-height:1.55;">
@@ -2698,12 +2698,15 @@ const isIOS = /iPhone|iPad|iPod/i.test(UA);
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0RD5HaSSjqdi1Csc6ZfmaG7eu2K4C-YkRyDeZbOXLrRjE/exec";
 
 // 시트로 데이터 보내는 함수
-async function sendToSheet(payload){
+async function sendToSheet(sheetName, rows){
   try{
+    const payload = {
+      sheet_name: sheetName,
+      rows: rows
+    };
+
     console.log('[sendToSheet] payload:', payload);
 
-    // 중요: GAS는 CORS 때문에 응답을 읽으려 하면 막히는 경우가 많아서
-    // 일단 "보내기만" 확실히 되도록 no-cors로 보냄
     await fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -2711,14 +2714,16 @@ async function sendToSheet(payload){
       body: JSON.stringify(payload),
     });
 
-    console.log('[sendToSheet] sent (no-cors). Check Google Sheet.');
+    console.log('[sendToSheet] sent:', sheetName, rows.length);
     return true;
   }catch(err){
     console.error('[sendToSheet] FAILED:', err);
     return false;
   }
 }
+
   const S = {
+  finalSaved: false,
   pid: "",
   birth: "",
   sex: "",
@@ -2801,7 +2806,10 @@ async function sendToSheet(payload){
   falseStart: 0,
   validCount: 0,
   elapsedSec: 0,
-  isiList: []
+    isiList: []
+    trialLogs: [],
+    currentTrialIndex: 0,
+    pendingIsiMs: null
 }
 };
 
@@ -2824,7 +2832,7 @@ function toKSTString(d = new Date()){
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
-  const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_pvt','screen_thankyou']
+  const screens=['screen_consent','screen_vfq','screen_home','screen_pd','screen_npc','screen_npa','screen_rt','screen_thankyou']
 
    const leavingPd =
      gid('screen_pd') &&
@@ -2856,15 +2864,7 @@ function toKSTString(d = new Date()){
   screens.forEach(s => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-
-  requestAnimationFrame(() => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   if(id === 'screen_pd'){
   const layer = gid('pd_start_layer');
@@ -2895,7 +2895,7 @@ function toKSTString(d = new Date()){
     }, 300);
   }
 
-if(id === 'screen_pvt'){
+if(id === 'screen_rt'){
   updateRTUI();
   if(rtBox && !S.rt.started){
     rtBox.textContent = '';
@@ -3193,24 +3193,8 @@ const now2 = new Date();
 S.submitAtISO = now2.toISOString();
 S.submitAtKST = toKSTString(now2);
 
-try{
-  const ok = await sendToSheet({
-    pid: S.pid,
-    consent_at: S.consentAtISO,        // UTC
-    consent_at_kst: S.consentAtKST,    // KST 문자열
-    timestamp: now2.toISOString(),     // UTC
-    timestamp_kst: toKSTString(now2),  // KST 문자열
-    birth: S.birth,
-    sex: S.sex,
-    retest_code: S.retest2 || '',
-    vfq_total: S.vfqSum,
-
-    // q1~q17을 헤더에 맞춰 보내기 (중요!)
-    q1: vfqAnswers[0],  q2: vfqAnswers[1],  q3: vfqAnswers[2],  q4: vfqAnswers[3],  q5: vfqAnswers[4],
-    q6: vfqAnswers[5],  q7: vfqAnswers[6],  q8: vfqAnswers[7],  q9: vfqAnswers[8],  q10: vfqAnswers[9],
-    q11: vfqAnswers[10], q12: vfqAnswers[11], q13: vfqAnswers[12], q14: vfqAnswers[13], q15: vfqAnswers[14],
-    q16: vfqAnswers[15], q17: vfqAnswers[16],
-  });
+go('screen_home');
+return;
 
   if(!ok){
     alert('결과 전송에 실패했습니다.\n인터넷 상태를 확인하고 다시 시도해 주세요.');
@@ -3357,7 +3341,7 @@ function updateNpaUI(){
   const markBtn = gid('btn_npa_mark');
   if(markBtn){
   if(S.npa_completed){
-    markBtn.innerHTML = '총 6회 기록<br>완료';
+    markBtn.innerHTML = '총 6회 기록 완료';
     markBtn.disabled = true;
     markBtn.style.display = 'inline-flex';
   }else{
@@ -4672,6 +4656,9 @@ function resetRT(){
     validCount: 0,
     elapsedSec: 0,
     isiList: []
+    trialLogs: [],
+    currentTrialIndex: 0,
+    pendingIsiMs: null
   };
 
   if(rtBox){
@@ -4709,6 +4696,8 @@ function scheduleRTStimulus(){
   // 따라서 feedback 후 추가 대기시간은 1.000~8.999초
   const delay = getRandomPostFeedbackDelayMs();
   S.rt.isiList.push(delay + RT_FEEDBACK_MS);
+  S.rt.pendingIsiMs = delay + RT_FEEDBACK_MS;
+  S.rt.currentTrialIndex += 1;
 
   S.rt.timeoutId = setTimeout(() => {
     if(!S.rt.started || S.rt.finished) return;
@@ -4749,6 +4738,19 @@ function scheduleRTStimulus(){
       S.rt.current = null;
       S.rt.noResponse += 1;
       S.rt.lapse += 1;
+
+      S.rt.trialLogs.push({
+        pid: S.pid,
+        trial_index: S.rt.currentTrialIndex,
+        isi_ms: S.rt.pendingIsiMs,
+        stimulus_at_ms: Math.round(S.rt.stimulusAt - S.rt.testStartAt),
+        response_at_ms: "",
+        rt_ms: "",
+        false_start: 0,
+        no_response: 1,
+        lapse: 1,
+        completed_trial: 1
+      });
 
       if(rtBox){
         rtBox.textContent = 'ET';
@@ -4829,6 +4831,19 @@ function handleRTTap(){
   if(!S.rt.waiting){
     S.rt.falseStart += 1;
 
+    S.rt.trialLogs.push({
+      pid: S.pid,
+      trial_index: S.rt.currentTrialIndex + 1,
+      isi_ms: "",
+      stimulus_at_ms: "",
+      response_at_ms: Math.round(performance.now() - S.rt.testStartAt),
+      rt_ms: "",
+      false_start: 1,
+      no_response: 0,
+      lapse: 0,
+      completed_trial: 1
+    }); 
+
     if(rtBox){
       rtBox.textContent = 'FS';
       rtBox.className = 'target';
@@ -4868,6 +4883,19 @@ function handleRTTap(){
   S.rt.current = rt;
   S.rt.values.push(rt);
   S.rt.validCount += 1;
+
+  S.rt.trialLogs.push({
+    pid: S.pid,
+    trial_index: S.rt.currentTrialIndex,
+    isi_ms: S.rt.pendingIsiMs,
+    stimulus_at_ms: Math.round(S.rt.stimulusAt - S.rt.testStartAt),
+    response_at_ms: Math.round(performance.now() - S.rt.testStartAt),
+    rt_ms: Math.round(rt),
+    false_start: 0,
+    no_response: 0,
+    lapse: rt >= 500 ? 1 : 0,
+    completed_trial: 1
+  });
 
   if(rt >= 500){
     S.rt.lapse += 1;
@@ -5219,7 +5247,132 @@ function onConsentNext(){
   go('screen_vfq');   
 }
 
-function openThankyou(){
+function buildSummaryRow(){
+  const rtMean = calcMean(S.rt.values);
+  const rtMedian = calcMedian(S.rt.values);
+  const rtStd = calcStd(S.rt.values);
+  const rtSpeed = calcSpeed(rtMean);
+
+  const npcVals = S.npc.filter(v => Number.isFinite(v));
+  const npcAvg = npcVals.length ? (npcVals.reduce((a,b)=>a+b,0) / npcVals.length) : null;
+
+  const odAvg = getMean(S.npa_OD);
+  const osAvg = getMean(S.npa_OS);
+  const odD = cmToDiopter(odAvg);
+  const osD = cmToDiopter(osAvg);
+
+  return {
+    pid: S.pid || "",
+    consent_at: S.consentAtISO || "",
+    consent_at_kst: S.consentAtKST || "",
+    timestamp: S.submitAtISO || "",
+    timestamp_kst: S.submitAtKST || "",
+    birth: S.birth || "",
+    sex: S.sex || "",
+    retest_code: S.retest2 || "",
+
+    vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
+    q1: vfqAnswers[0] ?? "",
+    q2: vfqAnswers[1] ?? "",
+    q3: vfqAnswers[2] ?? "",
+    q4: vfqAnswers[3] ?? "",
+    q5: vfqAnswers[4] ?? "",
+    q6: vfqAnswers[5] ?? "",
+    q7: vfqAnswers[6] ?? "",
+    q8: vfqAnswers[7] ?? "",
+    q9: vfqAnswers[8] ?? "",
+    q10: vfqAnswers[9] ?? "",
+    q11: vfqAnswers[10] ?? "",
+    q12: vfqAnswers[11] ?? "",
+    q13: vfqAnswers[12] ?? "",
+    q14: vfqAnswers[13] ?? "",
+    q15: vfqAnswers[14] ?? "",
+    q16: vfqAnswers[15] ?? "",
+    q17: vfqAnswers[16] ?? "",
+
+    pd_input_mm: Number.isFinite(S.pd_input_mm) ? S.pd_input_mm : "",
+    pd_auto_1_mm: Number.isFinite(S.pd_auto_trials[0]) ? S.pd_auto_trials[0] : "",
+    pd_auto_2_mm: Number.isFinite(S.pd_auto_trials[1]) ? S.pd_auto_trials[1] : "",
+    pd_auto_3_mm: Number.isFinite(S.pd_auto_trials[2]) ? S.pd_auto_trials[2] : "",
+    pd_auto_final_mm: Number.isFinite(S.pd_auto_final_mm) ? S.pd_auto_final_mm : "",
+
+    npc_1_cm: Number.isFinite(S.npc[0]) ? S.npc[0] : "",
+    npc_2_cm: Number.isFinite(S.npc[1]) ? S.npc[1] : "",
+    npc_3_cm: Number.isFinite(S.npc[2]) ? S.npc[2] : "",
+    npc_avg_cm: Number.isFinite(npcAvg) ? Number(npcAvg.toFixed(1)) : "",
+
+    npa_od_1_cm: Number.isFinite(S.npa_OD[0]) ? S.npa_OD[0] : "",
+    npa_od_2_cm: Number.isFinite(S.npa_OD[1]) ? S.npa_OD[1] : "",
+    npa_od_3_cm: Number.isFinite(S.npa_OD[2]) ? S.npa_OD[2] : "",
+    npa_od_avg_cm: Number.isFinite(odAvg) ? odAvg : "",
+    npa_od_D: Number.isFinite(odD) ? odD : "",
+
+    npa_os_1_cm: Number.isFinite(S.npa_OS[0]) ? S.npa_OS[0] : "",
+    npa_os_2_cm: Number.isFinite(S.npa_OS[1]) ? S.npa_OS[1] : "",
+    npa_os_3_cm: Number.isFinite(S.npa_OS[2]) ? S.npa_OS[2] : "",
+    npa_os_avg_cm: Number.isFinite(osAvg) ? osAvg : "",
+    npa_os_D: Number.isFinite(osD) ? osD : "",
+
+    rt_duration_sec: Number.isFinite(S.rt.elapsedSec) ? S.rt.elapsedSec : "",
+    rt_valid_n: S.rt.validCount ?? "",
+    rt_false_start_n: S.rt.falseStart ?? "",
+    rt_no_response_n: S.rt.noResponse ?? "",
+    rt_lapse_n: S.rt.lapse ?? "",
+    rt_mean_ms: Number.isFinite(rtMean) ? Math.round(rtMean) : "",
+    rt_median_ms: Number.isFinite(rtMedian) ? Math.round(rtMedian) : "",
+    rt_sd_ms: Number.isFinite(rtStd) ? Math.round(rtStd) : "",
+    rt_speed_1_per_ms: Number.isFinite(rtSpeed) ? Number(rtSpeed.toFixed(5)) : "",
+    rt_completed: S.rt.finished ? 1 : 0
+  };
+}
+
+async function saveAllResults(){
+  const summaryRow = buildSummaryRow();
+  const rtRows = (S.rt.trialLogs || []).map(row => ({
+    pid: row.pid ?? "",
+    trial_index: row.trial_index ?? "",
+    isi_ms: row.isi_ms ?? "",
+    stimulus_at_ms: row.stimulus_at_ms ?? "",
+    response_at_ms: row.response_at_ms ?? "",
+    rt_ms: row.rt_ms ?? "",
+    false_start: row.false_start ?? 0,
+    no_response: row.no_response ?? 0,
+    lapse: row.lapse ?? 0,
+    completed_trial: row.completed_trial ?? 1
+  }));
+
+  const ok1 = await sendToSheet('summary', [summaryRow]);
+  if(!ok1) return false;
+
+  if(rtRows.length > 0){
+    const ok2 = await sendToSheet('rt_trials', rtRows);
+    if(!ok2) return false;
+  }
+
+  return true;
+}
+
+async function openThankyou(){
+  if(S.finalSaved){
+    go('screen_thankyou');
+    return;
+  }
+
+  if(!S.submitAtISO || !S.submitAtKST){
+    const now = new Date();
+    S.submitAtISO = now.toISOString();
+    S.submitAtKST = toKSTString(now);
+  }
+
+  const ok = await saveAllResults();
+
+  if(!ok){
+    alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
+  S.finalSaved = true;
+
   const tp = document.getElementById('thanks_pid');
   if(tp) tp.textContent = S.pid || '-';
 
@@ -5284,6 +5437,7 @@ function resetAll(){
   S.consentAtISO = '';
   S.consentAtKST = '';
   S.vfqSum = 0;
+  S.finalSaved = false;
 
   // 기본정보 잠금 해제
   unlockConsentInputs();
@@ -5448,7 +5602,7 @@ gid('btn_npa_next')?.addEventListener('click', () => {
     alert('조절근점 측정을 우안 3회, 좌안 3회 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
-  go('screen_pvt');
+  go('screen_rt');
 });
 
 gid('btn_npa_finish')?.addEventListener('click', () => openThankyou());
