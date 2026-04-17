@@ -3195,32 +3195,6 @@ S.submitAtKST = toKSTString(now2);
 
 go('screen_home');
 return;
-
-  if(!ok){
-    alert('결과 전송에 실패했습니다.\n인터넷 상태를 확인하고 다시 시도해 주세요.');
-    isSubmitting = false;
-    btn.disabled = false;
-    const backBtn = gid('btn_vfq_back');
-    if(backBtn) backBtn.disabled = false;
-    btn.textContent = '설문 완료';
-    resultDiv.textContent = '';
-    return;    
-  }
-
-  // ✅ 성공했을 때 다음 페이지
-  go('screen_home');
-
-}catch(err){
-  console.error('submit/sendToSheet 오류:', err);
-  alert('제출 중 오류가 발생했습니다. 인터넷 상태를 확인한 뒤 다시 시도해주세요.');
-  isSubmitting = false;
-  btn.disabled = false;
-  const backBtn = gid('btn_vfq_back');
-  if(backBtn) backBtn.disabled = false;
-  btn.textContent = '설문 완료';
-  resultDiv.textContent = '';
-  return;
-}
   };
  }
 }
