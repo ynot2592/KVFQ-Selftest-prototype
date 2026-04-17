@@ -5319,8 +5319,8 @@ async function saveAllResults(){a
   const rtRows = (S.rt.trialLogs || []).map(row => ({
     pid: row.pid ?? "",
     trial_index: row.trial_index ?? "",
-    isi_ms: row.isi_ms ?? "",a
-    stimulus_at_ms: row.stimulus_at_ms ?as? "",
+    isi_ms: row.isi_ms ?? "",
+    stimulus_at_ms: row.stimulus_at_ms ?? "",
     response_at_ms: row.response_at_ms ?? "",
     rt_ms: row.rt_ms ?? "",
     false_start: row.false_start ?? 0,
