@@ -2699,6 +2699,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0
 
 // 시트로 데이터 보내는 함수
 async function sendToSheet(sheetName, rows){
+  console.log('sendToSheet start:', sheetName, rows);
   try{
     const payload = {
       sheet_name: sheetName,
@@ -3188,19 +3189,19 @@ if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.conse
 }
 
 const now2 = new Date();
-
-// 설문 제출 시각 기록
 S.submitAtISO = now2.toISOString();
 S.submitAtKST = toKSTString(now2);
 
-const ok = await saveSummarySnapshot();
+// 설문 완료 시점 1차 저장
+const ok = await sendToSheet('DATA', [buildSummaryRow()]);
 
 if(!ok){
-  alert('설문 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+  alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
   isSubmitting = false;
   btn.disabled = false;
   btn.textContent = '설문 완료';
   resultDiv.textContent = '';
+  const backBtn = gid('btn_vfq_back');
   if(backBtn) backBtn.disabled = false;
   return;
 }
@@ -5322,6 +5323,7 @@ async function saveSummarySnapshot(){
 }
 
 async function saveAllResults(){
+  console.log('saveAllResults called');
   const summaryRow = buildSummaryRow();
   const rtRows = (S.rt.trialLogs || []).map(row => ({
     pid: row.pid ?? "",
@@ -5348,6 +5350,7 @@ async function saveAllResults(){
 }
 
 async function openThankyou(){
+console.log('openThankyou called');
   if(S.finalSaved){
     go('screen_thankyou');
     return;
