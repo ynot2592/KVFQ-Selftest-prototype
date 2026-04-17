@@ -5314,7 +5314,7 @@ async function saveSummarySnapshot(){
   return ok;
 }
 
-async function saveAllResults(){a
+async function saveAllResults(){
   const summaryRow = buildSummaryRow();
   const rtRows = (S.rt.trialLogs || []).map(row => ({
     pid: row.pid ?? "",
