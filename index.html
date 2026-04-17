@@ -2148,7 +2148,6 @@ html, body{
     <button class="btn ghost" id="btn_pd_finish" type="button">PD 측정만 하고 종료</button>
     <button class="btn" id="btn_pd_restart" type="button">카메라 다시 시작</button>
 </div>
-<div id="pdResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
   </section>
 
 <!-- NPC 측정 -->
@@ -2306,7 +2305,6 @@ html, body{
     <div class="row" style="margin-top:10px;">
           <button class="btn ghost" id="btn_npc_finish" type="button">NPC 측정만 하고 종료</button>
     </div>
-    <div id="npcResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
   </div>
 
   <section id="screen_npa" class="card hidden">
@@ -2568,7 +2566,6 @@ html, body{
   <div class="row" style="margin-top:10px;">
     <button class="btn ghost" id="btn_npa_finish" type="button">NPA 측정만 하고 종료</button>
   </div>
-  <div id="npaResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
 </section>
 
 
@@ -2815,8 +2812,6 @@ async function sendToSheet(sheetName, rows){
     pendingIsiMs: null
 }
 };
-
-
 
 function toKSTString(d = new Date()){
   const kst = new Date(d.getTime() + 9*60*60*1000);
@@ -3154,97 +3149,73 @@ if(mount){
       createVAS(idx, canvas, score);
     });
 
-        const btn = document.getElementById('submitVFQ');
+    const btn = document.getElementById('submitVFQ');
     const resultDiv = document.getElementById('vfqResult');
 
     if(btn && resultDiv){
       btn.onclick = async ()=>{
-        if(isSubmitting){
-          return;
-        }
-        isSubmitting = true;
-
-        const missing = [];
-        vfqAnswers.forEach((v,i)=>{ if(v===null) missing.push(i+1); });
-
-        if(missing.length){
-          resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
-          isSubmitting = false;
-          return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = '제출 중...';
-        resultDiv.textContent = '결과를 제출 중입니다. 잠시만 기다려주세요.';
-        const backBtn = gid('btn_vfq_back');
-        if(backBtn) backBtn.disabled = true;
-
-        calcVFQ();
-
-        if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
-          alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
-          isSubmitting = false;
-          btn.disabled = false;
-          btn.textContent = '설문 완료';
-          resultDiv.textContent = '';
-          if(backBtn) backBtn.disabled = false;
-          return;
-        }
-
-        const now2 = new Date();
-        S.submitAtISO = now2.toISOString();
-        S.submitAtKST = toKSTString(now2);
-
-        try{
-          const ok = await sendToSheet('DATA', [{
-            pid: S.pid,
-            consent_at: S.consentAtISO,
-            consent_at_kst: S.consentAtKST,
-            timestamp: S.submitAtISO,
-            timestamp_kst: S.submitAtKST,
-            birth: S.birth,
-            sex: S.sex,
-            retest_code: S.retest2 || '',
-            vfq_total: S.vfqSum,
-
-            q1: vfqAnswers[0],  q2: vfqAnswers[1],  q3: vfqAnswers[2],  q4: vfqAnswers[3],  q5: vfqAnswers[4],
-            q6: vfqAnswers[5],  q7: vfqAnswers[6],  q8: vfqAnswers[7],  q9: vfqAnswers[8],  q10: vfqAnswers[9],
-            q11: vfqAnswers[10], q12: vfqAnswers[11], q13: vfqAnswers[12], q14: vfqAnswers[13], q15: vfqAnswers[14],
-            q16: vfqAnswers[15], q17: vfqAnswers[16],
-          }]);
-
-          if(!ok){
-            alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인하고 다시 시도해 주세요.');
-            isSubmitting = false;
-            btn.disabled = false;
-            btn.textContent = '설문 완료';
-            resultDiv.textContent = '';
-            if(backBtn) backBtn.disabled = false;
-            return;
-          }
-
-          isSubmitting = false;
-          btn.disabled = false;
-          btn.textContent = '설문 완료';
-          resultDiv.textContent = '';
-          if(backBtn) backBtn.disabled = false;
-
-          go('screen_home');
-          return;
-
-        }catch(err){
-          console.error('submitVFQ save error:', err);
-          alert('제출 중 오류가 발생했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-          isSubmitting = false;
-          btn.disabled = false;
-          btn.textContent = '설문 완료';
-          resultDiv.textContent = '';
-          if(backBtn) backBtn.disabled = false;
-          return;
-        }
-      };
+         if(isSubmitting){
+           return;
+         }
+         isSubmitting = true;
+         
+         const missing = [];
+         vfqAnswers.forEach((v,i)=>{ if(v===null) missing.push(i+1); });
+    
+         if(missing.length){
+           resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
+           isSubmitting = false;
+           return;
     }
-  }  
+
+    btn.disabled = true;
+    btn.textContent = '제출 중...';
+    resultDiv.textContent = '결과를 제출 중입니다. 잠시만 기다려주세요.';
+    const backBtn = gid('btn_vfq_back');
+    if(backBtn) backBtn.disabled = true;
+
+// 총합 계산
+calcVFQ();
+
+// ✅ 제출 직전 필수 상태 재확인
+if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
+  alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
+  isSubmitting = false;
+  btn.disabled = false;
+  btn.textContent = '설문 완료';
+  resultDiv.textContent = '';
+  return;
+}
+
+const now2 = new Date();
+
+// 설문 제출 시각 기록
+S.submitAtISO = now2.toISOString();
+S.submitAtKST = toKSTString(now2);
+
+const ok = await saveSummarySnapshot();
+
+if(!ok){
+  alert('설문 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+  isSubmitting = false;
+  btn.disabled = false;
+  btn.textContent = '설문 완료';
+  resultDiv.textContent = '';
+  if(backBtn) backBtn.disabled = false;
+  return;
+}
+
+go('screen_home');
+return;
+  };
+ }
+}
+    
+  // VFQ 총합 계산: CSV에서 사용하는 값
+  function calcVFQ(){
+    S.vfqSum = vfqAnswers.reduce((sum,v)=> sum + (typeof v === 'number' ? v : 0), 0);
+  }
+  
 
   // ---------- PD 카메라/FaceMesh ----------
 const pdVideo = gid('pd_video');
@@ -3843,6 +3814,10 @@ function resetPD(){
   
   S.pd_started = false;
   gid('pd_start_layer').style.display = 'flex';
+}
+
+function finishFromPD(){
+  openThankyou();
 }
 
 async function setupNPCCam(){
@@ -5169,10 +5144,6 @@ function buildParticipantId(yyyymmdd, ini, dig){
   return baseDate;
 }
 
-function calcVFQ(){
-  S.vfqSum = vfqAnswers.reduce((sum, v) => sum + (typeof v === 'number' ? v : 0), 0);
-}
-
 function onConsentSign(){
   const requiredChecks = ['c_main','c_esign','c_camera'];
 
@@ -5262,113 +5233,141 @@ function onConsentNext(){
   go('screen_vfq');   
 }
 
-function setSavingState(config){
-  const {
-    buttons = [],
-    message = '',
-    resultTargetId = '',
-    lock = true
-  } = config || {};
+function buildSummaryRow(){
+  const rtMean = calcMean(S.rt.values);
+  const rtMedian = calcMedian(S.rt.values);
+  const rtStd = calcStd(S.rt.values);
+  const rtSpeed = calcSpeed(rtMean);
 
-  buttons.forEach(id => {
-    const el = gid(id);
-    if(el) el.disabled = lock;
-  });
+  const npcVals = S.npc.filter(v => Number.isFinite(v));
+  const npcAvg = npcVals.length ? (npcVals.reduce((a,b)=>a+b,0) / npcVals.length) : null;
 
-  if(resultTargetId){
-    const box = gid(resultTargetId);
-    if(box) box.textContent = message;
-  }
+  const odAvg = getMean(S.npa_OD);
+  const osAvg = getMean(S.npa_OS);
+  const odD = cmToDiopter(odAvg);
+  const osD = cmToDiopter(osAvg);
+
+  const now = new Date();
+  const nowKST = toKSTString(now);
+
+  return {    
+    pid: S.pid || "",
+    consent_at: S.consentAtISO || "",
+    consent_at_kst: S.consentAtKST || "",
+    timestamp: S.submitAtISO || now.toISOString(),
+    timestamp_kst: S.submitAtKST || nowKST,
+    birth: S.birth || "",
+    sex: S.sex || "",
+    retest_code: S.retest2 || "",
+
+    vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
+    q1: vfqAnswers[0] ?? "",
+    q2: vfqAnswers[1] ?? "",
+    q3: vfqAnswers[2] ?? "",
+    q4: vfqAnswers[3] ?? "",
+    q5: vfqAnswers[4] ?? "",
+    q6: vfqAnswers[5] ?? "",
+    q7: vfqAnswers[6] ?? "",
+    q8: vfqAnswers[7] ?? "",
+    q9: vfqAnswers[8] ?? "",
+    q10: vfqAnswers[9] ?? "",
+    q11: vfqAnswers[10] ?? "",
+    q12: vfqAnswers[11] ?? "",
+    q13: vfqAnswers[12] ?? "",
+    q14: vfqAnswers[13] ?? "",
+    q15: vfqAnswers[14] ?? "",
+    q16: vfqAnswers[15] ?? "",
+    q17: vfqAnswers[16] ?? "",
+
+    pd_input_mm: Number.isFinite(S.pd_input_mm) ? S.pd_input_mm : "",
+    pd_auto_1_mm: Number.isFinite(S.pd_auto_trials[0]) ? S.pd_auto_trials[0] : "",
+    pd_auto_2_mm: Number.isFinite(S.pd_auto_trials[1]) ? S.pd_auto_trials[1] : "",
+    pd_auto_3_mm: Number.isFinite(S.pd_auto_trials[2]) ? S.pd_auto_trials[2] : "",
+    pd_auto_final_mm: Number.isFinite(S.pd_auto_final_mm) ? S.pd_auto_final_mm : "",
+
+    npc_1_cm: Number.isFinite(S.npc[0]) ? S.npc[0] : "",
+    npc_2_cm: Number.isFinite(S.npc[1]) ? S.npc[1] : "",
+    npc_3_cm: Number.isFinite(S.npc[2]) ? S.npc[2] : "",
+    npc_avg_cm: Number.isFinite(npcAvg) ? Number(npcAvg.toFixed(1)) : "",
+
+    npa_od_1_cm: Number.isFinite(S.npa_OD[0]) ? S.npa_OD[0] : "",
+    npa_od_2_cm: Number.isFinite(S.npa_OD[1]) ? S.npa_OD[1] : "",
+    npa_od_3_cm: Number.isFinite(S.npa_OD[2]) ? S.npa_OD[2] : "",
+    npa_od_avg_cm: Number.isFinite(odAvg) ? odAvg : "",
+    npa_od_D: Number.isFinite(odD) ? odD : "",
+
+    npa_os_1_cm: Number.isFinite(S.npa_OS[0]) ? S.npa_OS[0] : "",
+    npa_os_2_cm: Number.isFinite(S.npa_OS[1]) ? S.npa_OS[1] : "",
+    npa_os_3_cm: Number.isFinite(S.npa_OS[2]) ? S.npa_OS[2] : "",
+    npa_os_avg_cm: Number.isFinite(osAvg) ? osAvg : "",
+    npa_os_D: Number.isFinite(osD) ? osD : "",
+
+    rt_duration_sec: Number.isFinite(S.rt.elapsedSec) ? S.rt.elapsedSec : "",
+    rt_valid_n: S.rt.validCount ?? "",
+    rt_false_start_n: S.rt.falseStart ?? "",
+    rt_no_response_n: S.rt.noResponse ?? "",
+    rt_lapse_n: S.rt.lapse ?? "",
+    rt_mean_ms: Number.isFinite(rtMean) ? Math.round(rtMean) : "",
+    rt_median_ms: Number.isFinite(rtMedian) ? Math.round(rtMedian) : "",
+    rt_sd_ms: Number.isFinite(rtStd) ? Math.round(rtStd) : "",
+    rt_speed_1_per_ms: Number.isFinite(rtSpeed) ? Number(rtSpeed.toFixed(5)) : "",
+    rt_completed: S.rt.finished ? 1 : 0
+  };
 }
 
-async function saveStepAndMove({
-  nextScreen = null,
-  finish = false,
-  message = '결과를 제출 중입니다. 잠시만 기다려주세요.',
-  buttons = [],
-  resultTargetId = null
-}){
-  if(isSubmitting) return;
-  isSubmitting = true;
-
-  const btnEls = buttons.map(id => gid(id)).filter(Boolean);
-  btnEls.forEach(el => el.disabled = true);
-
-  let resultEl = null;
-  if(resultTargetId){
-    resultEl = gid(resultTargetId);
-    if(resultEl){
-      resultEl.textContent = message;
-    }
-  }
-
-  try{
-    if(!S.submitAtISO || !S.submitAtKST){
-      const now = new Date();
-      S.submitAtISO = now.toISOString();
-      S.submitAtKST = toKSTString(now);
-    }    
-
-    if(!ok){
-      alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-      return;
-    }
-
-    if(finish){
-      await finishWithSave();
-    }else if(nextScreen){
-      go(nextScreen);
-    }
-
-  }catch(err){
-    console.error('saveStepAndMove error:', err);
-    alert('결과 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
-  }finally{
-    isSubmitting = false;
-    btnEls.forEach(el => el.disabled = false);
-
-    if(resultEl){
-      resultEl.textContent = '';
-    }
-  }
+async function saveSummarySnapshot(){
+  const summaryRow = buildSummaryRow();
+  const ok = await sendToSheet('DATA', [summaryRow]);
+  return ok;
 }
 
-async function finishWithSave(){
+async function saveAllResults(){
+  const summaryRow = buildSummaryRow();
+  const rtRows = (S.rt.trialLogs || []).map(row => ({
+    pid: row.pid ?? "",
+    trial_index: row.trial_index ?? "",
+    isi_ms: row.isi_ms ?? "",
+    stimulus_at_ms: row.stimulus_at_ms ?? "",
+    response_at_ms: row.response_at_ms ?? "",
+    rt_ms: row.rt_ms ?? "",
+    false_start: row.false_start ?? 0,
+    no_response: row.no_response ?? 0,
+    lapse: row.lapse ?? 0,
+    completed_trial: row.completed_trial ?? 1
+  }));
+
+  const ok1 = await sendToSheet('DATA', [summaryRow]);
+  if(!ok1) return false;
+
+  if(rtRows.length > 0){
+    const ok2 = await sendToSheet('rt_trials', rtRows);
+    if(!ok2) return false;
+  }
+
+  return true;
+}
+
+async function openThankyou(){
   if(S.finalSaved){
     go('screen_thankyou');
     return;
   }
 
-  try{
-    if(!S.submitAtISO || !S.submitAtKST){
-      const now = new Date();
-      S.submitAtISO = now.toISOString();
-      S.submitAtKST = toKSTString(now);
-    }
-
-    const ok = await saveAllResults();
-
-    if(!ok){
-      alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-      return;
-    }
-
-    S.finalSaved = true;
-
-    const tp = document.getElementById('thanks_pid');
-    if(tp) tp.textContent = S.pid || '-';
-
-    const tt = document.getElementById('thanks_time');
-    if(tt) tt.textContent = S.submitAtKST || '-';
-
-    go('screen_thankyou');
-  }catch(err){
-    console.error('finishWithSave error:', err);
-    alert('결과 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+  if(!S.submitAtISO || !S.submitAtKST){
+    const now = new Date();
+    S.submitAtISO = now.toISOString();
+    S.submitAtKST = toKSTString(now);
   }
-}
 
-function openThankyou(){
+  const ok = await saveAllResults();
+
+  if(!ok){
+    alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
+  S.finalSaved = true;
+
   const tp = document.getElementById('thanks_pid');
   if(tp) tp.textContent = S.pid || '-';
 
@@ -5432,8 +5431,6 @@ function resetAll(){
   S.retest2 = '';
   S.consentAtISO = '';
   S.consentAtKST = '';
-  S.submitAtISO = '';
-  S.submitAtKST = '';
   S.vfqSum = 0;
   S.finalSaved = false;
 
@@ -5568,13 +5565,12 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
 });
 
 gid('btn_pd_next')?.addEventListener('click', async () => {
-  await saveStepAndMove({
-    nextScreen: 'screen_npc',
-    finish: false,
-    message: 'PD 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_pd_next', 'btn_pd_finish', 'btn_pd_reset', 'btn_pd_restart'],
-    resultTargetId: 'pdResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  go('screen_npc');
 });
 
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
@@ -5583,12 +5579,12 @@ gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
 gid('btn_pd_finish')?.addEventListener('click', async () => {
-  await saveStepAndMove({
-    finish: true,
-    message: 'PD 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_pd_next', 'btn_pd_finish', 'btn_pd_reset', 'btn_pd_restart'],
-    resultTargetId: 'pdResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  finishFromPD();
 });
 
 gid('btn_npc_next')?.addEventListener('click', async () => {
@@ -5597,22 +5593,22 @@ gid('btn_npc_next')?.addEventListener('click', async () => {
     return;
   }
 
-  await saveStepAndMove({
-    nextScreen: 'screen_npa',
-    finish: false,
-    message: 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_npc_next', 'btn_npc_finish', 'btn_npc_clear'],
-    resultTargetId: 'npcResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
+  go('screen_npa');
 });
-  
+
 gid('btn_npc_finish')?.addEventListener('click', async () => {
-  await saveStepAndMove({
-    finish: true,
-    message: 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_npc_next', 'btn_npc_finish', 'btn_npc_clear'],
-    resultTargetId: 'npcResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  openThankyou();
 });
 
 gid('btn_npa_mark')?.addEventListener('click', () => markNPA());
@@ -5631,22 +5627,22 @@ gid('btn_npa_next')?.addEventListener('click', async () => {
     return;
   }
 
-  await saveStepAndMove({
-    nextScreen: 'screen_rt',
-    finish: false,
-    message: 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_npa_next', 'btn_npa_finish', 'btn_npa_clear', 'btn_npa_next_eye', 'btn_npa_mark'],
-    resultTargetId: 'npaResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+
+  go('screen_rt');
 });
 
 gid('btn_npa_finish')?.addEventListener('click', async () => {
-  await saveStepAndMove({
-    finish: true,
-    message: 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.',
-    buttons: ['btn_npa_next', 'btn_npa_finish', 'btn_npa_clear', 'btn_npa_next_eye', 'btn_npa_mark'],
-    resultTargetId: 'npaResult'
-  });
+  const ok = await saveSummarySnapshot();
+  if(!ok){
+    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+    return;
+  }
+  openThankyou();
 });
 
 gid('btn_rt_start')?.addEventListener('click', () => {
@@ -5657,12 +5653,12 @@ gid('btn_rt_reset')?.addEventListener('click', () => {
   resetRT();
 });
 
-gid('btn_rt_next')?.addEventListener('click', async () => {
+gid('btn_rt_next')?.addEventListener('click', () => {
   if(!S.rt.finished){
     alert('반응속도 측정을 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
-  await finishWithSave();
+  openThankyou();
 });
 
 gid('rtBox')?.addEventListener('click', () => {
