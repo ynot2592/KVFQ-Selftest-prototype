@@ -3193,14 +3193,15 @@ const now2 = new Date();
 S.submitAtISO = now2.toISOString();
 S.submitAtKST = toKSTString(now2);
 
-const ok = await saveSummarySnapshot();
+const ok = await sendToSheet('DATA', [buildSummaryRow()]);
 
 if(!ok){
-  alert('설문 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+  alert('설문 결과 저장에 실패했습니다. \n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
   isSubmitting = false;
   btn.disabled = false;
   btn.textContent = '설문 완료';
   resultDiv.textContent = '';
+  const backBtn = gid('btn_vfq_back');
   if(backBtn) backBtn.disabled = false;
   return;
 }
