@@ -5376,20 +5376,27 @@ function setSavingState(config){
 }
 
 async function saveStepAndMove({
-  nextScreen = '',
+  nextScreen = null,
   finish = false,
-  message = '제출 중입니다. 잠시만 기다려주세요.',
+  message = '결과를 제출 중입니다. 잠시만 기다려주세요.',
   buttons = [],
-  resultTargetId = ''
-} = {}){
-  try{
-    setSavingState({
-      buttons,
-      message,
-      resultTargetId,
-      lock: true
-    });
+  resultTargetId = null
+}){
+  if(isSubmitting) return;
+  isSubmitting = true;
 
+  const btnEls = buttons.map(id => gid(id)).filter(Boolean);
+  btnEls.forEach(el => el.disabled = true);
+
+  let resultEl = null;
+  if(resultTargetId){
+    resultEl = gid(resultTargetId);
+    if(resultEl){
+      resultEl.textContent = message;
+    }
+  }
+
+  try{
     if(!S.submitAtISO || !S.submitAtKST){
       const now = new Date();
       S.submitAtISO = now.toISOString();
@@ -5399,43 +5406,26 @@ async function saveStepAndMove({
     const ok = await saveSummarySnapshot();
 
     if(!ok){
-      setSavingState({
-        buttons,
-        message: '',
-        resultTargetId,
-        lock: false
-      });
       alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
       return;
     }
 
-    setSavingState({
-      buttons,
-      message: '',
-      resultTargetId,
-      lock: false
-    });
-
     if(finish){
-      openThankyou();
-      return;
-    }
-
-    if(nextScreen){
+      await finishWithSave();
+    }else if(nextScreen){
       go(nextScreen);
     }
 
   }catch(err){
     console.error('saveStepAndMove error:', err);
+    alert('결과 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+  }finally{
+    isSubmitting = false;
+    btnEls.forEach(el => el.disabled = false);
 
-    setSavingState({
-      buttons,
-      message: '',
-      resultTargetId,
-      lock: false
-    });
-
-    alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    if(resultEl){
+      resultEl.textContent = '';
+    }
   }
 }
 
