@@ -5643,16 +5643,7 @@ gid('btn_npa_next')?.addEventListener('click', () => {
     return;
   }
   goNextWithAutosave('screen_rt');
-});
-
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-
-  go('screen_rt');
-});
+}); 
 
 gid('btn_npa_finish')?.addEventListener('click', async () => {
   await finishWithSave();
