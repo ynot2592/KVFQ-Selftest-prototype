@@ -3154,97 +3154,97 @@ if(mount){
       createVAS(idx, canvas, score);
     });
 
-    const btn = document.getElementById('submitVFQ');
+        const btn = document.getElementById('submitVFQ');
     const resultDiv = document.getElementById('vfqResult');
 
     if(btn && resultDiv){
-      if(btn && resultDiv){
-  btn.onclick = async ()=>{
-    if(isSubmitting){
-      return;
+      btn.onclick = async ()=>{
+        if(isSubmitting){
+          return;
+        }
+        isSubmitting = true;
+
+        const missing = [];
+        vfqAnswers.forEach((v,i)=>{ if(v===null) missing.push(i+1); });
+
+        if(missing.length){
+          resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
+          isSubmitting = false;
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '제출 중...';
+        resultDiv.textContent = '결과를 제출 중입니다. 잠시만 기다려주세요.';
+        const backBtn = gid('btn_vfq_back');
+        if(backBtn) backBtn.disabled = true;
+
+        calcVFQ();
+
+        if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
+          alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
+          isSubmitting = false;
+          btn.disabled = false;
+          btn.textContent = '설문 완료';
+          resultDiv.textContent = '';
+          if(backBtn) backBtn.disabled = false;
+          return;
+        }
+
+        const now2 = new Date();
+        S.submitAtISO = now2.toISOString();
+        S.submitAtKST = toKSTString(now2);
+
+        try{
+          const ok = await sendToSheet('DATA', [{
+            pid: S.pid,
+            consent_at: S.consentAtISO,
+            consent_at_kst: S.consentAtKST,
+            timestamp: S.submitAtISO,
+            timestamp_kst: S.submitAtKST,
+            birth: S.birth,
+            sex: S.sex,
+            retest_code: S.retest2 || '',
+            vfq_total: S.vfqSum,
+
+            q1: vfqAnswers[0],  q2: vfqAnswers[1],  q3: vfqAnswers[2],  q4: vfqAnswers[3],  q5: vfqAnswers[4],
+            q6: vfqAnswers[5],  q7: vfqAnswers[6],  q8: vfqAnswers[7],  q9: vfqAnswers[8],  q10: vfqAnswers[9],
+            q11: vfqAnswers[10], q12: vfqAnswers[11], q13: vfqAnswers[12], q14: vfqAnswers[13], q15: vfqAnswers[14],
+            q16: vfqAnswers[15], q17: vfqAnswers[16],
+          }]);
+
+          if(!ok){
+            alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인하고 다시 시도해 주세요.');
+            isSubmitting = false;
+            btn.disabled = false;
+            btn.textContent = '설문 완료';
+            resultDiv.textContent = '';
+            if(backBtn) backBtn.disabled = false;
+            return;
+          }
+
+          isSubmitting = false;
+          btn.disabled = false;
+          btn.textContent = '설문 완료';
+          resultDiv.textContent = '';
+          if(backBtn) backBtn.disabled = false;
+
+          go('screen_home');
+          return;
+
+        }catch(err){
+          console.error('submitVFQ save error:', err);
+          alert('제출 중 오류가 발생했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+          isSubmitting = false;
+          btn.disabled = false;
+          btn.textContent = '설문 완료';
+          resultDiv.textContent = '';
+          if(backBtn) backBtn.disabled = false;
+          return;
+        }
+      };
     }
-    isSubmitting = true;
-
-    const missing = [];
-    vfqAnswers.forEach((v,i)=>{ if(v===null) missing.push(i+1); });
-
-    if(missing.length){
-      resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
-      isSubmitting = false;
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '제출 중...';
-    resultDiv.textContent = '결과를 제출 중입니다. 잠시만 기다려주세요.';
-    const backBtn = gid('btn_vfq_back');
-    if(backBtn) backBtn.disabled = true;
-
-    calcVFQ();
-
-    if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
-      alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
-      isSubmitting = false;
-      btn.disabled = false;
-      btn.textContent = '설문 완료';
-      resultDiv.textContent = '';
-      if(backBtn) backBtn.disabled = false;
-      return;
-    }
-
-    const now2 = new Date();
-    S.submitAtISO = now2.toISOString();
-    S.submitAtKST = toKSTString(now2);
-
-    try{
-      const ok = await sendToSheet('DATA', [{
-        pid: S.pid,
-        consent_at: S.consentAtISO,
-        consent_at_kst: S.consentAtKST,
-        timestamp: S.submitAtISO,
-        timestamp_kst: S.submitAtKST,
-        birth: S.birth,
-        sex: S.sex,
-        retest_code: S.retest2 || '',
-        vfq_total: S.vfqSum,
-
-        q1: vfqAnswers[0],  q2: vfqAnswers[1],  q3: vfqAnswers[2],  q4: vfqAnswers[3],  q5: vfqAnswers[4],
-        q6: vfqAnswers[5],  q7: vfqAnswers[6],  q8: vfqAnswers[7],  q9: vfqAnswers[8],  q10: vfqAnswers[9],
-        q11: vfqAnswers[10], q12: vfqAnswers[11], q13: vfqAnswers[12], q14: vfqAnswers[13], q15: vfqAnswers[14],
-        q16: vfqAnswers[15], q17: vfqAnswers[16],
-      }]);
-
-      if(!ok){
-        alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인하고 다시 시도해 주세요.');
-        isSubmitting = false;
-        btn.disabled = false;
-        btn.textContent = '설문 완료';
-        resultDiv.textContent = '';
-        if(backBtn) backBtn.disabled = false;
-        return;
-      }
-
-      isSubmitting = false;
-      btn.disabled = false;
-      btn.textContent = '설문 완료';
-      resultDiv.textContent = '';
-      if(backBtn) backBtn.disabled = false;
-
-      go('screen_home');
-      return;
-
-    }catch(err){
-      console.error('submitVFQ save error:', err);
-      alert('제출 중 오류가 발생했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-      isSubmitting = false;
-      btn.disabled = false;
-      btn.textContent = '설문 완료';
-      resultDiv.textContent = '';
-      if(backBtn) backBtn.disabled = false;
-      return;
-    }
-  };
-}  
+  }  
 
   // ---------- PD 카메라/FaceMesh ----------
 const pdVideo = gid('pd_video');
