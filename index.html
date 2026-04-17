@@ -2813,6 +2813,8 @@ async function sendToSheet(sheetName, rows){
 }
 };
 
+
+
 function toKSTString(d = new Date()){
   const kst = new Date(d.getTime() + 9*60*60*1000);
   const yyyy = kst.getUTCFullYear();
@@ -3188,23 +3190,17 @@ if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.conse
 }
 
 const now2 = new Date();
-
-// 설문 제출 시각 기록
 S.submitAtISO = now2.toISOString();
 S.submitAtKST = toKSTString(now2);
 
-const ok = await sendToSheet('DATA', [buildSummaryRow()]);
+queueAutosave();
 
-if(!ok){
-  alert('설문 결과 저장에 실패했습니다. \n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-  isSubmitting = false;
-  btn.disabled = false;
-  btn.textContent = '설문 완료';
-  resultDiv.textContent = '';
-  const backBtn = gid('btn_vfq_back');
-  if(backBtn) backBtn.disabled = false;
-  return;
-}
+btn.disabled = false;
+btn.textContent = '설문 완료';
+resultDiv.textContent = '';
+
+const backBtn2 = gid('btn_vfq_back');
+if(backBtn2) backBtn2.disabled = false;
 
 go('screen_home');
 return;
@@ -3815,10 +3811,6 @@ function resetPD(){
   
   S.pd_started = false;
   gid('pd_start_layer').style.display = 'flex';
-}
-
-function finishFromPD(){
-  openThankyou();
 }
 
 async function setupNPCCam(){
@@ -5322,13 +5314,13 @@ async function saveSummarySnapshot(){
   return ok;
 }
 
-async function saveAllResults(){
+async function saveAllResults(){a
   const summaryRow = buildSummaryRow();
   const rtRows = (S.rt.trialLogs || []).map(row => ({
     pid: row.pid ?? "",
     trial_index: row.trial_index ?? "",
-    isi_ms: row.isi_ms ?? "",
-    stimulus_at_ms: row.stimulus_at_ms ?? "",
+    isi_ms: row.isi_ms ?? "",a
+    stimulus_at_ms: row.stimulus_at_ms ?as? "",
     response_at_ms: row.response_at_ms ?? "",
     rt_ms: row.rt_ms ?? "",
     false_start: row.false_start ?? 0,
@@ -5348,27 +5340,72 @@ async function saveAllResults(){
   return true;
 }
 
-async function openThankyou(){
-  if(S.finalSaved){
-    go('screen_thankyou');
-    return;
-  }
+let autosavePromise = Promise.resolve();
+let autosaveRunning = false;
 
+function queueAutosave(){
+  autosavePromise = autosavePromise.then(async () => {
+    autosaveRunning = true;
+    try{
+      if(!S.submitAtISO || !S.submitAtKST){
+        const now = new Date();
+        S.submitAtISO = now.toISOString();
+        S.submitAtKST = toKSTString(now);
+      }
+
+      await saveAllResults();
+    }catch(err){
+      console.error('queueAutosave failed:', err);
+    }finally{
+      autosaveRunning = false;
+    }
+  });
+
+  return autosavePromise;
+}
+
+function goNextWithAutosave(nextScreen){
   if(!S.submitAtISO || !S.submitAtKST){
     const now = new Date();
     S.submitAtISO = now.toISOString();
     S.submitAtKST = toKSTString(now);
   }
 
-  const ok = await saveAllResults();
+  queueAutosave();
+  go(nextScreen);
+}
 
-  if(!ok){
-    alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
+async function finishWithSave(){
+  try{
+    if(!S.submitAtISO || !S.submitAtKST){
+      const now = new Date();
+      S.submitAtISO = now.toISOString();
+      S.submitAtKST = toKSTString(now);
+    }
+
+    const ok = await saveAllResults();
+
+    if(!ok){
+      alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+
+    S.finalSaved = true;
+
+    const tp = document.getElementById('thanks_pid');
+    if(tp) tp.textContent = S.pid || '-';
+
+    const tt = document.getElementById('thanks_time');
+    if(tt) tt.textContent = S.submitAtKST || '-';
+
+    go('screen_thankyou');
+  }catch(err){
+    console.error('finishWithSave error:', err);
+    alert('결과 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
   }
+}
 
-  S.finalSaved = true;
-
+function openThankyou(){
   const tp = document.getElementById('thanks_pid');
   if(tp) tp.textContent = S.pid || '-';
 
@@ -5565,13 +5602,9 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
   setPDStateMode('normal');
 });
 
-gid('btn_pd_next')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-  go('screen_npc');
+gid('btn_pd_next')?.addEventListener('click', () => {
+  goNextWithAutosave('screen_npc');
+});
 });
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
 
@@ -5579,19 +5612,16 @@ gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
 gid('btn_pd_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-  finishFromPD();
+  await finishWithSave();
 });
 
-gid('btn_npc_next')?.addEventListener('click', async () => {
+gid('btn_npc_next')?.addEventListener('click', () => {
   if(S.npc_trial_index < 3){
     alert('폭주근점 측정을 3회 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
+  goNextWithAutosave('screen_npa');
+});
 
   const ok = await saveSummarySnapshot();
   if(!ok){
@@ -5603,12 +5633,7 @@ gid('btn_npc_next')?.addEventListener('click', async () => {
 });
 
 gid('btn_npc_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-  openThankyou();
+  await finishWithSave();
 });
 
 gid('btn_npa_mark')?.addEventListener('click', () => markNPA());
@@ -5621,11 +5646,13 @@ gid('btn_npa_clear')?.addEventListener('click', () => {
   clearNPA();
 });
 
-gid('btn_npa_next')?.addEventListener('click', async () => {
+gid('btn_npa_next')?.addEventListener('click', () => {
   if(!S.npa_completed){
     alert('조절근점 측정을 우안 3회, 좌안 3회 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
+  goNextWithAutosave('screen_rt');
+});
 
   const ok = await saveSummarySnapshot();
   if(!ok){
@@ -5637,12 +5664,7 @@ gid('btn_npa_next')?.addEventListener('click', async () => {
 });
 
 gid('btn_npa_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-  openThankyou();
+  await finishWithSave();
 });
 
 gid('btn_rt_start')?.addEventListener('click', () => {
@@ -5653,12 +5675,12 @@ gid('btn_rt_reset')?.addEventListener('click', () => {
   resetRT();
 });
 
-gid('btn_rt_next')?.addEventListener('click', () => {
+gid('btn_rt_next')?.addEventListener('click', async () => {
   if(!S.rt.finished){
     alert('반응속도 측정을 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
-  openThankyou();
+  await finishWithSave();
 });
 
 gid('rtBox')?.addEventListener('click', () => {
