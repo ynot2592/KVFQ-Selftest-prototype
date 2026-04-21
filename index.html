@@ -3232,7 +3232,7 @@ if(mount){
     const payload = buildVFQOnlyPayload();
 
     // 설문 완료 시점 1차 저장 (설문형과 최대한 동일한 flat payload)
-    const ok = await sendToSheet(payload);
+    const ok = await sendToSheet('DATA', [buildVFQOnlyPayload()]);
 
     if(!ok){
       alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
