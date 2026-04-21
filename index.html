@@ -2682,6 +2682,30 @@ html, body{
   </div>
 </div>  
 
+<div id="submitOverlay" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,.45);
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+">
+  <div style="
+    width:min(92vw, 420px);
+    background:#ffffff;
+    color:#111827;
+    border-radius:16px;
+    padding:22px 18px;
+    text-align:center;
+    box-shadow:0 12px 36px rgba(0,0,0,.18);
+  ">
+    <div style="font-size:18px; font-weight:700; margin-bottom:10px;">제출 중...</div>
+    <div style="font-size:14px; line-height:1.6;">결과를 제출 중입니다. 잠시만 기다려주세요.</div>
+  </div>
+</div>
+
 
 <script>
 
@@ -2698,15 +2722,28 @@ const isIOS = /iPhone|iPad|iPod/i.test(UA);
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0RD5HaSSjqdi1Csc6ZfmaG7eu2K4C-YkRyDeZbOXLrRjE/exec";
 
 // 시트로 데이터 보내는 함수
-async function sendToSheet(sheetName, rows){
-  console.log('sendToSheet start:', sheetName, rows);
+async function sendToSheet(arg1, arg2){
   try{
-    const payload = {
-      sheet_name: sheetName,
-      rows: rows
-    };
+    let payload;
 
-    console.log('[sendToSheet] payload:', payload);
+    // 1) 설문형처럼 flat object 하나를 바로 보내는 경우
+    if(
+      arg2 === undefined &&
+      arg1 &&
+      typeof arg1 === 'object' &&
+      !Array.isArray(arg1)
+    ){
+      payload = arg1;
+      console.log('[sendToSheet] flat payload:', payload);
+    }
+    // 2) 기존 자가측정형처럼 sheet_name + rows wrapper로 보내는 경우
+    else{
+      payload = {
+        sheet_name: arg1,
+        rows: arg2
+      };
+      console.log('[sendToSheet] wrapped payload:', payload);
+    }
 
     await fetch(GAS_URL, {
       method: 'POST',
@@ -2715,7 +2752,7 @@ async function sendToSheet(sheetName, rows){
       body: JSON.stringify(payload),
     });
 
-    console.log('[sendToSheet] sent:', sheetName, rows.length);
+    console.log('[sendToSheet] sent');
     return true;
   }catch(err){
     console.error('[sendToSheet] FAILED:', err);
@@ -2829,6 +2866,7 @@ function toKSTString(d = new Date()){
   let fullDocConfirmed = false;
   let consentSigned = false;
   let isSubmitting = false;
+  let submitLockedButtons = [];
   const PD_PX_TO_MM = 0.738;
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
@@ -3154,61 +3192,67 @@ if(mount){
     const resultDiv = document.getElementById('vfqResult');
 
     if(btn && resultDiv){
-      btn.onclick = async ()=>{
-         if(isSubmitting){
-           return;
-         }
-         isSubmitting = true;
-         
-         const missing = [];
-         vfqAnswers.forEach((v,i)=>{ if(v===null) missing.push(i+1); });
-    
-         if(missing.length){
-           resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
-           isSubmitting = false;
-           return;
+  btn.onclick = async ()=>{
+    if(isSubmitting){
+      return;
+    }
+
+    isSubmitting = true;
+
+    const missing = [];
+    vfqAnswers.forEach((v,i)=>{
+      if(v===null) missing.push(i+1);
+    });
+
+    if(missing.length){
+      resultDiv.textContent = "아직 응답하지 않은 문항이 있습니다: " + missing.join(", ") + "번";
+      isSubmitting = false;
+      return;
     }
 
     btn.disabled = true;
     btn.textContent = '제출 중...';
     resultDiv.textContent = '결과를 제출 중입니다. 잠시만 기다려주세요.';
+
     const backBtn = gid('btn_vfq_back');
     if(backBtn) backBtn.disabled = true;
 
-// 총합 계산
-calcVFQ();
+    calcVFQ();
 
-// ✅ 제출 직전 필수 상태 재확인
-if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
-  alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
-  isSubmitting = false;
-  btn.disabled = false;
-  btn.textContent = '설문 완료';
-  resultDiv.textContent = '';
-  return;
-}
+    if(!consentSigned || !S.pid || !S.birth || !S.sex || !S.consentAtISO || !S.consentAtKST){
+      alert('동의 또는 기본정보 상태가 올바르지 않습니다. 처음부터 다시 진행해 주세요.');
+      isSubmitting = false;
+      btn.disabled = false;
+      btn.textContent = '설문 완료';
+      resultDiv.textContent = '';
+      if(backBtn) backBtn.disabled = false;
+      return;
+    }
 
-const now2 = new Date();
-S.submitAtISO = now2.toISOString();
-S.submitAtKST = toKSTString(now2);
+    const payload = buildVFQOnlyPayload();
 
-// 설문 완료 시점 1차 저장
-const ok = await sendToSheet('DATA', [buildSummaryRow()]);
+    // 설문 완료 시점 1차 저장 (설문형과 최대한 동일한 flat payload)
+    const ok = await sendToSheet(payload);
 
-if(!ok){
-  alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-  isSubmitting = false;
-  btn.disabled = false;
-  btn.textContent = '설문 완료';
-  resultDiv.textContent = '';
-  const backBtn = gid('btn_vfq_back');
-  if(backBtn) backBtn.disabled = false;
-  return;
-}
+    if(!ok){
+      alert('설문 결과 저장에 실패했습니다.\n인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      isSubmitting = false;
+      btn.disabled = false;
+      btn.textContent = '설문 완료';
+      resultDiv.textContent = '';
+      if(backBtn) backBtn.disabled = false;
+      return;
+    }
 
-go('screen_home');
-return;
+    // 설문 완료 저장 성공 후에만 submit 시각 확정
+    const now2 = new Date();
+    S.submitAtISO = now2.toISOString();
+    S.submitAtKST = toKSTString(now2);
+
+    isSubmitting = false;
+    go('screen_home');
   };
+}
  }
 }
     
@@ -5313,6 +5357,40 @@ function buildSummaryRow(){
     rt_sd_ms: Number.isFinite(rtStd) ? Math.round(rtStd) : "",
     rt_speed_1_per_ms: Number.isFinite(rtSpeed) ? Number(rtSpeed.toFixed(5)) : "",
     rt_completed: S.rt.finished ? 1 : 0
+  };
+}
+
+function buildVFQOnlyPayload(){
+  const now = new Date();
+
+  return {
+    pid: S.pid || "",
+    consent_at: S.consentAtISO || "",
+    consent_at_kst: S.consentAtKST || "",
+    timestamp: now.toISOString(),
+    timestamp_kst: toKSTString(now),
+    birth: S.birth || "",
+    sex: S.sex || "",
+    retest_code: S.retest2 || "",
+    vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
+
+    q1: vfqAnswers[0] ?? "",
+    q2: vfqAnswers[1] ?? "",
+    q3: vfqAnswers[2] ?? "",
+    q4: vfqAnswers[3] ?? "",
+    q5: vfqAnswers[4] ?? "",
+    q6: vfqAnswers[5] ?? "",
+    q7: vfqAnswers[6] ?? "",
+    q8: vfqAnswers[7] ?? "",
+    q9: vfqAnswers[8] ?? "",
+    q10: vfqAnswers[9] ?? "",
+    q11: vfqAnswers[10] ?? "",
+    q12: vfqAnswers[11] ?? "",
+    q13: vfqAnswers[12] ?? "",
+    q14: vfqAnswers[13] ?? "",
+    q15: vfqAnswers[14] ?? "",
+    q16: vfqAnswers[15] ?? "",
+    q17: vfqAnswers[16] ?? ""
   };
 }
 
