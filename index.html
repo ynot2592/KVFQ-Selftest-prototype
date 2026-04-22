@@ -1898,7 +1898,7 @@ html, body{
      </p>
 
      <ul style="margin:10px 0 0 20px; color:var(--muted); line-height:1.6;">
-         <li>PD(동공간거리)</li>
+         <li>동공간거리(PD)</li>
          <li>폭주근점(NPC)</li>
          <li>조절근점(NPA)</li>
          <li>반응속도(RT)</li>
@@ -1931,7 +1931,7 @@ html, body{
          font-size:14.6px;
          line-height:1.55;
      ">
-        ※ 자가측정 결과는 연구용 참고자료이며,<br>
+        ※ 자가측정 결과는 연구용 참고 자료이며,<br>
            임상적 진단이나 정밀 검사를 대체하지 않습니다.
      </p>
 
@@ -2309,8 +2309,8 @@ html, body{
   <div style="margin-top:10px; margin-left:10px; color:#e6ebff; line-height:1.55; font-size:14.8px;">
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:0;">
       <div style="font-weight:700;">1.</div>
-      <div>빨간 선의 <b style="color:#c7f9f1;">맨 위 꼭지점</b>을 주시한 상태로 <b>팔을 앞으로 살짝 편 위치 (약 40cm 거리)</b>에서,<br>
-              스마트폰을 <b style="color:#c7f9f1;">얼굴 중앙</b>에 위치시킨 뒤, <b style="color:#c7f9f1;">천천히</b> 코쪽으로 가까이 이동하세요.</div>
+      <div>빨간 선의 <b style="color:#c7f9f1;">맨 위 꼭짓점</b>을 주시한 상태로 <b>팔을 앞으로 살짝 편 위치 (약 40cm 거리)</b>에서,<br>
+              스마트폰을 <b style="color:#c7f9f1;">얼굴 중앙</b>에 위치시킨 뒤, <b style="color:#c7f9f1;">천천히</b> 코 쪽으로 가까이 이동하세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2611,7 +2611,7 @@ html, body{
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>팔을 앞으로 살짝 편 위치에서 (약 40cm) 숫자를 계속 바라보면서, 스마트폰을 해당 눈 앞쪽에서 <b style="color:#c7f9f1;">천천히</b> 코쪽으로 가까이 이동하세요.</div>
+      <div>팔을 앞으로 살짝 편 위치에서 (약 40cm) 숫자를 계속 바라보면서, 스마트폰을 해당 눈 앞쪽에서 <b style="color:#c7f9f1;">천천히</b> 코 쪽으로 가까이 이동하세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2685,7 +2685,7 @@ html, body{
   line-height:1.45;
 ">
   <div style="margin:2px 0; padding-left:1.05em; text-indent:-1.05em;">
-    ※ 가운데에 숫자가 나타나면 가능한 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
+    ※ 가운데에 숫자가 나타나면 <b style="color:#fde68a;">빠르게 터치</b>해 주세요.
   </div>
 
   <div style="margin:2px 0; padding-left:1.05em; text-indent:-1.05em;">
@@ -2701,7 +2701,7 @@ html, body{
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
       <div style="font-weight:700;">2.</div>
-      <div>검정색 화면을 보고 기다리다가, 가운데 숫자가 나타나는 순간 바로 터치해 주세요.</div>
+      <div>검은색 화면을 보고 기다리다가, 가운데 숫자가 나타나는 순간 바로 터치해 주세요.</div>
     </div>
 
     <div style="display:grid; grid-template-columns:14px 1fr; column-gap:4px; align-items:start; margin-top:10px;">
@@ -2871,7 +2871,6 @@ async function sendToSheet(arg1, arg2){
   birth: "",
   sex: "",
   retest2: "",
-  vfq: {},
   vfqSum: 0,
   consentAtISO: "",
   consentAtKST: "",
@@ -2879,18 +2878,14 @@ async function sendToSheet(arg1, arg2){
   submitAtKST: "",
 
   pd_input_mm: null,
-  pd_input_present: false,
   pd_auto_trials: [null, null, null],
   pd_auto_px_trials: [null, null, null],
   pd_trial_count: 0,
   pd_auto_final_mm: null,
   pdmm: null,
-  pd_measure_needed: 2,
   pd_completed: false,
   pd_quality_ok: false,
   pd_quality_reason: "",
-  pd_stable_frames: 0,
-  pd_last_center_ok: false,
   pd_auto_recording: false,
   pd_hold_frames: 0,
   pd_last_hold_value: null, 
@@ -2898,7 +2893,6 @@ async function sendToSheet(arg1, arg2){
   pd_started: false,
   pd_prev_pix_for_motion: null,
 
-  focal_px: null,
   pixPD: null,
   distNow: null,
 
@@ -2921,7 +2915,6 @@ async function sendToSheet(arg1, arg2){
   npc_last_dist: null,
   npc_last_ts: 0,
   npc_smooth_dist: null,
-  npc_speed_cm_s: 0,
   
   npc_prev_pix_dist: null,
   npc_fast_move_flag: false,
@@ -3412,7 +3405,6 @@ function parseKnownPdInput(){
 function updateKnownPdState(){
   const v = parseKnownPdInput();
   S.pd_input_mm = v;
-  S.pd_input_present = v !== null;
   gid('pd_known_value').textContent = v !== null ? `${v} mm` : '-';
 }
 
@@ -3879,8 +3871,7 @@ function recordPDTrial(){
   const a = S.pd_auto_trials[0];
   const b = S.pd_auto_trials[1];
 
-  if(Math.abs(a - b) > 2){
-    S.pd_measure_needed = 3;    
+  if(Math.abs(a - b) > 2){        
     setPDStateMode('done', '2차 측정 완료, 측정값 차이로 인해 잠시 후 3차 측정을 시작합니다.');
     S.pd_rearm_until = Date.now() + 1800;
 
@@ -3932,8 +3923,7 @@ function resetPD(){
   S.pd_auto_trials = [null, null, null];
   S.pd_auto_px_trials = [null, null, null];
   S.pd_trial_count = 0;
-  S.pd_auto_final_mm = null;
-  S.pd_measure_needed = 2;
+  S.pd_auto_final_mm = null;  
   S.pd_completed = false;
   S.pdmm = null;
   S.pd_auto_recording = false;
@@ -4120,8 +4110,7 @@ async function startNPCMeasure(){
     
     S.npc_last_dist = null;
     S.npc_last_ts = 0;
-    S.npc_smooth_dist = null;
-    S.npc_speed_cm_s = 0;
+    S.npc_smooth_dist = null;    
     
   }catch(e){
     alert('NPC 측정을 시작할 수 없습니다: ' + (e.message || e));
@@ -4182,7 +4171,6 @@ function onNPCResults(res){
       speedOverlay.style.display = 'none';
     }
 
-    S.npc_speed_cm_s = 0;
     S.npc_prev_pix_dist = null;
     S.npc_fast_move_flag = false;
 
@@ -4608,7 +4596,6 @@ function clearNPC(){
   S.npc_last_dist = null;
   S.npc_last_ts = 0;
   S.npc_smooth_dist = null;
-  S.npc_speed_cm_s = 0;
   S.distNow = null;
   S.npc_waiting_for_reset = false;
   S.npc_reset_reference_dist = null;
