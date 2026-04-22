@@ -2351,7 +2351,7 @@ html, body{
     </div>     
 
     <!-- npa 가운데 시표/버튼 -->
-    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:20px;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:34px;">
       <div id="npa_target_text" style="
         font-size:12px;
         font-weight:700;
@@ -2360,9 +2360,15 @@ html, body{
         background:rgba(15,23,42,.55);
         border:1px solid rgba(255,255,255,.14);
         border-radius:12px;
-        padding:14px 18px;
+
+        display:flex;
+        align-items:center;
+        justify-content:center;
+
+        min-height:32px;
+        padding:10px 16px;
         line-height:1;
-      ">1 2 3 4 5</div>
+      ">12345</div>
 
       <div id="npa_retry_guide" class="small" style="display:none; text-align:center; color:#e6ebff; line-height:1.45; position:relative; z-index:5; background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 8px;">
         스마트폰을 다시 멀리 이동한 뒤,<br>다시 천천히 가까이 진행해 주세요.
@@ -2402,12 +2408,17 @@ html, body{
 ">
   <button class="btn primary" id="btn_npa_mark" type="button" style="
   pointer-events:auto;
-  font-size:13px;
-  padding:10px 12px;
-  border-radius:10px;
+  font-size:14px;
+  padding:14px 18px;
+  min-width:140px;
+  min-height:52px;
+  border-radius:12px;
   white-space: normal !important;
   line-height:1.2;
   text-align:center;
+
+  background:linear-gradient(135deg,#1d4ed8,#0891b2);
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
 ">
   흐림 기록 #1
 </button>
