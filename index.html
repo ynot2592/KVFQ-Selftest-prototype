@@ -5316,6 +5316,8 @@ function onConsentNext(){
 }
 
 function buildSummaryRow(){
+  updateKnownPdState();
+
   const rtMean = calcMean(S.rt.values);
   const rtMedian = calcMedian(S.rt.values);
   const rtStd = calcStd(S.rt.values);
