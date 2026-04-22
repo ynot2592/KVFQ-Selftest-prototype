@@ -4642,8 +4642,25 @@ function updateRTUI(){
   gid('rtLapse').textContent = S.rt.lapse;
   gid('rtSpeed').textContent = Number.isFinite(speed) ? speed.toFixed(5) : '-';
 
-  const nextBtn = gid('btn_rt_next');
-  if(nextBtn) nextBtn.disabled = !S.rt.finished;
+  updateRTButtonStates();
+}
+
+function updateRTButtonStates(){
+  const startBtn = gid('btn_rt_start');
+  const resetBtn = gid('btn_rt_reset');
+  const nextBtn  = gid('btn_rt_next');
+
+  if(startBtn){
+    startBtn.disabled = !!S.rt.started && !S.rt.finished;
+  }
+
+  if(resetBtn){
+    resetBtn.disabled = false;
+  }
+
+  if(nextBtn){
+    nextBtn.disabled = !S.rt.finished;
+  }
 }
 
 function clearRTStimulusTimers(){
@@ -4698,6 +4715,7 @@ function resetRT(){
   }
 
   updateRTUI();
+  updateRTButtonStates();
 }
 
 function finishRT(){
@@ -4712,6 +4730,7 @@ function finishRT(){
   }
 
   updateRTUI();
+  updateRTButtonStates();
 }
 
 function scheduleRTStimulus(){
@@ -4816,6 +4835,7 @@ function startRT(){
 
   S.rt.started = true;
   S.rt.finished = false;
+  updateRTButtonStates();
   S.rt.testStartAt = performance.now();
 
   const tickElapsed = () => {
