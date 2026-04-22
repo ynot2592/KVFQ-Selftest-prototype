@@ -5033,7 +5033,7 @@ function handleRTTap(){
 
   const msgEl = ov.querySelector('div > div:last-child');
   if(msgEl && message){
-    msgEl.textContent = message;
+    msgEl.innerHTML = message;
   }
 
   ov.style.display = show ? 'flex' : 'none';
