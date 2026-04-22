@@ -5702,7 +5702,7 @@ gid('btn_pd_next')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_pd_next','btn_pd_finish','btn_pd_reset','btn_pd_restart']);
-  setSubmitOverlay(true, 'PD 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'PD 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     const ok = await saveSummarySnapshot();
@@ -5754,7 +5754,7 @@ gid('btn_npc_next')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_npc_next','btn_npc_finish','btn_npc_clear','btn_npc_mark']);
-  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     const ok = await saveSummarySnapshot();
@@ -5776,7 +5776,7 @@ gid('btn_npc_finish')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_npc_next','btn_npc_finish','btn_npc_clear','btn_npc_mark']);
-  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     const ok = await saveSummarySnapshot();
@@ -5812,7 +5812,7 @@ gid('btn_npa_next')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_npa_next','btn_npa_finish','btn_npa_clear','btn_npa_mark','btn_npa_next_eye']);
-  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     const ok = await saveSummarySnapshot();
@@ -5834,7 +5834,7 @@ gid('btn_npa_finish')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_npa_next','btn_npa_finish','btn_npa_clear','btn_npa_mark','btn_npa_next_eye']);
-  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     const ok = await saveSummarySnapshot();
@@ -5868,7 +5868,7 @@ gid('btn_rt_next')?.addEventListener('click', async () => {
   isSubmitting = true;
 
   lockButtons(['btn_rt_next','btn_rt_start','btn_rt_reset']);
-  setSubmitOverlay(true, 'RT 결과를 제출 중입니다. 잠시만 기다려주세요.');
+  setSubmitOverlay(true, 'RT 결과를 제출 중입니다.<br>잠시만 기다려주세요.');
 
   try{
     await openThankyou();
