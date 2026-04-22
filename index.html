@@ -4651,7 +4651,7 @@ function updateRTButtonStates(){
   const nextBtn  = gid('btn_rt_next');
 
   if(startBtn){
-    startBtn.disabled = !!S.rt.started && !S.rt.finished;
+    startBtn.disabled = !!S.rt.started;
   }
 
   if(resetBtn){
