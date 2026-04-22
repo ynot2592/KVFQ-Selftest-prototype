@@ -2867,6 +2867,7 @@ function toKSTString(d = new Date()){
   let consentSigned = false;
   let isSubmitting = false;
   let submitLockedButtons = [];
+  let finalSavingNow = false;
   const PD_PX_TO_MM = 0.738;
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
@@ -5026,6 +5027,43 @@ function handleRTTap(){
 
   function gid(id){ return document.getElementById(id) }
 
+  function setSubmitOverlay(show, message){
+  const ov = gid('submitOverlay');
+  if(!ov) return;
+
+  const msgEl = ov.querySelector('div > div:last-child');
+  if(msgEl && message){
+    msgEl.textContent = message;
+  }
+
+  ov.style.display = show ? 'flex' : 'none';
+}
+
+function lockButtons(ids){
+  submitLockedButtons = [];
+
+  ids.forEach(id => {
+    const el = gid(id);
+    if(!el) return;
+
+    submitLockedButtons.push({
+      el,
+      disabled: el.disabled,
+      text: el.textContent
+    });
+
+    el.disabled = true;
+  });
+}
+
+function unlockButtons(){
+  submitLockedButtons.forEach(item => {
+    item.el.disabled = item.disabled;
+    item.el.textContent = item.text;
+  });
+  submitLockedButtons = [];
+}
+
   function pad2(n){
   return String(n).padStart(2, '0');
 }
@@ -5427,34 +5465,47 @@ async function saveAllResults(){
 }
 
 async function openThankyou(){
-console.log('openThankyou called');
+  console.log('openThankyou called');
+
+  if(finalSavingNow){
+    return;
+  }
+
   if(S.finalSaved){
     go('screen_thankyou');
     return;
   }
 
-  if(!S.submitAtISO || !S.submitAtKST){
-    const now = new Date();
-    S.submitAtISO = now.toISOString();
-    S.submitAtKST = toKSTString(now);
+  finalSavingNow = true;
+  setSubmitOverlay(true, '결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    if(!S.submitAtISO || !S.submitAtKST){
+      const now = new Date();
+      S.submitAtISO = now.toISOString();
+      S.submitAtKST = toKSTString(now);
+    }
+
+    const ok = await saveAllResults();
+
+    if(!ok){
+      alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+
+    S.finalSaved = true;
+
+    const tp = document.getElementById('thanks_pid');
+    if(tp) tp.textContent = S.pid || '-';
+
+    const tt = document.getElementById('thanks_time');
+    if(tt) tt.textContent = S.submitAtKST || '-';
+
+    go('screen_thankyou');
+  } finally {
+    finalSavingNow = false;
+    setSubmitOverlay(false);
   }
-
-  const ok = await saveAllResults();
-
-  if(!ok){
-    alert('결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
-
-  S.finalSaved = true;
-
-  const tp = document.getElementById('thanks_pid');
-  if(tp) tp.textContent = S.pid || '-';
-
-  const tt = document.getElementById('thanks_time');
-  if(tt) tt.textContent = S.submitAtKST || '-';
-
-  go('screen_thankyou');
 }
 
 async function startSelftest(){
