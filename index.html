@@ -2335,7 +2335,7 @@ html, body{
           font-size:13.4px;
           line-height:1.45;
       ">
-         ※ 화면 중앙에 얼굴이 위치하도록 유지해 주세요.
+         ※ 스마트폰이 얼굴 중앙에 위치하도록 유지해 주세요.
       </div>
 
       <div style="
@@ -2822,15 +2822,6 @@ html, body{
 
 <script>
 
-const UA = navigator.userAgent || '';
-const isKakao = /KAKAOTALK/i.test(UA);
-const isLine  = /Line\//i.test(UA);
-const isIG    = /Instagram/i.test(UA);
-const isFB    = /FBAN|FBAV/i.test(UA);
-const isInApp = isKakao || isLine || isIG || isFB;
-const isAndroid = /Android/i.test(UA);
-const isIOS = /iPhone|iPad|iPod/i.test(UA);
-
   // ✅ Google Sheet 서버 주소
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0RD5HaSSjqdi1Csc6ZfmaG7eu2K4C-YkRyDeZbOXLrRjE/exec";
 
@@ -3031,7 +3022,7 @@ function toKSTString(d = new Date()){
     S.pd_started = false;
   }
 
-  setupPDCam();
+  setupPDCam().catch(() => {});
 }
 
   if(id === 'screen_npc'){
@@ -3342,9 +3333,7 @@ if(mount){
       if(backBtn) backBtn.disabled = false;
       return;
     }
-
-    const payload = buildVFQOnlyPayload();
-
+    
     // 설문 완료 시점 1차 저장 (설문형과 최대한 동일한 flat payload)
     const ok = await sendToSheet('DATA', [buildVFQOnlyPayload()]);
 
@@ -3532,11 +3521,6 @@ function setPDStatus(text){
 function setPDTrialDisplay(text){
   const b = gid('pd_overlay_trial');
   if(b) b.textContent = text;
-}
-
-function setPDNormalGuide(){
-  setPDTrialDisplay('●');
-  setPDStatus('위의 점을 바라봐 주세요.');
 }
 
 function setPDStateMode(mode, message=''){
@@ -4137,9 +4121,7 @@ async function startNPCMeasure(){
     S.npc_last_ts = 0;
     S.npc_smooth_dist = null;
     S.npc_speed_cm_s = 0;
-
-    const s = gid('npc_status');
-    if(s) s.textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
+    
   }catch(e){
     alert('NPC 측정을 시작할 수 없습니다: ' + (e.message || e));
   }
@@ -4645,11 +4627,7 @@ function clearNPC(){
   const guide = gid('npc_retry_guide');
   if(guide){
     guide.style.display = 'none';
-  }
-
-  if(gid('npc_status')){
-    gid('npc_status').textContent = '얼굴을 화면 중앙에 맞추고 천천히 가까이 이동해 주세요.';
-  }
+  }  
 
   const overlay = gid('npc_overlay_msg');
   if(overlay){
@@ -5721,7 +5699,6 @@ function resetAll(){
 
   // 동의 시각 표시 초기화 및 다음 버튼 안내문 초기화
   if(gid('consentSignedAt_inline')) gid('consentSignedAt_inline').textContent = '';
-  if(gid('consentTime')) gid('consentTime').textContent = '';
   if(gid('consentNextHint')) gid('consentNextHint').textContent = '';
   if(gid('consentLockGuide')) gid('consentLockGuide').innerHTML = '';
 
