@@ -5698,12 +5698,24 @@ gid('btn_pd_reset')?.addEventListener('click', () => {
 });
 
 gid('btn_pd_next')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
+  if(isSubmitting) return;
+  isSubmitting = true;
+
+  lockButtons(['btn_pd_next','btn_pd_finish','btn_pd_reset','btn_pd_restart']);
+  setSubmitOverlay(true, 'PD 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    go('screen_npc');
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
   }
-  go('screen_npc');
 });
 
 gid('pd_known_input')?.addEventListener('input', updateKnownPdState);
@@ -5712,12 +5724,24 @@ gid('btn_npc_mark')?.addEventListener('click', () => markDiplopia());
 gid('btn_npc_clear')?.addEventListener('click', () => clearNPC());
 
 gid('btn_pd_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
+  if(isSubmitting) return;
+  isSubmitting = true;
+
+  lockButtons(['btn_pd_next','btn_pd_finish','btn_pd_reset','btn_pd_restart']);
+  setSubmitOverlay(true, 'PD 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('PD 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    await openThankyou();
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
   }
-  finishFromPD();
 });
 
 gid('btn_npc_next')?.addEventListener('click', async () => {
@@ -5726,22 +5750,46 @@ gid('btn_npc_next')?.addEventListener('click', async () => {
     return;
   }
 
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
+  if(isSubmitting) return;
+  isSubmitting = true;
 
-  go('screen_npa');
+  lockButtons(['btn_npc_next','btn_npc_finish','btn_npc_clear','btn_npc_mark']);
+  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+
+    go('screen_npa');
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
+  }
 });
 
 gid('btn_npc_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
+  if(isSubmitting) return;
+  isSubmitting = true;
+
+  lockButtons(['btn_npc_next','btn_npc_finish','btn_npc_clear','btn_npc_mark']);
+  setSubmitOverlay(true, 'NPC 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('NPC 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    await openThankyou();
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
   }
-  openThankyou();
 });
 
 gid('btn_npa_mark')?.addEventListener('click', () => markNPA());
@@ -5760,22 +5808,46 @@ gid('btn_npa_next')?.addEventListener('click', async () => {
     return;
   }
 
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
-  }
+  if(isSubmitting) return;
+  isSubmitting = true;
 
-  go('screen_rt');
+  lockButtons(['btn_npa_next','btn_npa_finish','btn_npa_clear','btn_npa_mark','btn_npa_next_eye']);
+  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+
+    go('screen_rt');
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
+  }
 });
 
 gid('btn_npa_finish')?.addEventListener('click', async () => {
-  const ok = await saveSummarySnapshot();
-  if(!ok){
-    alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
-    return;
+  if(isSubmitting) return;
+  isSubmitting = true;
+
+  lockButtons(['btn_npa_next','btn_npa_finish','btn_npa_clear','btn_npa_mark','btn_npa_next_eye']);
+  setSubmitOverlay(true, 'NPA 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    const ok = await saveSummarySnapshot();
+    if(!ok){
+      alert('NPA 결과 저장에 실패했습니다. 인터넷 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    await openThankyou();
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
   }
-  openThankyou();
 });
 
 gid('btn_rt_start')?.addEventListener('click', () => {
@@ -5786,12 +5858,25 @@ gid('btn_rt_reset')?.addEventListener('click', () => {
   resetRT();
 });
 
-gid('btn_rt_next')?.addEventListener('click', () => {
+gid('btn_rt_next')?.addEventListener('click', async () => {
   if(!S.rt.finished){
     alert('반응속도 측정을 완료한 뒤 다음 단계로 진행해 주세요.');
     return;
   }
-  openThankyou();
+
+  if(isSubmitting) return;
+  isSubmitting = true;
+
+  lockButtons(['btn_rt_next','btn_rt_start','btn_rt_reset']);
+  setSubmitOverlay(true, 'RT 결과를 제출 중입니다. 잠시만 기다려주세요.');
+
+  try{
+    await openThankyou();
+  } finally {
+    setSubmitOverlay(false);
+    unlockButtons();
+    isSubmitting = false;
+  }
 });
 
 gid('rtBox')?.addEventListener('click', () => {
