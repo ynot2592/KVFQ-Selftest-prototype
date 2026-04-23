@@ -152,8 +152,7 @@
     border:1px solid rgba(255,255,255,.08);
   } 
 
-.question-block.example .question-title{
-  font-weight: 800;
+.question-block.example .question-title{  
   color: #ffe4e6;
   font-size: 0.9rem;
   font-weight: 700;
@@ -712,12 +711,14 @@
   line-height: 1.2;
   color: var(--muted);
   white-space: nowrap;
+  font-size: 14px;
 }
 
 
 #screen_consent .consentFormGrid .field > span .small{
   display: inline-block;
   margin-top: 4px;
+  font-size: 12px;
 }
 
 .retestNote{
@@ -812,16 +813,6 @@
   left:0; right:0;
   top:0;
   border-top: 1px dashed rgba(255,255,255,.16);
-}
-
-
-#screen_consent .consentFormGrid .field > span{
-  font-size: 14px;  
-}
-
-
-#screen_consent .consentFormGrid .field > span .small{
-  font-size: 12px;
 }
 
 #consentSignedAt_inline{
@@ -1948,7 +1939,7 @@ html, body{
 
     <p style="font-size:14.5px; margin-top:20px;">
       본 연구에 사용되는 설문지는<br> Visual Fatigue Questionnaire의 한국어판입니다.
-    </P>
+    </p>
 
     <p style="font-size:14.5px;">
       국내 임상에서 Visual Fatigue와 Asthenopia가 유사한 개념으로 사용되는 점을 고려하여,<br>
@@ -2999,10 +2990,10 @@ function toKSTString(d = new Date()){
    stopNPACam(false);
   }
 
-  screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  screens.forEach(s => gid(s)?.classList.add('hidden'));
+  gid(id)?.classList.remove('hidden');
 
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  window.scrollTo({ top: 0, behavior: 'auto' });
 
   if(id === 'screen_pd'){
   const layer = gid('pd_start_layer');
@@ -3042,7 +3033,7 @@ if(id === 'screen_rt'){
 }
 }
 
-  // ---------- VFQ VAS 17문항 (오늘 만든 캔버스 버전) ----------
+  // ---------- VFQ VAS 17문항 (캔버스 버전) ----------
   // 이제는 항상 어두운 배경(지금 앱 디자인)에 맞게 흰색 선 사용
   
   function getLineColor(){ return '#ffffff'; }
@@ -3085,7 +3076,7 @@ function createVAS(index, canvas, scoreElem, opts = {}) {
   canvas.style.height = "auto";
   canvas.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
 
-  //  중요: scale 누적 방지(너 코드의 ctx.scale(dpr,dpr)로는 재호출 시 깨질 수 있음)
+  // 중요: scale 누적 방지(너 코드의 ctx.scale(dpr,dpr)로는 재호출 시 깨질 수 있음)
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const leftX  = 30;
@@ -3221,7 +3212,7 @@ if (scoreElem && isExample) {
   // VFQ 화면 구성
   function setupVFQ(){
     vasItems.length = 0;   // 리셋 시 redraw 목록 누적 방지
-    const container = document.getElementById('questions');
+    const container = gid('questions');
     if(!container) return;
     container.innerHTML = "";
 
@@ -3287,8 +3278,8 @@ if(mount){
       createVAS(idx, canvas, score);
     });
 
-    const btn = document.getElementById('submitVFQ');
-    const resultDiv = document.getElementById('vfqResult');
+    const btn = gid('submitVFQ');
+    const resultDiv = gid('vfqResult');
 
     if(btn && resultDiv){
   btn.onclick = async ()=>{
@@ -3487,16 +3478,8 @@ function updateNpaUI(){
 
   const nextBtn = gid('btn_npa_next');
   if(nextBtn) nextBtn.disabled = !S.npa_completed;
-
-  updateNpaButtonSide();
+  
   updateNpaStatusBadges();
-}
-
-function updateNpaButtonSide(){ 
-  const wrap = gid('npa_mark_wrap');
-  if(!wrap) return;
-
-  wrap.style.justifyContent = 'center';
 }
 
 function updateNpaStatusBadges(){
@@ -3947,10 +3930,6 @@ function resetPD(){
   
   S.pd_started = false;
   gid('pd_start_layer').style.display = 'flex';
-}
-
-function finishFromPD(){
-  openThankyou();
 }
 
 async function setupNPCCam(){
@@ -4585,7 +4564,7 @@ function startNpaLeftEye(){
   if(switchGuide) switchGuide.style.display = 'none';
   if(nextEyeWrap) nextEyeWrap.style.display = 'none';
   if(retryGuide) retryGuide.style.display = 'none';
-  if(overlay) overlay.style.display = 'none';;
+  if(overlay) overlay.style.display = 'none';
 
   updateNpaUI();
 }
@@ -5311,7 +5290,7 @@ function setupBirthSelects(){
   if(hint) hint.textContent = ok ? '' : ('미완료 : ' + msg.join(', '));
 }
 
-// 생년월일 기반 PID 생성 + (재검 코드 있으면 -K74 형태로 결합) + used_ids 중복 suffix
+// 생년월일 기반 PID 생성 + (재검 코드 있으면 -K74 형태로 결합)
 function buildParticipantId(yyyymmdd, ini, dig){  
   const baseDate = yyyymmdd || 'NA';
 
@@ -5745,10 +5724,8 @@ stopNPCCam(true);
 stopNPACam(true);
 
 S.npc_last_dist = null;
-S.npc_last_ts = 0;
 S.npc_trial_index = 0;
 S.npc_smooth_dist = null;
-S.npc_speed_cm_s = 0;
 S.npc = [null, null, null];
 
 S.npa_eye = 'OD';
@@ -5977,7 +5954,7 @@ gid('btn_rt_next')?.addEventListener('click', async () => {
   }
 });
 
-gid('rtBox')?.addEventListener('click', () => {
+rtBox?.addEventListener('click', () => {
   handleRTTap();
 });
 
