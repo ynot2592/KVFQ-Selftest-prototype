@@ -2666,7 +2666,7 @@ html, body{
 <script>
 
   // Google Sheet 서버 주소
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0RD5HaSSjqdi1Csc6ZfmaG7eu2K4C-YkRyDeZbOXLrRjE/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz-XEEeinBtj7ywW-lvRPMOcNkY5wmj8H0PPhQxrJZje1b2t5PrhQL502knZyWi17A2_g/exec";
 
 // 시트로 데이터 보내는 함수
 async function sendToSheet(arg1, arg2){
@@ -5251,6 +5251,7 @@ function buildSummaryRow(){
     birth: S.birth || "",
     sex: S.sex || "",
     retest_code: S.retest2 || "",
+    complete_flag: S.finalSaved ? 1 : 0,
 
     vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
     q1: vfqAnswers[0] ?? "",
@@ -5319,6 +5320,7 @@ function buildVFQOnlyPayload(){
     birth: S.birth || "",
     sex: S.sex || "",
     retest_code: S.retest2 || "",
+    complete_flag: 0,
     vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
 
     q1: vfqAnswers[0] ?? "",
@@ -5366,7 +5368,7 @@ async function saveAllResults(){
   if(!ok1) return false;
 
   if(rtRows.length > 0){
-    const ok2 = await sendToSheet('rt_trials', rtRows);
+    const ok2 = await sendToSheet('RT_Trials', rtRows);
     if(!ok2) return false;
   }
 
