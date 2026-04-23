@@ -77,11 +77,7 @@
 }
 
   .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#12203a;border:1px solid rgba(255,255,255,.1)}
-  .target{height:160px;border-radius:14px;background:#0f172a;border:1px dashed #334155;display:flex;align-items:center;justify-content:center;font-weight:700}
-  .target.go{background:#0ea5e9}
-  .target.tap{background:#10b981}
-  .vfq-item{padding:10px;border-radius:10px;background:#10172a;border:1px solid rgba(255,255,255,.08)}
-  .vfq-item h4{margin:0 0 6px}  
+  .target{height:160px;border-radius:14px;background:#0f172a;border:1px dashed #334155;display:flex;align-items:center;justify-content:center;font-weight:700}  
 
   .pdOverlay{
   position:absolute;
@@ -211,7 +207,6 @@
   padding-left: 10px;
   padding-right: 10px;
 }
-
   
   html { -webkit-text-size-adjust: 100%; }
   
@@ -230,12 +225,6 @@
   }
   
   body { padding-top: env(safe-area-inset-top); }
-
-  
-  .field.checkbox{display:grid;grid-template-columns:auto 1fr;align-items:start;column-gap:8px}
-  .field.checkbox input[type="checkbox"]{margin-top:6px}
-  .field.checkbox label{display:block;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;line-height: inherit;}
-
   
 #screen_consent h1{
   font-size:24px;
@@ -251,7 +240,6 @@
 .consentMeta{
   display:flex; flex-wrap:wrap; gap:8px;
 }
-
 
 .metaBox{
   width:100%;
@@ -389,7 +377,6 @@
   content:none;
 }
 
-
 .detailsBox summary .sumTitle{
   display:inline-flex;
   align-items:center;
@@ -400,7 +387,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 
 .detailsBox summary #badge_full{
   margin-left: auto;
@@ -467,12 +453,10 @@
   margin-bottom: 14px;
 }
 
-
 #details_full .detailsInner p.small{
   font-size: 12.8px;     
   line-height: 1.25;      
 }
-
 
 .sectionBox{
   margin-top: 12px;
@@ -567,7 +551,6 @@
   border-top:0;
 }
 
-
 .badgeTag{
   display:inline-flex;
   align-items:center;
@@ -578,13 +561,11 @@
   white-space:nowrap;
 }
 
-
 .badgeTag.summary{
   color:#dbe6ff;
   background: rgba(148,163,184,.14);
   border:1px solid rgba(148,163,184,.30);
 }
-
 
 .badgeTag.required{
   color:#ffe4e6;
@@ -592,25 +573,10 @@
   border: 1px solid rgba(244, 63, 94, .45);
 }
 
-
 .badgeTag.done{
   color:#dcfce7;
   background: rgba(16,185,129,.12);
   border:1px solid rgba(16,185,129,.35);
-}
-
-
-.requiredBadge{
-  display:inline-flex;
-  align-items:center;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12.5px;
-  font-weight:800;
-  color:#e6fbff;
-  background: rgba(34,211,238,.12);
-  border:1px solid rgba(34,211,238,.35);
-  white-space:nowrap;
 }
 
 .consentChecks{
@@ -630,7 +596,6 @@
   background: rgba(15, 23, 42, 0.55);              
   border: 1px solid rgba(34, 211, 238, 0.14);      
 }
-
   
   #screen_consent #consent_checks_v3 .checkRow{
   grid-template-columns: 18px 1fr; /* 22px → 18px */
@@ -664,7 +629,6 @@
   margin-top:10px;
 }
 
-
 #screen_consent .consentFormGrid .field{
   display: grid;
   grid-template-columns: 100px 1fr;
@@ -672,12 +636,10 @@
   gap: 10px;
 }
 
-
 #screen_consent .consentFormGrid #retest_section{
   display: block;      
   padding: 8px 10px;   
 }
-
 
 #retest_section .retestFieldRow{
   margin-top: 10px;
@@ -695,7 +657,6 @@
   min-width:0;
 }
 
-
 @media (max-width: 430px){
   #retest_section .retestFieldRow{ grid-template-columns: 1fr; align-items:start; }
   #retest_section .retestLabel{ text-align:left; }
@@ -705,7 +666,6 @@
   #retest_section .retestInputs{ grid-template-columns: 1fr; }
 }
 
-
 #screen_consent .consentFormGrid .field > span{
   text-align: center;
   line-height: 1.2;
@@ -713,7 +673,6 @@
   white-space: nowrap;
   font-size: 14px;
 }
-
 
 #screen_consent .consentFormGrid .field > span .small{
   display: inline-block;
@@ -737,7 +696,6 @@
   line-height: 1.35;  
 }
 
-
 #screen_consent p,
 #screen_consent li,
 #screen_consent label,
@@ -745,27 +703,12 @@
   line-height: inherit;
 }
 
-
 #consent_section{
   background: rgba(34,211,238,.06);             
   border: 1px solid rgba(34,211,238,.22);         
 }
 #consent_section .sectionHead{
   background: rgba(34,211,238,.04);            
-}
-
-.miniTag{
-  display:inline-flex;
-  align-items:center;
-  padding:2px 8px;
-  margin-right:6px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:800;
-  color:#e6fbff;
-  background: rgba(34,211,238,.10);
-  border:1px solid rgba(34,211,238,.28);
-  vertical-align:middle;
 }
 
 .ckTitle{
@@ -787,7 +730,6 @@
   color:#b7c6ea;
 }
 
-
 #screen_consent #consent_agree_text ol li{
   margin-bottom: 10px;  
 }
@@ -795,11 +737,9 @@
   margin-bottom: 0;
 }
 
-
 #screen_consent #consent_checks_v3 .ckTitle{ font-size: 14px; }
 #screen_consent #consent_checks_v3 .ckBody { font-size: 13px; }
 #screen_consent #consent_checks_v3 .ckNote { font-size: 12.2px; }
-
 
 #screen_consent #consent_checks_v3{
   margin-top: 18px;     
@@ -830,7 +770,6 @@
   color: var(--text);
 }
 
-
 #btn_consent_start{
   white-space: nowrap;
   flex: 0 0 auto;      
@@ -838,7 +777,6 @@
 
 .retestField{ align-items:start; }
 .retestBox{ width:100%; display:flex; flex-direction:column; gap:8px; }
-
 
 .badgeOptional{
   display:inline-flex;
@@ -892,33 +830,6 @@
   line-height: 1.5;
 }
 
-
-.vfqStart{
-  margin: 18px 0 10px;
-  padding: 0;
-  font-size: 14.5px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-
-.vfqStart::before,
-.vfqStart::after{
-  content:"";
-  display:block;
-  border-top:1px dashed rgba(255,255,255,.25);
-  margin:10px 0;
-}
-
-
-.vfqStart b{ 
-  color: var(--text);
-  font-weight: 700;
-}
-
-
 #screen_vfq p.small{
   font-size: 14.5px;
   color: rgba(230,235,255,.88);
@@ -926,23 +837,6 @@
 @media (max-width:430px){
   #screen_vfq p.small{ font-size: 14px; }
 }
-
-
-.vfqDivider{
-  margin: 18px 0 14px;
-  border: 0;
-  border-top: 1px dashed rgba(255,255,255,.25);
-}
-
-
-.vfqIntroBox{
-  margin: 10px 0 14px;
-  padding: 12px 12px;
-  border-radius: 14px;
-  background: rgba(34,211,238,.06);        
-  border: 1px solid rgba(34,211,238,.16);   
-}
-
 
 #screen_vfq .vas-score{
   font-size: 12.5px;
@@ -957,12 +851,10 @@
   }
 }
 
-
 #screen_vfq .exampleNote{
   font-size: 12.5px;
   line-height: 1.25; 
 }
-
 
 #screen_vfq .question-block.example .vas-score{
   margin-bottom: 2px;
@@ -970,7 +862,6 @@
 #screen_vfq .question-block.example .exampleNote{
   margin-top: 2px;        
 }
-
 
 .question-block.example{
   background: rgba(239,68,68,.10);
@@ -980,7 +871,6 @@
   margin-left: 0;
   margin-right: 0;
 }
-
 
 #vfq_section{
   margin-left: 0;
@@ -1002,7 +892,6 @@
   background: transparent;                  
 }
 
-
 #screen_vfq > p{
   font-size: 16px;
   line-height: 1.65;
@@ -1011,16 +900,6 @@
 #screen_vfq > p b{
   color: #ffffff;
 }
-
-
-.vfqSectionBox{
-  margin-top: 10px;
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(34,211,238,.06);
-  border: 1px solid rgba(34,211,238,.22);
-}
-
 
 #vfq_section .question-block{
   background: rgba(15,23,42,.55);
@@ -1031,7 +910,6 @@
   margin-top: 26px;     
   margin-bottom: 30px;  
 }
-
 
 #vfq_section .sectionHead{
   justify-content: center;
@@ -1046,21 +924,6 @@
   color: var(--text);
   font-size: 13.5px;
   line-height: 1.4;
-}
-
-#retest_notice{ margin-top: 6px; }
-
-#retest_notice .badgeOptional{
-  display:inline-flex;
-  align-items:center;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(34,211,238,.10);
-  border: 1px solid rgba(34,211,238,.28);
-  color: #e6fbff;
-  margin-right: 6px;
 }
 
 html, body{
@@ -1550,7 +1413,6 @@ html, body{
     <span class="badgeTag summary">요약본</span>
   </h2>
 </div>
-
   
       <p>
         본 연구는 디지털 기기 사용 환경에서의 시각 피로를 체계적으로 평가하기 위한
@@ -1677,17 +1539,14 @@ html, body{
         </p>
       </div>
     </details>
-
    
 <div class="sectionBox" id="consent_section">
-
   
   <div class="sectionHead">
   <span>3. 연구대상자 동의서</span>
 </div>
 
   <div class="sectionBody">
-
     
     <div class="detailsInner" id="consent_agree_text">
       <ol style="margin:6px 0 0 18px; padding:0;">
@@ -1744,7 +1603,6 @@ html, body{
   </div>
 </div>
 
-
     
     <div class="grid two consentFormGrid">
     <div class="field birthField">
@@ -1778,7 +1636,6 @@ html, body{
         <span>참여자 ID</span>
         <input id="pid_preview" readonly value="(동의 후 자동 생성됨)" />
       </div>
-
  
 <div class="field retestSection" id="retest_section">
   <div class="retestTopNote">
@@ -1838,7 +1695,6 @@ html, body{
     </div>
 
     <div id="consentHint" class="small" style="color: var(--text);"></div> 
-
    
 <div class="row consentRow1">
   <button class="btn primary" id="btn_consent_start" onclick="onConsentSign()" disabled>
@@ -1859,9 +1715,8 @@ html, body{
 </div>   
     </div>
 </div>
-
    
-  <!-- 자가측정 시작 화면 -->
+  <!-- 자가측정 안내 -->
   <section id="screen_home" class="card hidden">
      <h1>자가측정 안내</h1>
      <div style="height:12px;"></div> 
@@ -1932,7 +1787,7 @@ html, body{
      </div>
   </section>  
 
-    <!-- VFQ VAS 17문항 -->
+    <!-- VFQ 17문항 -->
   <div class="card hidden" id="screen_vfq">
     <h2>Visual Fatigue Questionnaire</h2>
     <div class="vfq-subtitle">시각 피로(안정피로) 설문</div>
@@ -1955,9 +1810,7 @@ html, body{
      표시는 <b>왼쪽 끝</b>부터 <b>오른쪽 끝</b>까지 <b>어느 위치에나</b> 할 수 있습니다. (<b>굵은 선 포함</b>, 수정 가능)
     </p>
 
-
 <div id="vfqExampleMount"></div>
-
 
 <div class="sectionBox" id="vfq_section">
 
@@ -1983,7 +1836,6 @@ html, body{
   <button class="btn primary" id="submitVFQ">설문 완료</button>
   <button class="btn ghost" id="btn_vfq_back" onclick="go('screen_consent')">뒤로</button>
 </div>
-
     
     <div id="vfqResult" class="small" style="margin-top:10px;white-space:pre-line;"></div>
   </div>  
@@ -2401,7 +2253,7 @@ html, body{
        이동이 너무 빠릅니다. 천천히 이동해 주세요.
     </div>     
 
-    <!-- npa 가운데 시표/버튼 -->
+    <!-- npa 시표/버튼 -->
     <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:56px;">
       <div id="npa_target_text" style="
         font-size:12px;
@@ -2811,10 +2663,9 @@ html, body{
   </div>
 </div>
 
-
 <script>
 
-  // ✅ Google Sheet 서버 주소
+  // Google Sheet 서버 주소
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxbWd2Xh1pMfWfGZHGL1TA0RD5HaSSjqdi1Csc6ZfmaG7eu2K4C-YkRyDeZbOXLrRjE/exec";
 
 // 시트로 데이터 보내는 함수
@@ -2830,15 +2681,13 @@ async function sendToSheet(arg1, arg2){
       !Array.isArray(arg1)
     ){
       payload = arg1;
-      console.log('[sendToSheet] flat payload:', payload);
-    }
+      }
     // 2) 기존 자가측정형처럼 sheet_name + rows wrapper로 보내는 경우
     else{
       payload = {
         sheet_name: arg1,
         rows: arg2
-      };
-      console.log('[sendToSheet] wrapped payload:', payload);
+      };      
     }
 
     await fetch(GAS_URL, {
@@ -2847,8 +2696,7 @@ async function sendToSheet(arg1, arg2){
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload),
     });
-
-    console.log('[sendToSheet] sent');
+    
     return true;
   }catch(err){
     console.error('[sendToSheet] FAILED:', err);
@@ -2875,8 +2723,7 @@ async function sendToSheet(arg1, arg2){
   pd_auto_final_mm: null,
   pdmm: null,
   pd_completed: false,
-  pd_quality_ok: false,
-  pd_quality_reason: "",
+  pd_quality_ok: false,  
   pd_auto_recording: false,
   pd_hold_frames: 0,
   pd_last_hold_value: null, 
@@ -2903,13 +2750,11 @@ async function sendToSheet(arg1, arg2){
   npc_waiting_for_reset: false,
   npc_reset_reference_dist: null,
 
-  npc_last_dist: null,
-  npc_last_ts: 0,
+  npc_last_dist: null,  
   npc_smooth_dist: null,
   
   npc_prev_pix_dist: null,
-  npc_fast_move_flag: false,
-
+  
   npc_overlay_until: 0,
 
   rt: {
@@ -3033,8 +2878,7 @@ if(id === 'screen_rt'){
 }
 }
 
-  // ---------- VFQ VAS 17문항 (캔버스 버전) ----------
-  // 이제는 항상 어두운 배경(지금 앱 디자인)에 맞게 흰색 선 사용
+  // ---------- VFQ 17문항 (캔버스) ----------  
   
   function getLineColor(){ return '#ffffff'; }
   function getDashedColor(){ return '#64748b'; } // 점선 약간 회색
@@ -3076,7 +2920,7 @@ function createVAS(index, canvas, scoreElem, opts = {}) {
   canvas.style.height = "auto";
   canvas.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
 
-  // 중요: scale 누적 방지(너 코드의 ctx.scale(dpr,dpr)로는 재호출 시 깨질 수 있음)
+  // 중요: scale 누적 방지(코드의 ctx.scale(dpr,dpr)로는 재호출 시 깨질 수 있음)
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const leftX  = 30;
@@ -3161,7 +3005,7 @@ if (scoreElem && isExample) {
     if(current !== null){
       const x = mmToX(current);
 
-      // ✅ 실제 문항은 종이 설문 느낌 유지: 기존 굵기 2
+      //  실제 문항은 종이 설문 느낌 유지: 기존 굵기 2
       ctx.strokeStyle = getHighlightColor();
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -3169,7 +3013,7 @@ if (scoreElem && isExample) {
       ctx.lineTo(x, lineY + 20);     
       ctx.stroke();
 
-      // ✅ 예시만 점선 링(원형 강조)
+      //  예시만 점선 링(원형 강조)
       if(opts.markerStyle === "ring"){
         ctx.save();
         ctx.strokeStyle = "rgba(249, 115, 22, 0.18)";
@@ -3650,7 +3494,6 @@ function onPDResults(res){
     pdLastAutoMm = null;
 
     S.pd_quality_ok = false;
-    S.pd_quality_reason = '얼굴을 화면 중앙에 맞춰 주세요.';
     S.pd_hold_frames = 0;
     S.pd_last_hold_value = null;
     return;
@@ -3697,8 +3540,7 @@ function onPDResults(res){
   );
 
   S.pd_quality_ok = quality.ok;
-  S.pd_quality_reason = quality.reason;
-
+ 
   gid('pd_pix_value').textContent = pdLastPix.toFixed(1);
 
   pdLastAutoMm = Number((pdLastPix * PD_PX_TO_MM).toFixed(1));
@@ -4088,7 +3930,6 @@ async function startNPCMeasure(){
     }
     
     S.npc_last_dist = null;
-    S.npc_last_ts = 0;
     S.npc_smooth_dist = null;    
     
   }catch(e){
@@ -4151,8 +3992,7 @@ function onNPCResults(res){
     }
 
     S.npc_prev_pix_dist = null;
-    S.npc_fast_move_flag = false;
-
+    
     return;
   }
 
@@ -4228,9 +4068,7 @@ function onNPCResults(res){
       }
     }
   }
-
-  const now = performance.now();
-
+  
   // 너무 빠른 이동 감지
   let fastMove = false;
 
@@ -4250,10 +4088,8 @@ function onNPCResults(res){
 
   // 상태 저장
   S.npc_last_dist = shownDist;
-  S.npc_last_ts = now;
   S.npc_prev_pix_dist = pixDist;
-  S.npc_fast_move_flag = fastMove;
-
+  
   // 오버레이 표시
   if(fastMove){
   S.npc_overlay_until = Date.now() + 900;
@@ -4380,7 +4216,6 @@ function onNPAResults(res){
     }
   }
 
-  const now = performance.now();
   let fastMove = false;
 
   if(S.npc_last_dist !== null){
@@ -4398,10 +4233,8 @@ function onNPAResults(res){
   }
 
   S.npc_last_dist = shownDist;
-  S.npc_last_ts = now;
   S.npc_prev_pix_dist = pixDist;
-  S.npc_fast_move_flag = fastMove;
-
+  
   if(fastMove){
   S.npc_overlay_until = Date.now() + 900;
 
@@ -4573,7 +4406,6 @@ function clearNPC(){
   S.npc = [null, null, null];
   S.npc_trial_index = 0;
   S.npc_last_dist = null;
-  S.npc_last_ts = 0;
   S.npc_smooth_dist = null;
   S.distNow = null;
   S.npc_waiting_for_reset = false;
@@ -4621,10 +4453,8 @@ function clearNPA(){
 
   S.distNow = null;
   S.npc_last_dist = null;
-  S.npc_last_ts = 0;
   S.npc_smooth_dist = null;
   S.npc_prev_pix_dist = null;
-  S.npc_fast_move_flag = false;
   S.npc_overlay_until = 0;
 
   gid('npa_distNow').textContent = '-';
@@ -5360,19 +5190,19 @@ function onConsentSign(){
   const nh = gid('consentNextHint');
   if(nh) nh.textContent = '왼쪽의 다음 버튼을 누르면 설문 페이지로 이동합니다.';
 
-    // ✅ 서명 완료 처리
+    // 서명 완료 처리
   consentSigned = true;  
 
-  // ✅ 기본정보 잠금
+  // 기본정보 잠금
   lockConsentInputs();
 
-  // ✅ 동의 체크박스도 잠금
+  // 동의 체크박스도 잠금
   ['c_main','c_esign','c_camera'].forEach(id=>{
     const el = gid(id);
     if(el) el.disabled = true;
   });
 
-  // ✅ 버튼 색상/활성 스텝 처리
+  // 버튼 색상/활성 스텝 처리
   const startBtn = gid('btn_consent_start');
   const nextBtn  = gid('btn_consent_next');
 
@@ -5518,7 +5348,6 @@ async function saveSummarySnapshot(){
 }
 
 async function saveAllResults(){
-  console.log('saveAllResults called');
   const summaryRow = buildSummaryRow();
   const rtRows = (S.rt.trialLogs || []).map(row => ({
     pid: row.pid ?? "",
@@ -5545,8 +5374,7 @@ async function saveAllResults(){
 }
 
 async function openThankyou(){
-  console.log('openThankyou called');
-
+  
   if(finalSavingNow){
     return;
   }
@@ -5556,8 +5384,7 @@ async function openThankyou(){
     return;
   }
 
-  finalSavingNow = true;
-  setSubmitOverlay(true, '결과를 제출 중입니다. 잠시만 기다려주세요.');
+  finalSavingNow = true;  
 
   try{
     if(!S.submitAtISO || !S.submitAtKST){
@@ -5583,14 +5410,13 @@ async function openThankyou(){
 
     go('screen_thankyou');
   } finally {
-    finalSavingNow = false;
-    setSubmitOverlay(false);
+    finalSavingNow = false;    
   }
 }
 
 async function startSelftest(){
 
-  // ✅ 추가 (여기!)
+  // 추가 (여기!)
   const ok = confirm(
     '\n' +
     '다음 단계에서 브라우저의 카메라 권한 확인 창이 표시될 수 있습니다.\n\n' +
