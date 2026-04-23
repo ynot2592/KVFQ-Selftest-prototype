@@ -2802,7 +2802,7 @@ function toKSTString(d = new Date()){
   let isSubmitting = false;
   let submitLockedButtons = [];
   let finalSavingNow = false;
-  const PD_PX_TO_MM = 0.738;
+  const PD_PX_TO_MM = 0.748;
   const NPC_DIST_SCALE = 0.42;   // NPC 거리 보정계수
 
   function go(id){  
@@ -5250,8 +5250,7 @@ function buildSummaryRow(){
     timestamp_kst: S.submitAtKST || nowKST,
     birth: S.birth || "",
     sex: S.sex || "",
-    retest_code: S.retest2 || "",
-    complete_flag: S.finalSaved ? 1 : 0,
+    retest_code: S.retest2 || "",    
 
     vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
     q1: vfqAnswers[0] ?? "",
@@ -5319,8 +5318,7 @@ function buildVFQOnlyPayload(){
     timestamp_kst: toKSTString(now),
     birth: S.birth || "",
     sex: S.sex || "",
-    retest_code: S.retest2 || "",
-    complete_flag: 0,
+    retest_code: S.retest2 || "",    
     vfq_total: Number.isFinite(S.vfqSum) ? S.vfqSum : "",
 
     q1: vfqAnswers[0] ?? "",
