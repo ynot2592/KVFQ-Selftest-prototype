@@ -296,7 +296,6 @@ function calculateRednessIndex(imageData) {
 
   let sumRedness = 0;
   let validPixelCount = 0;
-
   let redPixelCount = 0;
   let strongRedPixelCount = 0;
 
@@ -306,30 +305,68 @@ function calculateRednessIndex(imageData) {
     const b = data[i + 2];
 
     const brightness = (r + g + b) / 3;
+    const maxC = Math.max(r, g, b);
+    const minC = Math.min(r, g, b);
+    const chroma = maxC - minC;
 
-    // 너무 어두운 영역: 홍채, 속눈썹, 그림자 제외
-    if (brightness < 50) continue;
+    // 1) 너무 어두운 영역 제외: 홍채, 속눈썹, 그림자
+    if (brightness < 70) continue;
 
-    // 너무 밝은 반사광은 제외
-    if (brightness > 250) continue;
+    // 2) 과노출/반사광 제외
+    if (brightness > 248) continue;
+
+    // 3) 피부/눈꺼풀 가능성이 높은 픽셀 제외
+    // 피부는 대체로 R, G가 높고 B가 상대적으로 낮은 노란/주황 계열인 경우가 많음
+    const skinLike =
+      r > 95 &&
+      g > 60 &&
+      b < 170 &&
+      r > g &&
+      g > b &&
+      (r - b) > 35 &&
+      chroma > 35;
+
+    if (skinLike) continue;
+
+    // 4) 너무 노란/갈색 계열 제외
+    const yellowBrownLike =
+      r > 110 &&
+      g > 90 &&
+      b < 120 &&
+      (r - b) > 45 &&
+      (g - b) > 30;
+
+    if (yellowBrownLike) continue;
+
+    // 5) 결막/흰자 후보 조건
+    // 너무 색이 진한 픽셀은 제외하되, 붉은 결막은 남김
+    const conjunctivaCandidate =
+      brightness >= 70 &&
+      (
+        chroma < 80 ||
+        r > g ||
+        r > b
+      );
+
+    if (!conjunctivaCandidate) continue;
 
     const redDominance = Math.max(0, (r - ((g + b) / 2)) / 255);
     const redGreenDiff = Math.max(0, (r - g) / 255);
     const redBlueDiff = Math.max(0, (r - b) / 255);
 
     const localRedness =
-      redDominance * 0.5 +
-      redGreenDiff * 0.3 +
-      redBlueDiff * 0.2;
+      redDominance * 0.55 +
+      redGreenDiff * 0.25 +
+      redBlueDiff * 0.20;
 
     sumRedness += localRedness;
     validPixelCount++;
 
-    if (localRedness > 0.045) {
+    if (localRedness > 0.06) {
       redPixelCount++;
     }
 
-    if (localRedness > 0.09) {
+    if (localRedness > 0.13) {
       strongRedPixelCount++;
     }
   }
@@ -340,10 +377,11 @@ function calculateRednessIndex(imageData) {
   const redAreaRatio = redPixelCount / validPixelCount;
   const strongRedAreaRatio = strongRedPixelCount / validPixelCount;
 
+  // 직전보다 red area 가중치를 낮춰서 전체 grade 과상승을 줄임
   const finalScore =
-    meanRedness * 0.45 +
-    redAreaRatio * 0.35 +
-    strongRedAreaRatio * 0.20;
+    meanRedness * 0.60 +
+    redAreaRatio * 0.25 +
+    strongRedAreaRatio * 0.15;
 
   return finalScore;
 }
