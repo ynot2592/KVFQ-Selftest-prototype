@@ -6,9 +6,7 @@
 <title>CCLRU 기반 안구 충혈도 유사도 분석</title>
 
 <style>
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
     margin: 0;
@@ -31,15 +29,8 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   }
 
-  h1 {
-    font-size: 22px;
-    margin: 0 0 10px;
-  }
-
-  h2 {
-    font-size: 18px;
-    margin: 0 0 10px;
-  }
+  h1 { font-size: 22px; margin: 0 0 10px; }
+  h2 { font-size: 18px; margin: 0 0 10px; }
 
   p {
     line-height: 1.6;
@@ -134,9 +125,7 @@
     text-align: left;
   }
 
-  th {
-    background: #f9fafb;
-  }
+  th { background: #f9fafb; }
 
   .warning {
     background: #fff7ed;
@@ -145,27 +134,6 @@
     border-radius: 12px;
     padding: 12px;
   }
-
-.control-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.small-btn {
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 10px;
-  background: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.small-btn:active {
-  background: #e5e7eb;
-}
 </style>
 </head>
 
@@ -184,17 +152,12 @@
     <input id="imageInput" type="file" accept="image/*" />
     <canvas id="previewCanvas"></canvas>
 
-<div class="control-grid">
-  <button type="button" class="small-btn" id="zoomInBtn">확대 +</button>
-  <button type="button" class="small-btn" id="zoomOutBtn">축소 -</button>
-  <button type="button" class="small-btn" id="resetViewBtn">초기화</button>
-</div>
+    <p class="muted">
+      업로드 후 결막 부위를 손가락 또는 마우스로 드래그하여 분석 영역을 지정한 뒤 분석해주세요.
+      피부, 홍채, 속눈썹, 눈꺼풀은 가능한 한 제외하는 것이 좋습니다.
+    </p>
 
-<p class="muted">
-  초록색 고정 박스 안에 결막 부위가 오도록 사진을 확대·축소·이동한 뒤 분석해주세요.
-</p>
-
-<button id="analyzeBtn" class="btn" disabled>분석하기</button>
+    <button id="analyzeBtn" class="btn" disabled>분석하기</button>
   </div>
 
   <div class="card">
@@ -248,10 +211,6 @@ const analyzeBtn = document.getElementById("analyzeBtn");
 const canvas = document.getElementById("previewCanvas");
 const ctx = canvas.getContext("2d");
 
-const zoomInBtn = document.getElementById("zoomInBtn");
-const zoomOutBtn = document.getElementById("zoomOutBtn");
-const resetViewBtn = document.getElementById("resetViewBtn");
-
 const statusBox = document.getElementById("status");
 const resultBox = document.getElementById("result");
 const bestGradeText = document.getElementById("bestGradeText");
@@ -263,17 +222,10 @@ const distanceTable = document.getElementById("distanceTable");
 let uploadedImage = null;
 let referenceData = [];
 
-let viewScale = 1;
-let viewOffsetX = 0;
-let viewOffsetY = 0;
-
-let isPanning = false;
-let panStartX = 0;
-let panStartY = 0;
-let startOffsetX = 0;
-let startOffsetY = 0;
-
-let fixedRoi = null;
+let roi = null;
+let isDragging = false;
+let startX = 0;
+let startY = 0;
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -299,6 +251,31 @@ function getImageDataFromImage(img, maxWidth = 500) {
   return tempCtx.getImageData(0, 0, w, h);
 }
 
+function rgbToHsv(r, g, b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+
+  let h = 0;
+  const s = max === 0 ? 0 : d / max;
+  const v = max;
+
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  return { h, s, v };
+}
+
 function calculateRednessIndex(imageData) {
   const data = imageData.data;
 
@@ -316,14 +293,15 @@ function calculateRednessIndex(imageData) {
     const maxC = Math.max(r, g, b);
     const minC = Math.min(r, g, b);
     const chroma = maxC - minC;
+    const hsv = rgbToHsv(r, g, b);
 
-    // 홍채, 속눈썹, 그림자 제외
+    // 1) 너무 어두운 영역 제외: 홍채, 속눈썹, 그림자
     if (brightness < 70) continue;
 
-    // 과노출/반사광 제외
+    // 2) 과노출/반사광 제외
     if (brightness > 248) continue;
 
-    // 피부/눈꺼풀 가능성이 높은 픽셀 제외
+    // 3) 피부/눈꺼풀 가능성이 높은 픽셀 제외
     const skinLike =
       r > 95 &&
       g > 60 &&
@@ -335,7 +313,7 @@ function calculateRednessIndex(imageData) {
 
     if (skinLike) continue;
 
-    // 노란/갈색 계열 제외
+    // 4) 노란/갈색 계열 제외
     const yellowBrownLike =
       r > 110 &&
       g > 90 &&
@@ -345,30 +323,47 @@ function calculateRednessIndex(imageData) {
 
     if (yellowBrownLike) continue;
 
+    // 5) 결막/흰자 후보 픽셀
     const conjunctivaCandidate =
       brightness >= 70 &&
       (
-        chroma < 80 ||
+        chroma < 85 ||
         r > g ||
         r > b
       );
 
     if (!conjunctivaCandidate) continue;
 
+    // 6) HSV 기반 붉은색 점수
+    let redHueScore = 0;
+    if (hsv.h <= 35) {
+      redHueScore = 1 - (hsv.h / 35);
+    } else if (hsv.h >= 325) {
+      redHueScore = 1 - ((360 - hsv.h) / 35);
+    }
+
+    // 7) RGB 기반 보조 지표
     const redDominance = Math.max(0, (r - ((g + b) / 2)) / 255);
     const redGreenDiff = Math.max(0, (r - g) / 255);
     const redBlueDiff = Math.max(0, (r - b) / 255);
 
+    // 8) 밝기 보정
+    const brightnessWeight = 1 - Math.abs((brightness - 155) / 155);
+    const safeBrightnessWeight = Math.max(0.35, Math.min(1, brightnessWeight));
+
     const localRedness =
-      redDominance * 0.55 +
-      redGreenDiff * 0.25 +
-      redBlueDiff * 0.20;
+      (
+        redDominance * 0.45 +
+        redGreenDiff * 0.20 +
+        redBlueDiff * 0.15 +
+        redHueScore * hsv.s * 0.20
+      ) * safeBrightnessWeight;
 
     sumRedness += localRedness;
     validPixelCount++;
 
-    if (localRedness > 0.06) redPixelCount++;
-    if (localRedness > 0.13) strongRedPixelCount++;
+    if (localRedness > 0.055) redPixelCount++;
+    if (localRedness > 0.12) strongRedPixelCount++;
   }
 
   if (validPixelCount === 0) return 0;
@@ -378,9 +373,9 @@ function calculateRednessIndex(imageData) {
   const strongRedAreaRatio = strongRedPixelCount / validPixelCount;
 
   const finalScore =
-    meanRedness * 0.60 +
-    redAreaRatio * 0.25 +
-    strongRedAreaRatio * 0.15;
+    meanRedness * 0.62 +
+    redAreaRatio * 0.24 +
+    strongRedAreaRatio * 0.14;
 
   return finalScore;
 }
@@ -402,49 +397,23 @@ async function loadReferenceData() {
   console.log("Reference data:", referenceData);
 }
 
-function setFixedRoi() {
-  const boxW = canvas.width * 0.34;
-  const boxH = canvas.height * 0.32;
-
-  fixedRoi = {
-    x: (canvas.width - boxW) / 2,
-    y: (canvas.height - boxH) / 2,
-    w: boxW,
-    h: boxH
-  };
-}
-
-function resetView() {
-  viewScale = 1;
-  viewOffsetX = 0;
-  viewOffsetY = 0;
-  redrawCanvas();
-}
-
 function redrawCanvas() {
   if (!uploadedImage) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
 
-  const drawW = canvas.width * viewScale;
-  const drawH = canvas.height * viewScale;
-
-  const drawX = (canvas.width - drawW) / 2 + viewOffsetX;
-  const drawY = (canvas.height - drawH) / 2 + viewOffsetY;
-
-  ctx.drawImage(uploadedImage, drawX, drawY, drawW, drawH);
-
-  if (fixedRoi) {
+  if (roi) {
     ctx.strokeStyle = "#00ff88";
     ctx.lineWidth = 3;
-    ctx.strokeRect(fixedRoi.x, fixedRoi.y, fixedRoi.w, fixedRoi.h);
+    ctx.strokeRect(roi.x, roi.y, roi.w, roi.h);
 
-    ctx.fillStyle = "rgba(0,255,136,0.12)";
-    ctx.fillRect(fixedRoi.x, fixedRoi.y, fixedRoi.w, fixedRoi.h);
+    ctx.fillStyle = "rgba(0,255,136,0.15)";
+    ctx.fillRect(roi.x, roi.y, roi.w, roi.h);
 
     ctx.fillStyle = "#00ff88";
     ctx.font = "14px system-ui";
-    ctx.fillText("고정 분석 영역", fixedRoi.x + 8, Math.max(18, fixedRoi.y - 8));
+    ctx.fillText("분석 영역 ROI", roi.x + 8, Math.max(18, roi.y - 8));
   }
 }
 
@@ -463,18 +432,14 @@ imageInput.addEventListener("change", async (e) => {
   canvas.width = w;
   canvas.height = h;
 
-  viewScale = 1;
-  viewOffsetX = 0;
-  viewOffsetY = 0;
-
-  setFixedRoi();
+  roi = null;
   redrawCanvas();
 
   analyzeBtn.disabled = false;
   resultBox.style.display = "none";
   statusBox.style.display = "block";
   statusBox.textContent =
-    "초록색 고정 박스 안에 결막 부위가 오도록 사진을 확대·축소·이동한 뒤 분석해주세요.";
+    "이미지가 업로드되었습니다. 결막 부위를 드래그하여 분석 영역을 지정한 뒤 분석해주세요.";
 });
 
 function getCanvasPoint(e) {
@@ -495,47 +460,58 @@ canvas.addEventListener("pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
 
   const p = getCanvasPoint(e);
-  panStartX = p.x;
-  panStartY = p.y;
-  startOffsetX = viewOffsetX;
-  startOffsetY = viewOffsetY;
+  startX = p.x;
+  startY = p.y;
 
-  isPanning = true;
+  isDragging = true;
+
+  roi = {
+    x: startX,
+    y: startY,
+    w: 0,
+    h: 0
+  };
+
+  redrawCanvas();
 });
 
 canvas.addEventListener("pointermove", (e) => {
-  if (!isPanning || !uploadedImage) return;
+  if (!isDragging || !uploadedImage) return;
 
   e.preventDefault();
 
   const p = getCanvasPoint(e);
 
-  viewOffsetX = startOffsetX + (p.x - panStartX);
-  viewOffsetY = startOffsetY + (p.y - panStartY);
+  roi = {
+    x: Math.min(startX, p.x),
+    y: Math.min(startY, p.y),
+    w: Math.abs(p.x - startX),
+    h: Math.abs(p.y - startY)
+  };
 
   redrawCanvas();
 });
 
 canvas.addEventListener("pointerup", (e) => {
-  isPanning = false;
+  isDragging = false;
 
   if (canvas.hasPointerCapture(e.pointerId)) {
     canvas.releasePointerCapture(e.pointerId);
   }
+
+  if (roi && (roi.w < 10 || roi.h < 10)) {
+    roi = null;
+    redrawCanvas();
+  }
 });
-
-function zoomImage(factor) {
-  viewScale *= factor;
-  viewScale = Math.max(0.6, Math.min(4, viewScale));
-  redrawCanvas();
-}
-
-zoomInBtn.addEventListener("click", () => zoomImage(1.15));
-zoomOutBtn.addEventListener("click", () => zoomImage(0.87));
-resetViewBtn.addEventListener("click", resetView);
 
 analyzeBtn.addEventListener("click", async () => {
   if (!uploadedImage) return;
+
+  if (!roi || roi.w < 10 || roi.h < 10) {
+    alert("먼저 결막 부위를 드래그하여 분석 영역을 지정해주세요.");
+    return;
+  }
 
   if (referenceData.length === 0) {
     statusBox.textContent = "기준 이미지를 불러오는 중입니다.";
@@ -547,19 +523,13 @@ analyzeBtn.addEventListener("click", async () => {
 
   tempCanvas.width = canvas.width;
   tempCanvas.height = canvas.height;
-
-  const drawW = canvas.width * viewScale;
-  const drawH = canvas.height * viewScale;
-  const drawX = (canvas.width - drawW) / 2 + viewOffsetX;
-  const drawY = (canvas.height - drawH) / 2 + viewOffsetY;
-
-  tempCtx.drawImage(uploadedImage, drawX, drawY, drawW, drawH);
+  tempCtx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
 
   const uploadedImageData = tempCtx.getImageData(
-    Math.round(fixedRoi.x),
-    Math.round(fixedRoi.y),
-    Math.round(fixedRoi.w),
-    Math.round(fixedRoi.h)
+    Math.round(roi.x),
+    Math.round(roi.y),
+    Math.round(roi.w),
+    Math.round(roi.h)
   );
 
   const uploadedRedness = calculateRednessIndex(uploadedImageData);
@@ -585,7 +555,7 @@ analyzeBtn.addEventListener("click", async () => {
   rednessText.textContent = uploadedRedness.toFixed(4);
 
   interpretationText.textContent =
-    `업로드된 안구 이미지에서 고정 ROI 내 결막 후보 픽셀을 분석한 결과, CCLRU Grade ${best.grade} 수준과 가장 유사하게 분류되었습니다.`;
+    `업로드된 안구 이미지의 선택 ROI에서 피부색, 홍채, 속눈썹, 그림자 및 과노출 가능성이 높은 픽셀을 제외한 뒤 분석한 결과, CCLRU Grade ${best.grade} 수준과 가장 유사하게 분류되었습니다.`;
 
   distanceTable.innerHTML = "";
   distances
@@ -616,5 +586,6 @@ window.addEventListener("load", async () => {
     console.error(err);
   }
 });
-</script></script></body>
+</script>
+</body>
 </html>
