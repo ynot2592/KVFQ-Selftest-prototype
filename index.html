@@ -68,6 +68,7 @@
     background: #111827;
     display: block;
     margin-top: 12px;
+    touch-action: none;
   }
 
   .btn {
@@ -353,39 +354,69 @@ imageInput.addEventListener("change", async (e) => {
 });
 
 
-canvas.addEventListener("mousedown", (e) => {
+function getCanvasPoint(e) {
+  const rect = canvas.getBoundingClientRect();
+
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+canvas.addEventListener("pointerdown", (e) => {
   if (!uploadedImage) return;
 
-  const rect = canvas.getBoundingClientRect();
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
 
-  startX = e.clientX - rect.left;
-  startY = e.clientY - rect.top;
+  const p = getCanvasPoint(e);
+  startX = p.x;
+  startY = p.y;
 
   isDragging = true;
-});
-
-canvas.addEventListener("mousemove", (e) => {
-  if (!isDragging || !uploadedImage) return;
-
-  const rect = canvas.getBoundingClientRect();
-
-  const currentX = e.clientX - rect.left;
-  const currentY = e.clientY - rect.top;
 
   roi = {
-    x: Math.min(startX, currentX),
-    y: Math.min(startY, currentY),
-    w: Math.abs(currentX - startX),
-    h: Math.abs(currentY - startY)
+    x: startX,
+    y: startY,
+    w: 0,
+    h: 0
   };
 
   redrawCanvas();
 });
 
-canvas.addEventListener("mouseup", () => {
-  isDragging = false;
+canvas.addEventListener("pointermove", (e) => {
+  if (!isDragging || !uploadedImage) return;
+
+  e.preventDefault();
+
+  const p = getCanvasPoint(e);
+
+  roi = {
+    x: Math.min(startX, p.x),
+    y: Math.min(startY, p.y),
+    w: Math.abs(p.x - startX),
+    h: Math.abs(p.y - startY)
+  };
+
+  redrawCanvas();
 });
 
+canvas.addEventListener("pointerup", (e) => {
+  isDragging = false;
+
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+
+  if (roi && roi.w < 10 && roi.h < 10) {
+    roi = null;
+    redrawCanvas();
+  }
+});
 function redrawCanvas() {
   if (!uploadedImage) return;
 
