@@ -226,6 +226,12 @@ const distanceTable = document.getElementById("distanceTable");
 let uploadedImage = null;
 let referenceData = [];
 
+let roi = null;
+
+let isDragging = false;
+let startX = 0;
+let startY = 0;
+
 /**
  * 이미지 로드 함수
  */
@@ -337,14 +343,65 @@ imageInput.addEventListener("change", async (e) => {
 
   canvas.width = w;
   canvas.height = h;
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(uploadedImage, 0, 0, w, h);
+  roi = null;
+  redrawCanvas();
 
   analyzeBtn.disabled = false;
   resultBox.style.display = "none";
   statusBox.style.display = "block";
   statusBox.textContent = "이미지가 업로드되었습니다. 분석하기 버튼을 눌러주세요.";
 });
+
+
+canvas.addEventListener("mousedown", (e) => {
+  if (!uploadedImage) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  startX = e.clientX - rect.left;
+  startY = e.clientY - rect.top;
+
+  isDragging = true;
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!isDragging || !uploadedImage) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  const currentX = e.clientX - rect.left;
+  const currentY = e.clientY - rect.top;
+
+  roi = {
+    x: Math.min(startX, currentX),
+    y: Math.min(startY, currentY),
+    w: Math.abs(currentX - startX),
+    h: Math.abs(currentY - startY)
+  };
+
+  redrawCanvas();
+});
+
+canvas.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+
+function redrawCanvas() {
+  if (!uploadedImage) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+  if (roi) {
+    ctx.strokeStyle = "#00ff88";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(roi.x, roi.y, roi.w, roi.h);
+
+    ctx.fillStyle = "rgba(0,255,136,0.15)";
+    ctx.fillRect(roi.x, roi.y, roi.w, roi.h);
+  }
+}
 
 /**
  * 분석 실행
@@ -357,7 +414,31 @@ analyzeBtn.addEventListener("click", async () => {
     await loadReferenceData();
   }
 
-  const uploadedImageData = getImageDataFromImage(uploadedImage);
+  const tempCanvas = document.createElement("canvas");
+const tempCtx = tempCanvas.getContext("2d");
+
+tempCanvas.width = canvas.width;
+tempCanvas.height = canvas.height;
+
+tempCtx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+let uploadedImageData;
+
+if (roi && roi.w > 10 && roi.h > 10) {
+  uploadedImageData = tempCtx.getImageData(
+    roi.x,
+    roi.y,
+    roi.w,
+    roi.h
+  );
+} else {
+  uploadedImageData = tempCtx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+}
   const uploadedRedness = calculateRednessIndex(uploadedImageData);
 
   const distances = referenceData.map(ref => ({
@@ -397,6 +478,8 @@ analyzeBtn.addEventListener("click", async () => {
   statusBox.style.display = "none";
   resultBox.style.display = "block";
 });
+
+
 
 /**
  * 시작 시 reference 이미지가 있는지 확인
