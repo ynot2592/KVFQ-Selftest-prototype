@@ -294,7 +294,7 @@ function rgbToHsv(r, g, b) {
 function calculateRednessIndex(imageData) {
   const data = imageData.data;
 
-  let sumScore = 0;
+  let sumRedness = 0;
   let validPixelCount = 0;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -304,46 +304,28 @@ function calculateRednessIndex(imageData) {
 
     const brightness = (r + g + b) / 3;
 
-    // 홍채/속눈썹/그림자 등 너무 어두운 영역 제외
-    if (brightness < 55) continue;
+    // 너무 어두운 영역: 홍채, 속눈썹, 그림자 등 제외
+    if (brightness < 45) continue;
 
-    // 반사광/과노출처럼 너무 밝은 영역 제외
-    if (brightness > 245) continue;
+    const rgbSum = r + g + b + 1;
 
-    const hsv = rgbToHsv(r, g, b);
+    // 빨강 비율
+    const redRatio = r / rgbSum;
 
-    // 붉은 계열 hue: 0도 근처 또는 360도 근처
-    let redHueScore = 0;
-    if (hsv.h <= 30) {
-      redHueScore = 1 - (hsv.h / 30);
-    } else if (hsv.h >= 330) {
-      redHueScore = 1 - ((360 - hsv.h) / 30);
-    }
-
-    // RGB 기반 보조 지표
+    // 초록/파랑 대비 빨강 우세 정도
     const redDominance = Math.max(0, (r - ((g + b) / 2)) / 255);
 
-    // 밝기 정규화: 너무 어둡거나 밝은 픽셀 가중치 낮춤
-    const brightnessWeight = 1 - Math.abs((brightness - 155) / 155);
-    const safeBrightnessWeight = Math.max(0.25, Math.min(1, brightnessWeight));
+    // 기존 방식에 가까운 redness index
+    const redness = (redRatio * 0.6) + (redDominance * 0.4);
 
-    // 최종 redness score
-    const redness =
-      (
-        redHueScore * 0.45 +
-        hsv.s * redHueScore * 0.35 +
-        redDominance * 0.20
-      ) * safeBrightnessWeight;
-
-    sumScore += redness;
+    sumRedness += redness;
     validPixelCount++;
   }
 
   if (validPixelCount === 0) return 0;
 
-  return sumScore / validPixelCount;
+  return sumRedness / validPixelCount;
 }
-
 async function loadReferenceData() {
   referenceData = [];
 
