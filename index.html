@@ -187,10 +187,6 @@
 <div class="control-grid">
   <button type="button" class="small-btn" id="zoomInBtn">확대 +</button>
   <button type="button" class="small-btn" id="zoomOutBtn">축소 -</button>
-  <button type="button" class="small-btn" id="moveUpBtn">위</button>
-  <button type="button" class="small-btn" id="moveDownBtn">아래</button>
-  <button type="button" class="small-btn" id="moveLeftBtn">왼쪽</button>
-  <button type="button" class="small-btn" id="moveRightBtn">오른쪽</button>
   <button type="button" class="small-btn" id="resetViewBtn">초기화</button>
 </div>
 
@@ -254,10 +250,6 @@ const ctx = canvas.getContext("2d");
 
 const zoomInBtn = document.getElementById("zoomInBtn");
 const zoomOutBtn = document.getElementById("zoomOutBtn");
-const moveUpBtn = document.getElementById("moveUpBtn");
-const moveDownBtn = document.getElementById("moveDownBtn");
-const moveLeftBtn = document.getElementById("moveLeftBtn");
-const moveRightBtn = document.getElementById("moveRightBtn");
 const resetViewBtn = document.getElementById("resetViewBtn");
 
 const statusBox = document.getElementById("status");
@@ -538,18 +530,8 @@ function zoomImage(factor) {
   redrawCanvas();
 }
 
-function moveImage(dx, dy) {
-  viewOffsetX += dx;
-  viewOffsetY += dy;
-  redrawCanvas();
-}
-
 zoomInBtn.addEventListener("click", () => zoomImage(1.15));
 zoomOutBtn.addEventListener("click", () => zoomImage(0.87));
-moveUpBtn.addEventListener("click", () => moveImage(0, -20));
-moveDownBtn.addEventListener("click", () => moveImage(0, 20));
-moveLeftBtn.addEventListener("click", () => moveImage(-20, 0));
-moveRightBtn.addEventListener("click", () => moveImage(20, 0));
 resetViewBtn.addEventListener("click", resetView);
 
 analyzeBtn.addEventListener("click", async () => {
